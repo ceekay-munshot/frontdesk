@@ -48,9 +48,17 @@ const DOC_URL =
 /** Output file, resolved relative to this script so cwd never matters. */
 const OUT_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta.url));
 
-/** ~300 quote lines per LLM call keeps each request well inside the budget and
- *  the model's attention; the day's arrays are merged back together. */
-const CHUNK_LINES = 300;
+/** Quote lines per LLM call. Each input line expands into a verbose 20-field
+ *  JSON object (every field required, nulls included), so the OUTPUT is what
+ *  bounds the chunk, not the input: 300-line chunks overflowed even a 65k
+ *  max_tokens ceiling and truncated in production. ~60 lines keeps each reply
+ *  near ~12k output tokens — comfortably inside the default budget, no
+ *  truncation, fast. The day's arrays are merged back together. */
+const CHUNK_LINES = 60;
+
+/** How many chunks to run at once (after the first, which resolves the provider
+ *  /shape/model once). Keeps a ~16-chunk day well under the 10-minute cron. */
+const CHUNK_CONCURRENCY = 4;
 
 const DRY_RUN = process.env.DRY_RUN === "1" || process.argv.includes("--dry");
 
@@ -390,10 +398,13 @@ async function main() {
     return;
   }
 
-  // 4. LLM: one structured call per chunk, merge the arrays. A failed chunk is
-  //    warned and skipped rather than sinking the whole run.
-  const merged = [];
-  for (let i = 0; i < chunks.length; i++) {
+  // 4. LLM: one structured call per chunk. The FIRST chunk runs alone so llm.mjs
+  //    resolves the provider / request shape / model / token budget once; the
+  //    rest then run with a small concurrency limit. A failed chunk is warned and
+  //    skipped (its ~60 rows lost) rather than sinking the whole run.
+  const results = new Array(chunks.length).fill(null);
+
+  const runChunk = async (i) => {
     const user = `TRADING DAY: ${tradingDay} (Asia/Kolkata).\n\nOrganize these chat lines into the schema:\n\n${chunks[i].join("\n")}`;
     try {
       console.log(`[frontdesk] chunk ${i + 1}/${chunks.length} -> LLM (${chunks[i].length} lines)`);
@@ -404,12 +415,24 @@ async function main() {
         schema: QUOTES_SCHEMA,
       });
       const got = Array.isArray(out?.quotes) ? out.quotes : [];
-      console.log(`[frontdesk]   chunk ${i + 1}: ${got.length} raw rows`);
-      merged.push(...got);
+      console.log(`[frontdesk]   chunk ${i + 1}/${chunks.length}: ${got.length} raw rows`);
+      results[i] = got;
     } catch (err) {
-      console.warn(`[frontdesk]   chunk ${i + 1} failed: ${String(err.message || err).slice(0, 200)}`);
+      console.warn(`[frontdesk]   chunk ${i + 1}/${chunks.length} failed: ${String(err.message || err).slice(0, 200)}`);
+      results[i] = [];
     }
+  };
+
+  await runChunk(0);
+  if (chunks.length > 1) {
+    let next = 1;
+    const worker = async () => {
+      while (next < chunks.length) await runChunk(next++);
+    };
+    await Promise.all(Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length - 1) }, worker));
   }
+
+  const merged = results.filter(Boolean).flat();
 
   // 5. Validate, drop junk, re-id.
   const quotes = merged.map((q, i) => cleanRow(q, i)).filter(Boolean).map((q, i) => ({ ...q, id: `q${i + 1}` }));
