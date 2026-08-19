@@ -83,6 +83,10 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          # Headroom so a ~40-line chunk never truncates -> llm.mjs never grows
+          # its process-global token budget mid-run, which is what keeps the
+          # parser's bounded parallelism safe against that shared state.
+          BEDROCK_MAX_TOKENS: "32768"
         run: node scripts/parse-quotes.mjs
 
       # Commit ONLY if quotes.json actually changed, then push with a 4-attempt

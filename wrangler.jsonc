@@ -1,0 +1,15 @@
+{
+  // The Front Desk deploys as a STATIC site. This repo is connected to
+  // Cloudflare as a Worker ("Workers Builds: frontdesk"), so it needs a wrangler
+  // config: there is no server code, just static assets. With `assets.directory`
+  // and no `main`, Wrangler deploys the folder as a static-assets-only Worker —
+  // index.html at "/", js/app.js and data/quotes.json served alongside it.
+  //
+  // (If you would rather deploy on Cloudflare Pages instead, delete this file and
+  // create a Pages project with build command = none, output directory = public.)
+  "name": "frontdesk",
+  "compatibility_date": "2024-11-01",
+  "assets": {
+    "directory": "./public"
+  }
+}

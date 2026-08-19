@@ -102,7 +102,8 @@ how many LLM chunks it would send, and a sample of the annotated transcript — 
 calling the LLM**, so no key is required.
 
 _Last dry run against the live doc found all three sections:_ **Bonds (472 lines),
-Gsec (124 lines), DCM (334 lines)** → 930 quote lines → 4 LLM chunks.
+Gsec (124 lines), DCM (334 lines)** → 930 quote lines → ~24 LLM chunks (~40 lines
+each), run with bounded parallelism so a full day refreshes in a few minutes.
 
 ---
 
@@ -230,12 +231,20 @@ frontdesk/
 
 ---
 
-## Deploy (Cloudflare Pages)
+## Deploy (Cloudflare)
 
-1. Connect the repo to Cloudflare Pages.
-2. **Build command:** _none_. **Build output directory:** `public`.
-3. Deploys automatically on push to `main`. The GitHub Action commits fresh
-   `quotes.json` on its schedule, which triggers a redeploy.
+Static site, no build step. Two equivalent options — the repo ships ready for both:
+
+- **Cloudflare Workers (static assets)** — the repo includes `wrangler.jsonc` with
+  `assets.directory: ./public`, so a Workers project deploys the folder as a
+  static-assets-only Worker (no server code). This is what a "Workers Builds:
+  frontdesk" check is deploying.
+- **Cloudflare Pages** — alternatively, create a Pages project with **build command
+  = none** and **output directory = `public`**. (`wrangler.jsonc` is harmless to a
+  Pages project; delete it if you prefer.)
+
+Either way it deploys automatically on push to `main`. The GitHub Action commits a
+fresh `quotes.json` on its schedule, which triggers a redeploy.
 
 ## Local preview
 
