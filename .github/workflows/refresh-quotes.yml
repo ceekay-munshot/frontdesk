@@ -1,0 +1,115 @@
+# =============================================================================
+# The Front Desk — Refresh Quotes (the data engine)
+#
+# Reads the shared Google Doc of bond dealing-desk chat, cleans the messy
+# shorthand into structured rows with an LLM (Claude via Amazon Bedrock, OpenAI
+# fallback — the SAME llm.mjs seam proven in dakshamconcall), and commits
+# public/data/quotes.json back to the branch it ran on so Cloudflare Pages
+# auto-deploys and the Live Board updates. No servers, no build step.
+#
+# Runs every 10 minutes through Indian market hours on weekdays, and on demand
+# from the Actions tab. A bad run (dead key, unreachable doc, zero valid rows)
+# never blanks the board: the parser keeps the previous quotes.json and the
+# commit step simply finds nothing changed.
+# =============================================================================
+
+name: Refresh Quotes
+
+on:
+  schedule:
+    # Every 10 min, 03:00–12:59 UTC, Mon–Fri ≈ 08:30–18:30 IST (market hours).
+    - cron: "*/10 3-12 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      bedrock_model:
+        description: "Override the Claude model for this run only, e.g. anthropic.claude-sonnet-5 (blank = the default chain)"
+        required: false
+        type: string
+
+# The commit back to the repo uses the built-in Actions token.
+permissions:
+  contents: write
+
+# Never let two refreshes race on the same branch; let the running one finish.
+concurrency:
+  group: refresh-quotes-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the push rebase-retry loop can rebase
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Configure git identity
+        run: |
+          git config user.name "frontdesk-bot"
+          git config user.email "actions@github.com"
+
+      # Prove an LLM answers BEFORE we fetch and parse the doc. One tiny
+      # structured call, a fraction of a paisa, through the same seam the parser
+      # uses — so a bad key fails here in seconds instead of after the fetch.
+      - name: Preflight — LLM key
+        env:
+          BEDROCK_API_KEY: ${{ secrets.BEDROCK_API_KEY }}
+          BEDROCK_REGION: ${{ secrets.BEDROCK_REGION }} # optional; defaults to us-east-1
+          BEDROCK_MODEL: ${{ github.event.inputs.bedrock_model || secrets.BEDROCK_MODEL }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }} # optional; blank = Bedrock first
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }} # optional; llm.mjs defaults to gpt-4o
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+        run: node scripts/check-llm.mjs
+
+      # Fetch → section → LLM-clean → write public/data/quotes.json.
+      # continue-on-error so a bad parse (the parser exits 0 and keeps the old
+      # file anyway, but this is belt-and-braces) never breaks the repo.
+      - name: Parse quotes
+        continue-on-error: true
+        env:
+          BEDROCK_API_KEY: ${{ secrets.BEDROCK_API_KEY }}
+          BEDROCK_REGION: ${{ secrets.BEDROCK_REGION }}
+          # The run input wins over the secret, so a single A/B run can pin a
+          # different model without touching the stored configuration.
+          BEDROCK_MODEL: ${{ github.event.inputs.bedrock_model || secrets.BEDROCK_MODEL }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+        run: node scripts/parse-quotes.mjs
+
+      # Commit ONLY if quotes.json actually changed, then push with a 4-attempt
+      # loop that rebases on the branch head before each try — so a refresh that
+      # overlaps another push (or a human commit) lands cleanly instead of
+      # failing on a non-fast-forward.
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet -- public/data/quotes.json; then
+            echo "No change in quotes.json — nothing to commit."
+            exit 0
+          fi
+
+          git add public/data/quotes.json
+          git commit -m "data: refresh quotes.json [skip ci]"
+
+          n=0
+          until [ "$n" -ge 4 ]; do
+            git pull --rebase origin "${{ github.ref_name }}" && \
+            git push origin "HEAD:${{ github.ref_name }}" && {
+              echo "Pushed on attempt $((n + 1))."
+              exit 0
+            }
+            n=$((n + 1))
+            echo "Push attempt $n failed; retrying in $((n * 2))s..."
+            sleep "$((n * 2))"
+          done
+
+          echo "Failed to push after 4 attempts."
+          exit 1

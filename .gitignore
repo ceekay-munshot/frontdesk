@@ -1,0 +1,13 @@
+# Dependencies (the engine has none, but never commit these if added)
+node_modules/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Test artifacts / scratch
+.shots/
+*.log
