@@ -604,6 +604,7 @@ function buildGovtCurve(enriched) {
   const byTenor = new Map();
   for (const e of enriched) {
     if (e.section !== "Gsec") continue;
+    if (!(e.tenor > 0 && e.tenor <= 50)) continue; // ignore implausible tenors (bad LLM data)
     if (!byTenor.has(e.tenor)) byTenor.set(e.tenor, []);
     byTenor.get(e.tenor).push(e.uy);
   }
@@ -652,12 +653,14 @@ function computeSpread() {
   const bondMap = new Map();
   for (const e of corp) {
     const key = `${e.section}||${e.issuer.toLowerCase()}||${e.maturity}`;
-    if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [] });
+    if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [], who: new Set() });
     const b = bondMap.get(key);
     b.uys.push(e.uy);
     if (isNum(e.q.size_cr)) b.sizes.push(e.q.size_cr);
+    if (e.q.dealer) b.who.add(e.q.dealer);
+    if (e.q.firm) b.who.add(e.q.firm);
   }
-  const bonds = [...bondMap.values()].map((b) => ({ issuer: b.issuer, maturity: b.maturity, section: b.section, tenor: b.tenor, bucket: b.bucket, uy: median(b.uys), n: b.uys.length, size: b.sizes.length ? Math.max(...b.sizes) : null }));
+  const bonds = [...bondMap.values()].map((b) => ({ issuer: b.issuer, maturity: b.maturity, section: b.section, tenor: b.tenor, bucket: b.bucket, uy: median(b.uys), n: b.uys.length, size: b.sizes.length ? Math.max(...b.sizes) : null, who: [...b.who].join(" ").toLowerCase() }));
   const peerGroups = new Map();
   for (const b of bonds) {
     const k = `${b.section}||${b.bucket}`;
@@ -673,36 +676,50 @@ function computeSpread() {
   // ---- Heatmap: per corp quote, spread vs govt; median per issuer x bucket.
   let issuerRows = [];
   if (govtCurve) {
-    const cellMap = new Map();
-    const issuerAgg = new Map();
+    // Keys include section so an issuer that trades BOTH Bonds and DCM keeps two
+    // separate rows (one section's yields never contaminate the other's).
+    const cellMap = new Map(); // section|||issuer|||bucket -> observations
+    const issuerAgg = new Map(); // section|||issuer -> {issuer, section, who}
     for (const e of corp) {
       const gy = govtYieldAt(govtCurve, e.tenor);
       if (gy == null) continue;
       const spread = Math.round((e.uy - gy) * 100);
-      const ck = `${e.issuer}|||${e.bucket}`;
-      if (!cellMap.has(ck)) cellMap.set(ck, { spreads: [], corpYs: [], govtYs: [] });
-      const c = cellMap.get(ck);
-      c.spreads.push(spread); c.corpYs.push(e.uy); c.govtYs.push(gy);
-      if (!issuerAgg.has(e.issuer)) issuerAgg.set(e.issuer, { issuer: e.issuer, section: e.section, all: [] });
-      issuerAgg.get(e.issuer).all.push(spread);
+      const ck = `${e.section}|||${e.issuer}|||${e.bucket}`;
+      if (!cellMap.has(ck)) cellMap.set(ck, []);
+      cellMap.get(ck).push({ spread, corpY: e.uy, govtY: gy });
+      const ik = `${e.section}|||${e.issuer}`;
+      if (!issuerAgg.has(ik)) issuerAgg.set(ik, { issuer: e.issuer, section: e.section, who: new Set() });
+      const ia = issuerAgg.get(ik);
+      if (e.q.dealer) ia.who.add(e.q.dealer);
+      if (e.q.firm) ia.who.add(e.q.firm);
     }
     issuerRows = [...issuerAgg.values()].map((it) => {
       const cells = {};
       for (const bk of TENOR_BUCKETS) {
-        const c = cellMap.get(`${it.issuer}|||${bk}`);
-        if (c) cells[bk] = { median: Math.round(median(c.spreads)), n: c.spreads.length, corpY: median(c.corpYs), govtY: median(c.govtYs) };
+        const obs = cellMap.get(`${it.section}|||${it.issuer}|||${bk}`);
+        if (obs && obs.length) {
+          // The cell shows the MEDIAN OBSERVATION (a real quote), so its corp and
+          // govt yields reproduce exactly the spread on the tile.
+          const s = obs.slice().sort((a, b) => a.spread - b.spread);
+          const mid = s[Math.floor((s.length - 1) / 2)];
+          cells[bk] = { median: mid.spread, n: obs.length, corpY: mid.corpY, govtY: mid.govtY };
+        }
       }
-      return { issuer: it.issuer, section: it.section, avgSpread: Math.round(median(it.all)), cells };
+      const vals = Object.values(cells).map((c) => c.median);
+      const avgSpread = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+      return { issuer: it.issuer, section: it.section, who: [...it.who].join(" ").toLowerCase(), avgSpread, cells };
     });
   }
 
   // ---- Display filters (section / search / tenor).
   const term = state.search.trim().toLowerCase();
   const secOk = (s) => (state.spreadSection === "All" ? true : s === state.spreadSection);
-  const searchOk = (issuer) => !term || issuer.toLowerCase().includes(term);
+  // The header field promises "issuer or dealer", so match issuer AND the
+  // dealers/firms that quoted it (carried through aggregation as `who`).
+  const searchOk = (issuer, who) => !term || issuer.toLowerCase().includes(term) || (!!who && who.includes(term));
   const buckets = state.spreadTenor === "All" ? TENOR_BUCKETS : [state.spreadTenor];
 
-  let rows = issuerRows.filter((r) => secOk(r.section) && searchOk(r.issuer));
+  let rows = issuerRows.filter((r) => secOk(r.section) && searchOk(r.issuer, r.who));
   if (state.spreadTenor !== "All") rows = rows.filter((r) => r.cells[state.spreadTenor]);
   rows.sort((a, b) => b.avgSpread - a.avgSpread);
 
@@ -713,7 +730,7 @@ function computeSpread() {
     ? { min: sortedCells[0], med: median(sortedCells), max: sortedCells[sortedCells.length - 1] }
     : null;
 
-  let dispBonds = bonds.filter((b) => secOk(b.section) && searchOk(b.issuer) && isNum(b.gap));
+  let dispBonds = bonds.filter((b) => secOk(b.section) && searchOk(b.issuer, b.who) && isNum(b.gap));
   if (state.spreadTenor !== "All") dispBonds = dispBonds.filter((b) => b.bucket === state.spreadTenor);
   dispBonds.sort((a, b) => b.gap - a.gap);
 
@@ -771,16 +788,20 @@ function renderTip(o) {
 function govtCurveSVG(curve) {
   const W = 680, H = 196, pl = 42, pr = 16, pt = 16, pb = 28;
   const ts = curve.map((p) => p.t), ys = curve.map((p) => p.y);
-  const maxT = Math.max(2, Math.ceil(Math.max(...ts)));
+  // Curve tenors are already filtered to <=50 in buildGovtCurve, but clamp the
+  // axis domain and use a fixed step anyway so a stray value can never spawn a
+  // runaway number of ticks.
+  const maxT = Math.min(50, Math.max(2, Math.ceil(Math.max(...ts))));
+  const step = maxT <= 12 ? 2 : Math.ceil(maxT / 6);
   const dMin = Math.min(...ys), dMax = Math.max(...ys);
   const pad = Math.max(0.15, (dMax - dMin) * 0.2);
   const y0 = dMin - pad, y1 = dMax + pad;
-  const sx = (t) => pl + (t / maxT) * (W - pl - pr);
+  const sx = (t) => pl + (Math.min(t, maxT) / maxT) * (W - pl - pr);
   const sy = (y) => H - pb - ((y - y0) / (y1 - y0)) * (H - pt - pb);
   const line = curve.map((p, i) => `${i ? "L" : "M"}${sx(p.t).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(" ");
   const area = `${line} L${sx(ts[ts.length - 1]).toFixed(1)} ${(H - pb).toFixed(1)} L${sx(ts[0]).toFixed(1)} ${(H - pb).toFixed(1)} Z`;
   let xg = "";
-  for (let t = 0; t <= maxT; t += 2) xg += `<line x1="${sx(t).toFixed(1)}" y1="${pt}" x2="${sx(t).toFixed(1)}" y2="${H - pb}" stroke="#eef2f6"/><text x="${sx(t).toFixed(1)}" y="${H - pb + 15}" text-anchor="middle" font-size="10" fill="#94a3b8">${t}y</text>`;
+  for (let t = 0; t <= maxT; t += step) xg += `<line x1="${sx(t).toFixed(1)}" y1="${pt}" x2="${sx(t).toFixed(1)}" y2="${H - pb}" stroke="#eef2f6"/><text x="${sx(t).toFixed(1)}" y="${H - pb + 15}" text-anchor="middle" font-size="10" fill="#94a3b8">${t}y</text>`;
   const ymid = (dMin + dMax) / 2;
   const yg = [dMin, ymid, dMax].map((v) => `<line x1="${pl}" y1="${sy(v).toFixed(1)}" x2="${W - pr}" y2="${sy(v).toFixed(1)}" stroke="#f1f5f9"/><text x="${pl - 6}" y="${(sy(v) + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8">${v.toFixed(2)}</text>`).join("");
   const dots = curve.map((p) => {
