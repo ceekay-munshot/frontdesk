@@ -56,10 +56,6 @@ const OUT_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta
  *  truncation, fast. The day's arrays are merged back together. */
 const CHUNK_LINES = 60;
 
-/** How many chunks to run at once (after the first, which resolves the provider
- *  /shape/model once). Keeps a ~16-chunk day well under the 10-minute cron. */
-const CHUNK_CONCURRENCY = 4;
-
 const DRY_RUN = process.env.DRY_RUN === "1" || process.argv.includes("--dry");
 
 const VALID_SECTIONS = new Set(["Bonds", "Gsec", "DCM"]);
@@ -398,13 +394,16 @@ async function main() {
     return;
   }
 
-  // 4. LLM: one structured call per chunk. The FIRST chunk runs alone so llm.mjs
-  //    resolves the provider / request shape / model / token budget once; the
-  //    rest then run with a small concurrency limit. A failed chunk is warned and
-  //    skipped (its ~60 rows lost) rather than sinking the whole run.
-  const results = new Array(chunks.length).fill(null);
-
-  const runChunk = async (i) => {
+  // 4. LLM: one structured call per chunk, IN SEQUENCE, merging the arrays.
+  //    Sequential on purpose: llm.mjs carries a process-global token budget
+  //    (its max_tokens auto-growth) and a resolved-provider/shape/model that are
+  //    not concurrency-safe — parallel calls could race the budget and make a
+  //    chunk throw, and a thrown chunk is dropped. Small (~60-line) chunks keep
+  //    each reply well inside the budget, so ~16 sequential calls still finish in
+  //    a few minutes, comfortably under the 10-minute refresh cron. A failed
+  //    chunk is warned and skipped (its ~60 rows lost) rather than sinking the run.
+  const merged = [];
+  for (let i = 0; i < chunks.length; i++) {
     const user = `TRADING DAY: ${tradingDay} (Asia/Kolkata).\n\nOrganize these chat lines into the schema:\n\n${chunks[i].join("\n")}`;
     try {
       console.log(`[frontdesk] chunk ${i + 1}/${chunks.length} -> LLM (${chunks[i].length} lines)`);
@@ -416,23 +415,11 @@ async function main() {
       });
       const got = Array.isArray(out?.quotes) ? out.quotes : [];
       console.log(`[frontdesk]   chunk ${i + 1}/${chunks.length}: ${got.length} raw rows`);
-      results[i] = got;
+      merged.push(...got);
     } catch (err) {
       console.warn(`[frontdesk]   chunk ${i + 1}/${chunks.length} failed: ${String(err.message || err).slice(0, 200)}`);
-      results[i] = [];
     }
-  };
-
-  await runChunk(0);
-  if (chunks.length > 1) {
-    let next = 1;
-    const worker = async () => {
-      while (next < chunks.length) await runChunk(next++);
-    };
-    await Promise.all(Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length - 1) }, worker));
   }
-
-  const merged = results.filter(Boolean).flat();
 
   // 5. Validate, drop junk, re-id.
   const quotes = merged.map((q, i) => cleanRow(q, i)).filter(Boolean).map((q, i) => ({ ...q, id: `q${i + 1}` }));
