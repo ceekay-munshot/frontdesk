@@ -49,12 +49,19 @@ const DOC_URL =
 const OUT_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta.url));
 
 /** Quote lines per LLM call. Each input line expands into a verbose 20-field
- *  JSON object (every field required, nulls included), so the OUTPUT is what
- *  bounds the chunk, not the input: 300-line chunks overflowed even a 65k
- *  max_tokens ceiling and truncated in production. ~60 lines keeps each reply
- *  near ~12k output tokens — comfortably inside the default budget, no
- *  truncation, fast. The day's arrays are merged back together. */
-const CHUNK_LINES = 60;
+ *  JSON object, so the OUTPUT bounds the chunk, not the input: 300-line chunks
+ *  overflowed even a 65k max_tokens ceiling in production. ~40 lines keeps each
+ *  reply near ~9k output tokens — well under even the DEFAULT 16k budget (and the
+ *  workflow raises it further), so no chunk ever truncates and llm.mjs never
+ *  renegotiates its process-global token budget mid-run. That no-truncation
+ *  property is what makes the bounded parallelism below safe. */
+const CHUNK_LINES = 40;
+
+/** Chunks run with bounded parallelism (see the warm-up note in main() for why
+ *  that is concurrency-safe against llm.mjs's shared state). A full trading day
+ *  is ~700 structured rows, which streams for ~15 min one-chunk-at-a-time — over
+ *  the 10-minute refresh cron; parallelism brings a run back to a few minutes. */
+const CHUNK_CONCURRENCY = 5;
 
 const DRY_RUN = process.env.DRY_RUN === "1" || process.argv.includes("--dry");
 
@@ -394,16 +401,23 @@ async function main() {
     return;
   }
 
-  // 4. LLM: one structured call per chunk, IN SEQUENCE, merging the arrays.
-  //    Sequential on purpose: llm.mjs carries a process-global token budget
-  //    (its max_tokens auto-growth) and a resolved-provider/shape/model that are
-  //    not concurrency-safe — parallel calls could race the budget and make a
-  //    chunk throw, and a thrown chunk is dropped. Small (~60-line) chunks keep
-  //    each reply well inside the budget, so ~16 sequential calls still finish in
-  //    a few minutes, comfortably under the 10-minute refresh cron. A failed
-  //    chunk is warned and skipped (its ~60 rows lost) rather than sinking the run.
-  const merged = [];
-  for (let i = 0; i < chunks.length; i++) {
+  // 4. LLM. A full trading day is ~700 rows; streamed strictly one chunk at a
+  //    time that is ~15 min — over the 10-minute refresh cron — so chunks run with
+  //    bounded parallelism. That is safe against llm.mjs's process-global
+  //    negotiation state (resolved provider/shape/model + its max_tokens budget)
+  //    because of two properties working together:
+  //      (a) a single WARM-UP call (chunk 0) runs ALONE first, so every possible
+  //          mutation of that state — shape probing, model selection, any budget
+  //          adjustment — happens once, single-threaded, before any parallelism;
+  //      (b) chunks are sized (~40 lines -> ~9k output tokens) to stay under even
+  //          the default 16k max_tokens (the workflow raises it further), so no
+  //          chunk truncates and the budget is never renegotiated mid-run.
+  //    After the warm-up the shared state is effectively read-only — the only
+  //    writes left are idempotent same-value re-assignments — so the parallel
+  //    workers cannot race it. A failed chunk is warned and skipped, not fatal.
+  const results = new Array(chunks.length).fill(null);
+
+  const runChunk = async (i) => {
     const user = `TRADING DAY: ${tradingDay} (Asia/Kolkata).\n\nOrganize these chat lines into the schema:\n\n${chunks[i].join("\n")}`;
     try {
       console.log(`[frontdesk] chunk ${i + 1}/${chunks.length} -> LLM (${chunks[i].length} lines)`);
@@ -415,11 +429,23 @@ async function main() {
       });
       const got = Array.isArray(out?.quotes) ? out.quotes : [];
       console.log(`[frontdesk]   chunk ${i + 1}/${chunks.length}: ${got.length} raw rows`);
-      merged.push(...got);
+      results[i] = got;
     } catch (err) {
       console.warn(`[frontdesk]   chunk ${i + 1}/${chunks.length} failed: ${String(err.message || err).slice(0, 200)}`);
+      results[i] = [];
     }
+  };
+
+  await runChunk(0); // warm-up: resolve shape/model/budget once, single-threaded
+  if (chunks.length > 1) {
+    let next = 1;
+    const worker = async () => {
+      while (next < chunks.length) await runChunk(next++);
+    };
+    await Promise.all(Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length - 1) }, worker));
   }
+
+  const merged = results.filter(Boolean).flat();
 
   // 5. Validate, drop junk, re-id.
   const quotes = merged.map((q, i) => cleanRow(q, i)).filter(Boolean).map((q, i) => ({ ...q, id: `q${i + 1}` }));

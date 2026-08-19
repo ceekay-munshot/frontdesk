@@ -102,7 +102,8 @@ how many LLM chunks it would send, and a sample of the annotated transcript — 
 calling the LLM**, so no key is required.
 
 _Last dry run against the live doc found all three sections:_ **Bonds (472 lines),
-Gsec (124 lines), DCM (334 lines)** → 930 quote lines → 16 LLM chunks (~60 lines each).
+Gsec (124 lines), DCM (334 lines)** → 930 quote lines → ~24 LLM chunks (~40 lines
+each), run with bounded parallelism so a full day refreshes in a few minutes.
 
 ---
 
