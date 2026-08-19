@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Front Desk · Bond Dealing Desk</title>
+    <meta
+      name="description"
+      content="The Front Desk — a live, auto-updating board of bond dealing-desk quotes."
+    />
+
+    <!-- Fonts: Inter for UI, Plus Jakarta Sans for headings -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind (CDN, no build step) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Guarded so a blocked/slow CDN degrades to plain HTML instead of throwing.
+      window.tailwind &&
+        (tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+              display: ['"Plus Jakarta Sans"', "Inter", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                indigo: "#6366f1",
+                purple: "#8b5cf6",
+                pink: "#ec4899",
+              },
+            },
+          },
+        },
+      });
+    </script>
+
+    <style>
+      :root {
+        --brand-grad: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+        color: #0f172a;
+        background:
+          radial-gradient(1200px 560px at 6% -12%, #eef2ff 0%, rgba(238, 242, 255, 0) 55%),
+          radial-gradient(1000px 520px at 112% -8%, #fdf2f8 0%, rgba(253, 242, 248, 0) 52%),
+          #f6f7fb;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+      .font-display {
+        font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+      }
+      /* Brand gradient text (wordmark, active tab) */
+      .grad-text {
+        background: var(--brand-grad);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .grad-bar {
+        background: var(--brand-grad);
+      }
+      /* Numbers: always tabular + right-aligned where used */
+      .nums {
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum" 1;
+      }
+      /* Loading shimmer */
+      @keyframes shimmer {
+        0% {
+          background-position: 200% 0;
+        }
+        100% {
+          background-position: -200% 0;
+        }
+      }
+      .shimmer {
+        background-image: linear-gradient(90deg, #eef1f6 0%, #f6f8fb 50%, #eef1f6 100%);
+        background-size: 200% 100%;
+        animation: shimmer 1.4s infinite;
+        border-radius: 6px;
+      }
+      /* Narrow two-way glow */
+      .narrow-glow {
+        box-shadow: inset 3px 0 0 0 #f59e0b;
+        background-image: linear-gradient(90deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0) 42%);
+      }
+      .narrow-glow:hover {
+        background-image: linear-gradient(90deg, rgba(251, 191, 36, 0.16), rgba(251, 191, 36, 0) 46%);
+      }
+      /* Row hover */
+      .qrow {
+        transition: background-color 0.14s ease;
+      }
+      .qrow:hover {
+        background-color: #f8fafc;
+      }
+      /* Section left-accent */
+      .acc-bonds {
+        box-shadow: inset 3px 0 0 0 #6366f1;
+      }
+      .acc-gsec {
+        box-shadow: inset 3px 0 0 0 #10b981;
+      }
+      .acc-dcm {
+        box-shadow: inset 3px 0 0 0 #f59e0b;
+      }
+      /* Thin, tasteful scrollbar for the table body */
+      .scroll-y {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+      }
+      .scroll-y::-webkit-scrollbar {
+        width: 10px;
+      }
+      .scroll-y::-webkit-scrollbar-thumb {
+        background: #d3dae6;
+        border-radius: 999px;
+        border: 3px solid transparent;
+        background-clip: padding-box;
+      }
+      .scroll-y::-webkit-scrollbar-thumb:hover {
+        background: #b8c2d4;
+        background-clip: padding-box;
+      }
+      /* Live pulse dot */
+      @keyframes pulse-dot {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.45;
+          transform: scale(0.82);
+        }
+      }
+      .pulse {
+        animation: pulse-dot 1.8s ease-in-out infinite;
+      }
+      /* Brief flash when new data lands */
+      @keyframes flashUpdate {
+        0% {
+          background-color: rgba(16, 185, 129, 0.18);
+        }
+        100% {
+          background-color: transparent;
+        }
+      }
+      .flash {
+        animation: flashUpdate 1.1s ease-out;
+      }
+      /* Custom tooltip */
+      #tooltip {
+        position: fixed;
+        z-index: 60;
+        max-width: 460px;
+        padding: 8px 11px;
+        border-radius: 10px;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 12px;
+        line-height: 1.45;
+        box-shadow: 0 12px 30px rgba(2, 6, 23, 0.28);
+        pointer-events: none;
+        opacity: 0;
+        transform: translateY(4px);
+        transition: opacity 0.12s ease, transform 0.12s ease;
+      }
+      #tooltip.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      #tooltip .tt-label {
+        color: #94a3b8;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 3px;
+        font-weight: 600;
+      }
+      /* Sticky table head */
+      thead.sticky-head th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app" class="h-screen flex flex-col overflow-hidden">
+      <!-- ============================= HEADER ============================= -->
+      <header
+        class="shrink-0 border-b border-slate-200/70 bg-white/80 backdrop-blur-md"
+      >
+        <div class="mx-auto max-w-[1500px] px-4 sm:px-6">
+          <div class="flex items-center gap-4 py-3">
+            <!-- Wordmark -->
+            <div class="flex shrink-0 items-center gap-3">
+              <div
+                class="grid h-10 w-10 shrink-0 place-items-center rounded-xl grad-bar shadow-sm shadow-indigo-500/30"
+              >
+                <i data-lucide="candlestick-chart" class="h-5 w-5 text-white"></i>
+              </div>
+              <div>
+                <h1
+                  class="font-display grad-text whitespace-nowrap text-[18px] font-extrabold leading-none tracking-tight sm:text-[22px]"
+                >
+                  The Front Desk
+                </h1>
+                <p class="mt-0.5 text-[11px] font-medium text-slate-500 sm:text-xs">
+                  Bond Dealing Desk
+                </p>
+              </div>
+            </div>
+
+            <!-- Live pill -->
+            <div class="hidden sm:block">
+              <span
+                id="livePill"
+                title="Auto-refreshes every 10 minutes during market hours"
+                class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+              >
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 pulse"></span>
+                <span id="livePillText">Live</span>
+              </span>
+            </div>
+
+            <!-- Search -->
+            <div class="ml-auto w-full min-w-0 max-w-xs">
+              <div class="relative">
+                <i
+                  data-lucide="search"
+                  class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                ></i>
+                <input
+                  id="search"
+                  type="search"
+                  autocomplete="off"
+                  placeholder="Search issuer or dealer…"
+                  class="w-full rounded-xl border border-slate-200 bg-white/90 py-2 pl-9 pr-3 text-sm text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================ TABS ============================ -->
+          <nav id="tabs" class="flex items-center gap-1 overflow-x-auto">
+            <!-- tab buttons injected by app.js -->
+          </nav>
+        </div>
+      </header>
+
+      <!-- ============================== MAIN ============================== -->
+      <main class="min-h-0 flex-1">
+        <div
+          class="mx-auto flex h-full max-w-[1500px] flex-col px-4 pb-4 pt-4 sm:px-6"
+        >
+          <div id="view" class="flex min-h-0 flex-1 flex-col">
+            <!-- active tab content injected by app.js -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Custom hover tooltip (shows the original raw chat line) -->
+    <div id="tooltip" role="tooltip"></div>
+
+    <!-- Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- App (ES module) -->
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>
