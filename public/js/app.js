@@ -665,10 +665,14 @@ function computeSpread() {
   for (const b of bonds) {
     const k = `${b.section}||${b.bucket}`;
     if (!peerGroups.has(k)) peerGroups.set(k, []);
-    peerGroups.get(k).push(b.uy);
+    peerGroups.get(k).push(b);
   }
   for (const b of bonds) {
-    const pm = median(peerGroups.get(`${b.section}||${b.bucket}`));
+    // Benchmark each bond against the OTHER bonds in its group (leave-one-out),
+    // so a bond can't pull its own peer median toward itself. A bond with no
+    // peers has no benchmark, so its gap is unavailable rather than a false zero.
+    const others = peerGroups.get(`${b.section}||${b.bucket}`).filter((x) => x !== b);
+    const pm = others.length ? median(others.map((x) => x.uy)) : null;
     b.peerMedian = pm;
     b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
   }
@@ -678,36 +682,40 @@ function computeSpread() {
   if (govtCurve) {
     // Keys include section so an issuer that trades BOTH Bonds and DCM keeps two
     // separate rows (one section's yields never contaminate the other's).
-    const cellMap = new Map(); // section|||issuer|||bucket -> observations
-    const issuerAgg = new Map(); // section|||issuer -> {issuer, section, who}
+    // Keys are lowercased (like the peer aggregation) so casing variants of the
+    // same issuer don't split into separate rows; the first spelling seen is kept
+    // for display.
+    const cellMap = new Map(); // section|||issuerLC|||bucket -> exact observations
+    const issuerAgg = new Map(); // section|||issuerLC -> {issuer(display), section, who}
     for (const e of corp) {
       const gy = govtYieldAt(govtCurve, e.tenor);
       if (gy == null) continue;
-      const spread = Math.round((e.uy - gy) * 100);
-      const ck = `${e.section}|||${e.issuer}|||${e.bucket}`;
+      const iss = e.issuer.toLowerCase();
+      const ck = `${e.section}|||${iss}|||${e.bucket}`;
       if (!cellMap.has(ck)) cellMap.set(ck, []);
-      cellMap.get(ck).push({ spread, corpY: e.uy, govtY: gy });
-      const ik = `${e.section}|||${e.issuer}`;
+      cellMap.get(ck).push({ spread: (e.uy - gy) * 100, corpY: e.uy, govtY: gy });
+      const ik = `${e.section}|||${iss}`;
       if (!issuerAgg.has(ik)) issuerAgg.set(ik, { issuer: e.issuer, section: e.section, who: new Set() });
       const ia = issuerAgg.get(ik);
       if (e.q.dealer) ia.who.add(e.q.dealer);
       if (e.q.firm) ia.who.add(e.q.firm);
     }
     issuerRows = [...issuerAgg.values()].map((it) => {
+      const issLC = it.issuer.toLowerCase();
       const cells = {};
       for (const bk of TENOR_BUCKETS) {
-        const obs = cellMap.get(`${it.section}|||${it.issuer}|||${bk}`);
+        const obs = cellMap.get(`${it.section}|||${issLC}|||${bk}`);
         if (obs && obs.length) {
-          // The cell shows the MEDIAN OBSERVATION (a real quote), so its corp and
-          // govt yields reproduce exactly the spread on the tile.
+          // True median: for an even count, average the TWO central observations'
+          // spread AND their yields, so corp - govt still reproduces the tile.
           const s = obs.slice().sort((a, b) => a.spread - b.spread);
-          const mid = s[Math.floor((s.length - 1) / 2)];
-          cells[bk] = { median: mid.spread, n: obs.length, corpY: mid.corpY, govtY: mid.govtY };
+          const n = s.length, m = Math.floor(n / 2);
+          const pick = n % 2 ? [s[m]] : [s[m - 1], s[m]];
+          const mean = (f) => pick.reduce((x, o) => x + f(o), 0) / pick.length;
+          cells[bk] = { median: Math.round(mean((o) => o.spread)), n, corpY: mean((o) => o.corpY), govtY: mean((o) => o.govtY) };
         }
       }
-      const vals = Object.values(cells).map((c) => c.median);
-      const avgSpread = vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
-      return { issuer: it.issuer, section: it.section, who: [...it.who].join(" ").toLowerCase(), avgSpread, cells };
+      return { issuer: it.issuer, section: it.section, who: [...it.who].join(" ").toLowerCase(), cells };
     });
   }
 
@@ -721,7 +729,13 @@ function computeSpread() {
 
   let rows = issuerRows.filter((r) => secOk(r.section) && searchOk(r.issuer, r.who));
   if (state.spreadTenor !== "All") rows = rows.filter((r) => r.cells[state.spreadTenor]);
-  rows.sort((a, b) => b.avgSpread - a.avgSpread);
+  // Average over the DISPLAYED buckets only, so selecting a tenor re-labels and
+  // re-ranks rows by the cells actually on screen (not hidden ones).
+  rows = rows.map((r) => {
+    const vals = buckets.filter((bk) => r.cells[bk]).map((bk) => r.cells[bk].median);
+    return { ...r, avg: vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0 };
+  });
+  rows.sort((a, b) => b.avg - a.avg);
 
   const cellVals = [];
   for (const r of rows) for (const bk of buckets) if (r.cells[bk]) cellVals.push(r.cells[bk].median);
@@ -873,7 +887,7 @@ function spreadGridHTML(rows, buckets, gridStats) {
       <td class="heat-issuer sticky left-0 z-10 bg-white px-3 py-1.5">
         <div class="flex items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:190px">${esc(r.issuer)}</span>
         <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></div>
-        <div class="text-[10px] text-slate-400 nums">avg ${fmtBps(r.avgSpread)} bps</div>
+        <div class="text-[10px] text-slate-400 nums">avg ${fmtBps(r.avg)} bps</div>
       </td>${cells}</tr>`;
   }).join("");
   return `<table class="w-full min-w-[560px] border-collapse text-sm"><colgroup><col style="width:auto"/>${buckets.map(() => '<col style="width:92px"/>').join("")}</colgroup>${head}<tbody>${body}</tbody></table>`;
