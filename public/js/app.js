@@ -21,7 +21,7 @@ const TABS = [
   { id: "live", label: "Live Board", icon: "layout-list" },
   { id: "spread", label: "Spread Watch", icon: "git-compare-arrows" },
   { id: "opps", label: "Opportunities", icon: "sparkles" },
-  { id: "pulse", label: "Desk Pulse", icon: "activity", soon: true, blurb: "Who is quoting what, how busy each section is, and where flow is building." },
+  { id: "pulse", label: "Desk Pulse", icon: "activity" },
 ];
 
 /* Tenor buckets used across Spread Watch. */
@@ -561,26 +561,6 @@ function errorHTML() {
     </div>`;
 }
 
-function placeholderHTML(tabId) {
-  const t = TABS.find((x) => x.id === tabId) || {};
-  return `
-    <div class="grid min-h-0 flex-1 place-items-center">
-      <div class="max-w-md rounded-2xl border border-dashed border-slate-300 bg-white/70 px-8 py-12 text-center backdrop-blur">
-        <div class="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl grad-bar shadow-lg shadow-indigo-500/25">
-          <i data-lucide="${esc(t.icon || "sparkles")}" class="h-8 w-8 text-white"></i>
-        </div>
-        <div class="mb-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-          <i data-lucide="clock" class="h-3 w-3"></i>Coming next
-        </div>
-        <h2 class="font-display text-xl font-extrabold text-slate-800">${esc(t.label || "")}</h2>
-        <p class="mx-auto mt-2 max-w-xs text-sm text-slate-500">${esc(t.blurb || "This tab is on the way.")}</p>
-        <button data-action="goLive" class="mt-6 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700">
-          <i data-lucide="layout-list" class="h-4 w-4"></i>Back to Live Board
-        </button>
-      </div>
-    </div>`;
-}
-
 /* =========================================================================
    Spread Watch — computation (all in the browser, from quotes.json)
    ========================================================================= */
@@ -830,6 +810,24 @@ function renderTip(o) {
     const raws = [o.raw, o.buyRaw, o.sellRaw].filter(Boolean);
     const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
     return `${L(esc(o.title || "Opportunity"))}${rows}${rawHtml}`;
+  }
+  if (o.kind === "pulseinfo") {
+    return `${L("How to read Desk Pulse")}<div style="line-height:1.55">A quick read on the desk today:
+      <div style="margin-top:6px"><b style="color:#a5b4fc">Market split</b> — how many quotes in each section. <b style="color:#6ee7b7">Buy vs sell</b> — is the desk mostly looking to buy or to sell.</div>
+      <div style="margin-top:4px"><b>Activity</b> — quotes every 30 minutes, so you can see when it was busiest. <b>Most-active</b> — the issuers and dealers posting the most today.</div>
+      <div style="margin-top:4px;color:#94a3b8">Everything here is a live count from today's quotes — no jargon needed.</div></div>`;
+  }
+  if (o.kind === "donutseg") {
+    return `${L(esc(o.label))}${row("Quotes", o.count)}${row("Share", o.pct + "%")}${o.sub ? `<div style="color:#94a3b8;margin-top:3px">${esc(o.sub)}</div>` : ""}`;
+  }
+  if (o.kind === "timeline") {
+    return `${L("Activity")}${row("Time", esc(o.label))}${row("Quotes", o.count)}`;
+  }
+  if (o.kind === "rankissuer") {
+    return `${L(esc(o.name))}${row("Quotes", o.count)}${row("Buy interest", o.buy)}${row("Sell interest", o.sell)}${o.other ? row("Two-way / other", o.other) : ""}`;
+  }
+  if (o.kind === "rankdealer") {
+    return `${L(esc(o.name))}${o.firm ? `<div style="color:#94a3b8;margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}`;
   }
   return "";
 }
@@ -1326,7 +1324,7 @@ function oppChip(id, label, count, color) {
 function oppSectionSeg() {
   const opt = (v) => {
     const a = state.oppSection === v;
-    return `<button data-opp-section="${v}" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${a ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}">${v}</button>`;
+    return `<button data-opp-section="${v}" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition ${a ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}">${v}</button>`;
   };
   return `<div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1">${["All", "Bonds", "Gsec", "DCM"].map(opt).join("")}</div>`;
 }
@@ -1397,6 +1395,335 @@ function renderOppsView() {
 }
 
 /* =========================================================================
+   Desk Pulse — "what's happening on the desk today" overview
+   All hand-rolled inline SVG (donut, split bar, activity bars, rankings);
+   pure counting, so it works even on a day with few priced quotes.
+   ========================================================================= */
+
+/** "HH:MM" from seconds-since-midnight (wraps a day defensively). */
+function hhmm(sec) {
+  sec = ((Math.round(sec) % 86400) + 86400) % 86400;
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+const PULSE_BUCKET = 1800;        // 30-minute activity buckets
+const PULSE_OTHER = "#cbd5e1";    // two-way / note quotes in the issuer split
+
+function computePulse() {
+  const quotes = state.data?.quotes || [];
+  const total = quotes.length;
+
+  // --- Section mix (donut).
+  const secCount = { Bonds: 0, Gsec: 0, DCM: 0 };
+  for (const q of quotes) if (secCount[q.section] != null) secCount[q.section]++;
+  const secTotal = secCount.Bonds + secCount.Gsec + secCount.DCM;
+  const sections = ["Bonds", "Gsec", "DCM"].map((k) => ({
+    key: k, label: SECTION[k].label, color: SECTION[k].dot, count: secCount[k],
+    pct: secTotal ? (secCount[k] / secTotal) * 100 : 0,
+  }));
+
+  // --- Buy vs Sell balance (directional quotes only; two-way/notes shown apart).
+  let buy = 0, sell = 0, twoway = 0, other = 0;
+  for (const q of quotes) {
+    if (BUY_SIDES.has(q.side)) buy++;
+    else if (SELL_SIDES.has(q.side)) sell++;
+    else if (q.side === "two_way") twoway++;
+    else other++;
+  }
+
+  // --- Activity through the day (30-min buckets across the active range).
+  const counts = new Map();
+  for (const q of quotes) {
+    const s = tsSeconds(q.timestamp);
+    if (s < 0) continue;
+    counts.set(Math.floor(s / PULSE_BUCKET), (counts.get(Math.floor(s / PULSE_BUCKET)) || 0) + 1);
+  }
+  let timeline = [], withTime = 0, peak = null;
+  if (counts.size) {
+    const bmin = Math.min(...counts.keys()), bmax = Math.max(...counts.keys());
+    for (let b = bmin; b <= bmax; b++) {
+      const startSec = b * PULSE_BUCKET, count = counts.get(b) || 0;
+      withTime += count;
+      const t = { b, startSec, label: hhmm(startSec), endLabel: hhmm(startSec + PULSE_BUCKET), count };
+      timeline.push(t);
+      if (!peak || count > peak.count) peak = t;
+    }
+  }
+
+  // --- Most-active issuers (by quote count, with buy/sell split).
+  const issMap = new Map();
+  for (const q of quotes) {
+    const name = (q.issuer || "").trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (!issMap.has(key)) issMap.set(key, { name, count: 0, buy: 0, sell: 0, other: 0 });
+    const it = issMap.get(key);
+    it.count++;
+    if (BUY_SIDES.has(q.side)) it.buy++;
+    else if (SELL_SIDES.has(q.side)) it.sell++;
+    else it.other++;
+  }
+  const topIssuers = [...issMap.values()]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10);
+
+  // --- Most-active dealers (by quotes posted).
+  const dlrMap = new Map();
+  for (const q of quotes) {
+    const name = (q.dealer || "").trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, firms: new Set() });
+    const it = dlrMap.get(key);
+    it.count++;
+    if (q.firm) it.firms.add(q.firm);
+  }
+  const topDealers = [...dlrMap.values()]
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10)
+    .map((d) => ({ name: d.name, count: d.count, firm: [...d.firms][0] || "" }));
+
+  return {
+    total, sections, secTotal, buy, sell, twoway, other,
+    timeline, withTime, peak, topIssuers, topDealers,
+    stats: { total, dealers: dlrMap.size, issuers: issMap.size },
+  };
+}
+
+/* --------------------------- Desk Pulse — SVG ----------------------------- */
+
+function pkNote(msg) {
+  return `<div class="grid min-h-[120px] place-items-center px-4 text-center text-xs text-slate-400">${esc(msg)}</div>`;
+}
+
+/** Donut ring via stroke-dasharray (no arc math); each segment carries a tip. */
+function donutSVG(segments, opts = {}) {
+  const total = segments.reduce((a, s) => a + s.value, 0);
+  if (!total) return pkNote(opts.empty || "No data yet");
+  const size = 180, cx = size / 2, cy = size / 2, r = 62, sw = 24, C = 2 * Math.PI * r;
+  let off = 0;
+  const rings = segments.filter((s) => s.value > 0).map((s) => {
+    const frac = s.value / total, dash = Math.max(0, frac * C - 1.5);
+    const el = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}"
+      stroke-dasharray="${dash.toFixed(2)} ${(C - dash).toFixed(2)}" stroke-dashoffset="${(-off * C).toFixed(2)}"
+      class="pk-seg" style="cursor:pointer" data-tip="${esc(JSON.stringify({ kind: "donutseg", label: s.label, count: s.value, pct: +(frac * 100).toFixed(1), sub: s.sub || "" }))}"></circle>`;
+    off += frac;
+    return el;
+  }).join("");
+  return `<svg viewBox="0 0 ${size} ${size}" class="block" style="max-height:184px;margin:0 auto" role="img" aria-label="${esc(opts.aria || "")}">
+    <g transform="rotate(-90 ${cx} ${cy})">${rings}</g>
+    <text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="27" font-weight="800" fill="#0f172a" style="font-variant-numeric:tabular-nums;pointer-events:none">${esc(String(opts.centerBig ?? total))}</text>
+    <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.06em" style="pointer-events:none">${esc(opts.centerSmall || "")}</text>
+  </svg>`;
+}
+
+/** Two-segment balance bar (buy vs sell); white % inside each side. */
+function splitBarSVG(buy, sell, opts = {}) {
+  const total = buy + sell;
+  if (!total) return pkNote("No directional (bid/offer) quotes yet");
+  const W = 340, H = 46, r = 12;
+  const buyFrac = buy / total, buyW = buyFrac * W;
+  const buyPct = Math.round(buyFrac * 100), sellPct = 100 - buyPct;
+  const tip = (label, count, pct, sub) => esc(JSON.stringify({ kind: "donutseg", label, count, pct, sub }));
+  const buyTxt = buyW > 34 ? `<text x="14" y="${H / 2 + 4.5}" font-size="13" font-weight="800" fill="#fff" style="font-variant-numeric:tabular-nums">${buyPct}%</text>` : "";
+  const sellTxt = (W - buyW) > 34 ? `<text x="${W - 14}" y="${H / 2 + 4.5}" text-anchor="end" font-size="13" font-weight="800" fill="#fff" style="font-variant-numeric:tabular-nums">${sellPct}%</text>` : "";
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="max-height:50px" role="img" aria-label="${esc(opts.aria || "")}">
+    <defs><clipPath id="pkSplitClip"><rect x="0" y="0" width="${W}" height="${H}" rx="${r}"></rect></clipPath></defs>
+    <g clip-path="url(#pkSplitClip)">
+      <rect x="0" y="0" width="${buyW.toFixed(1)}" height="${H}" fill="${CHEAP}" class="pk-seg" style="cursor:pointer" data-tip="${tip("Buy interest", buy, buyPct, "bids / buys")}"></rect>
+      <rect x="${buyW.toFixed(1)}" y="0" width="${(W - buyW).toFixed(1)}" height="${H}" fill="${RICH}" class="pk-seg" style="cursor:pointer" data-tip="${tip("Sell interest", sell, sellPct, "offers / sells")}"></rect>
+      ${buyTxt}${sellTxt}
+      <line x1="${buyW.toFixed(1)}" y1="0" x2="${buyW.toFixed(1)}" y2="${H}" stroke="#fff" stroke-width="2"></line>
+    </g>
+  </svg>`;
+}
+
+/** Activity bars per 30-min bucket; hour x-labels thinned to ~7. */
+function timelineSVG(timeline, opts = {}) {
+  const n = timeline.length;
+  if (!n) return pkNote("No timestamps on today's quotes yet");
+  const W = 720, H = 172, pl = 30, pr = 12, pt = 14, pb = 24;
+  const plotW = W - pl - pr, plotH = H - pt - pb;
+  const maxC = Math.max(1, ...timeline.map((t) => t.count));
+  const bw = plotW / n;
+  const sy = (c) => pt + plotH - (c / maxC) * plotH;
+  const bars = timeline.map((t, i) => {
+    const x0 = pl + i * bw, y = sy(t.count), h = pt + plotH - y, pad = Math.min(3, bw * 0.16);
+    const tip = esc(JSON.stringify({ kind: "timeline", label: `${t.label}–${t.endLabel}`, count: t.count }));
+    return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
+      <rect x="${x0.toFixed(1)}" y="${pt}" width="${bw.toFixed(1)}" height="${plotH}" fill="transparent"></rect>
+      <rect x="${(x0 + pad / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - pad).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="2" fill="url(#pkTimeGrad)"></rect>
+    </g>`;
+  }).join("");
+  const grid = `<line x1="${pl}" y1="${(pt + plotH).toFixed(1)}" x2="${W - pr}" y2="${(pt + plotH).toFixed(1)}" stroke="#e2e8f0"></line>
+    <line x1="${pl}" y1="${pt}" x2="${W - pr}" y2="${pt}" stroke="#f1f5f9"></line>
+    <text x="${pl - 6}" y="${pt + 4}" text-anchor="end" font-size="9" fill="#cbd5e1" style="font-variant-numeric:tabular-nums">${maxC}</text>`;
+  const hours = [];
+  timeline.forEach((t, i) => { if (t.startSec % 3600 === 0) hours.push(i); });
+  let step = 1; while (hours.length / step > 7) step++;
+  const xlabels = hours.filter((_, k) => k % step === 0).map((i) => {
+    const cx = pl + (i + 0.5) * bw;
+    return `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9.5" fill="#94a3b8">${timeline[i].label}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" style="max-height:190px" role="img" aria-label="${esc(opts.aria || "")}">
+    <defs><linearGradient id="pkTimeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b5cf6"></stop><stop offset="100%" stop-color="#6366f1"></stop></linearGradient></defs>
+    ${grid}${bars}${xlabels}
+  </svg>`;
+}
+
+/** Horizontal ranking bars. mode "issuer" = stacked buy/sell/other; "dealer" = single. */
+function rankBarsSVG(items, mode) {
+  const n = items.length;
+  if (!n) return pkNote("Nothing to rank yet");
+  const W = 384, rowH = 26, top = 4, bot = 4, labelW = 124, valW = 30;
+  const H = top + n * rowH + bot, plotR = W - valW;
+  const maxV = Math.max(1, ...items.map((it) => it.count));
+  const fullTo = (v) => labelW + (v / maxV) * (plotR - labelW);
+  const rows = items.map((it, i) => {
+    const y = top + i * rowH, cy = y + rowH / 2, barY = y + 5, barH = rowH - 10;
+    const end = fullTo(it.count), fullW = Math.max(2, end - labelW);
+    let seg, tip;
+    if (mode === "issuer") {
+      const unit = fullW / Math.max(1, it.count);
+      let cx = labelW;
+      const push = (val, col) => { if (val <= 0) return ""; const w = val * unit; const s = `<rect x="${cx.toFixed(1)}" y="${barY}" width="${Math.max(0.4, w).toFixed(1)}" height="${barH}" fill="${col}"></rect>`; cx += w; return s; };
+      seg = `<defs><clipPath id="pkRankClip${i}"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3"></rect></clipPath></defs>
+        <g clip-path="url(#pkRankClip${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="#eef2f6"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.other, PULSE_OTHER)}</g>`;
+      tip = esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other }));
+    } else {
+      seg = `<rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3" fill="url(#pkRankGrad)"></rect>`;
+      tip = esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, firm: it.firm || "" }));
+    }
+    return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
+      <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"></rect>
+      <text x="${labelW - 8}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="#334155">${esc(trunc(it.name, 16))}</text>
+      ${seg}
+      <text x="${(end + 5).toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" font-size="10" font-weight="700" fill="#475569" style="font-variant-numeric:tabular-nums">${it.count}</text>
+    </g>`;
+  }).join("");
+  const grad = mode === "dealer" ? `<defs><linearGradient id="pkRankGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6366f1"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>` : "";
+  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" role="img" aria-label="${esc(mode === "issuer" ? "Most active issuers by quote count" : "Most active dealers by quotes posted")}">${grad}${rows}</svg>`;
+}
+
+/* --------------------------- Desk Pulse — cards --------------------------- */
+
+const pkDot = (c, t) => `<span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full" style="background:${c}"></span>${esc(t)}</span>`;
+
+function pulseCard({ icon, title, legend, body, span }) {
+  return `<section class="${span ? "lg:col-span-2 " : ""}flex flex-col rounded-xl border border-slate-100 bg-white/70 p-3.5">
+    <div class="mb-2.5 flex flex-wrap items-center gap-2">
+      <i data-lucide="${icon}" class="h-4 w-4 text-indigo-500"></i>
+      <h3 class="font-display text-sm font-bold text-slate-700">${esc(title)}</h3>
+      ${legend ? `<div class="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-slate-400">${legend}</div>` : ""}
+    </div>
+    <div class="flex flex-1 flex-col justify-center">${body}</div>
+  </section>`;
+}
+
+function pulseBody(p) {
+  // 1 — Activity through the day (wide hero).
+  const activity = pulseCard({
+    icon: "bar-chart-3", title: "Activity through the day", span: true,
+    legend: `<span class="inline-flex items-center gap-1"><span class="h-2 w-6 rounded-full" style="background:linear-gradient(90deg,#8b5cf6,#6366f1)"></span>quotes / 30 min</span>${p.peak ? `<span>busiest <b class="text-slate-500 nums">${esc(p.peak.label)}</b> · ${p.peak.count}</span>` : ""}`,
+    body: timelineSVG(p.timeline, { aria: "Quotes per 30 minutes through the day" }),
+  });
+
+  // 2 — Market split (donut) with a 3-cell breakdown as its legend.
+  const msList = `<div class="mt-3 grid grid-cols-3 gap-2">${p.sections.map((s) => `
+    <div class="rounded-lg bg-slate-50 px-2 py-1.5 text-center">
+      <div class="flex items-center justify-center gap-1"><span class="h-2 w-2 rounded-full" style="background:${s.color}"></span><span class="text-[10px] font-semibold text-slate-500">${esc(s.label)}</span></div>
+      <div class="mt-0.5 nums text-sm font-bold text-slate-800">${s.count}</div>
+      <div class="nums text-[10px] text-slate-400">${s.pct.toFixed(0)}%</div>
+    </div>`).join("")}</div>`;
+  const market = pulseCard({
+    icon: "pie-chart", title: "Market split",
+    body: donutSVG(p.sections.map((s) => ({ label: s.label, value: s.count, color: s.color, sub: "section" })),
+      { aria: "Quotes by section", centerBig: p.secTotal, centerSmall: "QUOTES", empty: "No quotes yet" }) + msList,
+  });
+
+  // 3 — Buy vs Sell balance + a plain-language takeaway.
+  const net = p.buy === p.sell ? "balanced" : p.buy > p.sell ? "net BUYING" : "net SELLING";
+  const netCol = p.buy > p.sell ? CHEAP : p.sell > p.buy ? RICH : "#64748b";
+  const buysell = pulseCard({
+    icon: "scale", title: "Buy vs sell balance",
+    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}`,
+    body: `<div class="flex h-full flex-col justify-center gap-3">
+      ${splitBarSVG(p.buy, p.sell, { aria: "Buy versus sell interest" })}
+      <div class="flex items-center justify-between gap-2">
+        <div><div class="nums text-lg font-extrabold" style="color:${CHEAP}">${p.buy}</div><div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Buy interest</div></div>
+        <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wide" style="color:${netCol}">${net}</div><div class="nums mt-0.5 text-[10px] text-slate-400">${p.twoway} two-way · ${p.other} notes</div></div>
+        <div class="text-right"><div class="nums text-lg font-extrabold" style="color:${RICH}">${p.sell}</div><div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Sell interest</div></div>
+      </div>
+    </div>`,
+  });
+
+  // 4 — Most-active issuers (stacked buy/sell/other).
+  const issuers = pulseCard({
+    icon: "building-2", title: "Most-active issuers",
+    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}${pkDot(PULSE_OTHER, "2-way / other")}`,
+    body: rankBarsSVG(p.topIssuers, "issuer"),
+  });
+
+  // 5 — Most-active dealers.
+  const dealers = pulseCard({
+    icon: "users", title: "Most-active dealers",
+    legend: `<span>by quotes posted</span>`,
+    body: rankBarsSVG(p.topDealers, "dealer"),
+  });
+
+  return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${activity}${market}${buysell}${issuers}${dealers}</div>`;
+}
+
+function pulseStatChips(p) {
+  const chip = (icon, label, value) => `<span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600"><i data-lucide="${icon}" class="h-3 w-3"></i><span class="opacity-70">${label}</span><span class="font-bold nums text-slate-800">${esc(value)}</span></span>`;
+  return chip("layers", "Total quotes", p.stats.total) + chip("users", "Active dealers", p.stats.dealers) + chip("building-2", "Active issuers", p.stats.issuers);
+}
+
+function pulseControls(p) {
+  return `<div class="mb-3 flex flex-wrap items-center gap-2">
+    <button class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" data-tip="${esc(JSON.stringify({ kind: "pulseinfo" }))}" aria-label="How to read Desk Pulse"><i data-lucide="info" class="h-4 w-4"></i></button>
+    <span class="text-xs font-semibold text-slate-500">Desk overview · today</span>
+    <div class="ml-auto flex flex-wrap items-center gap-2">${p ? pulseStatChips(p) : ""}</div>
+  </div>`;
+}
+
+function pulseSkeleton() {
+  const card = (h, span) => `<div class="${span ? "lg:col-span-2 " : ""}rounded-xl border border-slate-100 bg-white/70 p-3.5"><div class="shimmer mb-3 h-4" style="width:40%"></div><div class="shimmer" style="height:${h}px"></div></div>`;
+  return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${card(150, true)}${card(240)}${card(150)}${card(250)}${card(250)}</div>`;
+}
+
+function pulseChrome(bodyHTML, p) {
+  const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
+  const cov = p ? `<span class="font-semibold text-slate-600">${p.total}</span> quotes today` : "";
+  return `
+    ${pulseControls(p)}
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/50 backdrop-blur">
+      <div class="flex shrink-0 items-center gap-3 border-b border-slate-100 px-4 py-2.5">
+        <div class="flex items-center gap-2"><i data-lucide="activity" class="h-4 w-4 text-indigo-500"></i><h2 class="font-display text-sm font-bold text-slate-800">Desk Pulse</h2></div>
+        <span class="hidden text-xs text-slate-400 sm:inline">who's busy and where flow is building</span>
+        <div class="ml-auto text-xs text-slate-400">${cov}</div>
+      </div>
+      <div class="scroll-y min-h-0 flex-1 overflow-auto">${bodyHTML}</div>
+    </div>
+    <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
+      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Counted live in your browser from quotes.json</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(state.data?.trading_day || "—")}</span>
+      ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
+    </div>`;
+}
+
+function renderPulseView() {
+  if (state.loading) { els.view.innerHTML = pulseChrome(pulseSkeleton(), null); afterRender(); return; }
+  if (state.error) { els.view.innerHTML = pulseChrome(errorHTML(), null); afterRender(); return; }
+  const p = computePulse();
+  const body = p.total
+    ? pulseBody(p)
+    : spreadEmpty("No desk activity yet", "Today's quotes haven't loaded yet. This overview fills in as the desk quotes through the day.", "activity");
+  els.view.innerHTML = pulseChrome(body, p);
+  afterRender();
+}
+
+/* =========================================================================
    Render orchestration
    ========================================================================= */
 
@@ -1441,9 +1768,8 @@ function renderView() {
     renderOppsView();
     return;
   }
-  if (state.tab !== "live") {
-    view.innerHTML = placeholderHTML(state.tab);
-    afterRender();
+  if (state.tab === "pulse") {
+    renderPulseView();
     return;
   }
   if (state.loading) {
@@ -1612,9 +1938,6 @@ els.view.addEventListener("click", (e) => {
       renderView();
     } else if (a === "retry") {
       loadData({ initial: true });
-    } else if (a === "goLive") {
-      state.tab = "live";
-      render();
     }
   }
 });
