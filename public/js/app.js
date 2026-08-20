@@ -190,10 +190,13 @@ function repLevel(q) {
   return isNum(q.yield) ? q.yield : isNum(q.level) ? q.level : isNum(q.bid) ? q.bid : isNum(q.offer) ? q.offer : null;
 }
 
-/** A tight bid-offer? Yields are close in absolute terms (<=0.06), prices wider (<=5). */
+/** A tight bid-offer? Measured on the ABSOLUTE gap so it is orientation-agnostic:
+ *  the data carries yield two-ways in both conventions (bid<offer AND bid>offer),
+ *  and tightness is the width of the market, not the sign. Yields close in
+ *  absolute terms (<=0.06 = 6bps), prices wider (<=5). */
 function narrowGap(bid, offer, meaning) {
   if (!isNum(bid) || !isNum(offer)) return false;
-  const gap = offer - bid;
+  const gap = Math.abs(offer - bid);
   if (gap <= 0) return false;
   return meaning === "yield" ? gap <= 0.06 : gap <= 5;
 }
@@ -253,7 +256,9 @@ function sortRows(rows) {
 function groupBonds(rows) {
   const map = new Map();
   for (const q of rows) {
-    const key = `${(q.issuer || "—").toLowerCase()}||${q.maturity || ""}`;
+    // A row without an issuer isn't an identifiable bond — keep each on its own
+    // (keyed by id) so unrelated instruments never collapse into one "—" group.
+    const key = q.issuer ? `${q.issuer.toLowerCase()}||${q.maturity || ""}` : `__${q.id}`;
     if (!map.has(key)) {
       map.set(key, { issuer: q.issuer, maturity: q.maturity, tenor: q.tenor_years, section: q.section, coupon: q.coupon, instrument: q.instrument_type, items: [] });
     }
@@ -261,11 +266,16 @@ function groupBonds(rows) {
   }
   const groups = [];
   for (const g of map.values()) {
+    // Decide the group's unit first, then pool bid/offer ONLY from quotes that
+    // share it — so a price (80) never mixes with a yield (6.9) into a
+    // nonsensical best-bid / best-offer / spread.
+    const anyYield = g.items.some((q) => q.level_meaning === "yield");
+    const meaning = anyYield ? "yield" : "price_or_spread";
+    const sameUnit = (q) => (q.level_meaning === "yield") === anyYield;
     const bids = [];
     const offers = [];
-    let anyYield = false;
     for (const q of g.items) {
-      if (q.level_meaning === "yield") anyYield = true;
+      if (!sameUnit(q)) continue;
       if (q.side === "two_way") {
         if (isNum(q.bid)) bids.push(q.bid);
         if (isNum(q.offer)) offers.push(q.offer);
@@ -279,8 +289,9 @@ function groupBonds(rows) {
     }
     const bestBid = bids.length ? Math.max(...bids) : null;
     const bestOffer = offers.length ? Math.min(...offers) : null;
-    const meaning = anyYield ? "yield" : "price_or_spread";
-    const spread = bestBid != null && bestOffer != null ? Math.round((bestOffer - bestBid) * 100) / 100 : null;
+    // The bid-offer WIDTH (magnitude): yield two-ways arrive in mixed orientation,
+    // so a signed offer-bid would flip sign meaninglessly across rows.
+    const spread = bestBid != null && bestOffer != null ? Math.round(Math.abs(bestOffer - bestBid) * 100) / 100 : null;
     groups.push({ ...g, bestBid, bestOffer, spread, meaning, count: g.items.length });
   }
   return groups;
@@ -288,9 +299,10 @@ function groupBonds(rows) {
 
 function sortGroups(groups) {
   const order = { Bonds: 0, Gsec: 1, DCM: 2 };
+  const ord = (s) => (order[s] ?? 99); // unknown sections sort last, never NaN
   const dir = state.sortDir === "asc" ? 1 : -1;
   return groups.slice().sort((a, b) => {
-    if (order[a.section] !== order[b.section]) return order[a.section] - order[b.section];
+    if (ord(a.section) !== ord(b.section)) return ord(a.section) - ord(b.section);
     if (state.sortKey === "maturity") {
       const av = a.maturity || "";
       const bv = b.maturity || "";
@@ -363,7 +375,7 @@ function legendHTML() {
 function sectionSummary() {
   if (!state.data) return "";
   const c = { Bonds: 0, Gsec: 0, DCM: 0 };
-  for (const q of state.data.quotes) c[q.section]++;
+  for (const q of state.data.quotes) if (c[q.section] != null) c[q.section]++;
   return `${c.Bonds} Bonds · ${c.Gsec} Gsec · ${c.DCM} DCM`;
 }
 
@@ -620,11 +632,17 @@ function fmtBps(v, signed) {
 /** Government curve: Gsec (tenor, usableYield) points, duplicate tenors collapsed
  *  by median (keeps a stray outlier from spiking the line), sorted by tenor.
  *  Returns [{t,y}] or null when there are fewer than 2 distinct points. */
+/* Government yields realistically sit in a single-digit band; a value outside
+   this is a mis-parse (a price/spread that landed in the yield field) and, left
+   in, it rescales the whole curve chart. Same spirit as the tenor guard above
+   and the Opportunities plausibility band. */
+const GOVT_Y_MIN = 2, GOVT_Y_MAX = 12;
 function buildGovtCurve(enriched) {
   const byTenor = new Map();
   for (const e of enriched) {
     if (e.section !== "Gsec") continue;
     if (!(e.tenor > 0 && e.tenor <= 50)) continue; // ignore implausible tenors (bad LLM data)
+    if (!(e.uy >= GOVT_Y_MIN && e.uy <= GOVT_Y_MAX)) continue; // ignore implausible yields (bad LLM data)
     if (!byTenor.has(e.tenor)) byTenor.set(e.tenor, []);
     byTenor.get(e.tenor).push(e.uy);
   }
@@ -1249,8 +1267,11 @@ function computeOpportunities() {
   for (const q of quotes) {
     if (!q.issuer) continue; // a card needs a bond to name
     if (q.side !== "two_way" || q.level_meaning !== "yield" || !isNum(q.bid) || !isNum(q.offer)) continue;
-    if (!(q.offer > q.bid) || !plausibleY(q.bid) || !plausibleY(q.offer)) continue;
-    const gap = Math.round((q.offer - q.bid) * 100);
+    if (!plausibleY(q.bid) || !plausibleY(q.offer)) continue;
+    // Absolute gap: yield two-ways come in both orientations (bid<offer AND
+    // bid>offer). Requiring offer>bid used to drop genuinely tight markets that
+    // were quoted the other way round; tightness is the |bid-offer| width.
+    const gap = Math.abs(Math.round((q.offer - q.bid) * 100));
     if (gap <= 0 || gap > 8) continue;
     const bucket = tenorBucket(q.tenor_years);
     if (!secOk(q.section) || !tenOk(bucket) || !hitsSearch(q.issuer, `${q.dealer || ""} ${q.firm || ""}`)) continue;
@@ -1283,8 +1304,16 @@ function computeOpportunities() {
     const whoAll = [...e.buys, ...e.sells].map((q) => `${q.dealer || ""} ${q.firm || ""}`).join(" ");
     if (!secOk(e.section) || !tenOk(bucket) || !hitsSearch(e.issuer, whoAll)) continue;
     const recent = (arr) => arr.slice().sort((a, b) => tsSeconds(b.timestamp) - tsSeconds(a.timestamp));
-    const buy = recent(e.buys)[0];
-    const sell = recent(e.sells).find((s) => s.dealer && s.dealer !== buy.dealer) || recent(e.sells)[0];
+    const buysR = recent(e.buys), sellsR = recent(e.sells);
+    let buy = buysR[0];
+    let sell = sellsR.find((s) => s.dealer && s.dealer !== buy.dealer);
+    if (!sell) {
+      // The most-recent buyer has no differing seller; try another buyer so the
+      // card genuinely shows two DIFFERENT desks (never the same dealer X vs X).
+      buy = buysR.find((b) => b.dealer && sellsR.some((s) => s.dealer && s.dealer !== b.dealer)) || buy;
+      sell = sellsR.find((s) => s.dealer && s.dealer !== buy.dealer);
+    }
+    if (!sell) continue; // no genuine two-desk cross
     const size = (isNum(buy.size_cr) ? buy.size_cr : 0) + (isNum(sell.size_cr) ? sell.size_cr : 0);
     const time = tsSeconds(buy.timestamp) >= tsSeconds(sell.timestamp) ? buy.timestamp : sell.timestamp;
     twosided.push({
@@ -1878,6 +1907,12 @@ async function loadData({ initial = false } = {}) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     if (!json || !Array.isArray(json.quotes)) throw new Error("Malformed quotes file");
+    // Defensive: keep only well-formed rows so a stray null/garbage element can
+    // never throw mid-render and strand the board on the loading skeleton. The
+    // engine already guarantees this shape; this is belt-and-braces.
+    json.quotes = json.quotes.filter(
+      (q) => q && typeof q === "object" && typeof q.section === "string" && typeof q.side === "string"
+    );
 
     const changed = json.generated_at !== state.lastGeneratedAt;
     state.data = json;
