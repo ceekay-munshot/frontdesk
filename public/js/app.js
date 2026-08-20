@@ -613,11 +613,21 @@ function errorHTML() {
 
 const trunc = (s, n) => { s = String(s ?? ""); return s.length > n ? s.slice(0, n - 1) + "…" : s; };
 
-/** Usable yield for a quote: q.yield, else the mid of a yield two-way, else null. */
+/* A real bond/govt yield lives in a single-digit band; a "yield" outside it is a
+   mis-parsed size or price (e.g. 80, 92, 25) that would otherwise distort the
+   curve, heatmap and peer gaps. This is the ONE place Spread Watch and
+   Opportunities read a yield, so guarding here excludes those values from every
+   spread computation at once — the Live Board still shows each quote's raw level
+   as-is (it never calls usableYield). */
+const USABLE_Y_MIN = 2, USABLE_Y_MAX = 13;
+
+/** Usable yield for a quote: q.yield, else the mid of a yield two-way, else null —
+ *  but only when it falls in the plausible [2, 13]% band (else null). */
 function usableYield(q) {
-  if (isNum(q.yield)) return q.yield;
-  if (q.side === "two_way" && isNum(q.bid) && isNum(q.offer) && q.level_meaning === "yield") return (q.bid + q.offer) / 2;
-  return null;
+  let y = null;
+  if (isNum(q.yield)) y = q.yield;
+  else if (q.side === "two_way" && isNum(q.bid) && isNum(q.offer) && q.level_meaning === "yield") y = (q.bid + q.offer) / 2;
+  return y != null && y >= USABLE_Y_MIN && y <= USABLE_Y_MAX ? y : null;
 }
 
 function median(arr) {
@@ -1840,7 +1850,9 @@ function renderPill() {
     return;
   }
   const gen = fmtGenerated(state.data?.generated_at);
-  els.pillText.textContent = gen ? `Live · updated ${gen}` : "Live";
+  // "Latest desk chat" (not "today") while the doc holds several days at once;
+  // reverts to a today/live label once date-splitting lands.
+  els.pillText.textContent = gen ? `Latest desk chat · updated ${gen}` : "Latest desk chat";
 }
 
 function renderView() {
