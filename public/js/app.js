@@ -96,6 +96,7 @@ const state = {
   search: "",
   narrowOnly: false,
   grouped: false,
+  showChatter: false, // Live Board hides "comment"/NOTE chatter by default
   sortKey: "time", // "time" | "maturity"
   sortDir: "desc", // "asc" | "desc"
   lastGeneratedAt: null,
@@ -345,6 +346,7 @@ function controlsHTML() {
 
     ${toggleButton({ on: state.grouped, id: "grouped", icon: "layers", label: "Group by bond" })}
     ${toggleButton({ on: state.narrowOnly, id: "narrow", icon: "diff", label: "Narrow only", tone: "amber" })}
+    ${state.grouped ? "" : toggleButton({ on: state.showChatter, id: "chatter", icon: "messages-square", label: "Show desk chatter" })}
 
     <div class="ml-auto flex items-center gap-2 text-xs text-slate-400">
       <span>Sort</span>
@@ -375,14 +377,16 @@ function legendHTML() {
 function sectionSummary() {
   if (!state.data) return "";
   const c = { Bonds: 0, Gsec: 0, DCM: 0 };
-  for (const q of state.data.quotes) if (c[q.section] != null) c[q.section]++;
+  // Count tradeable quotes only — desk chatter (side "comment") isn't a quote.
+  for (const q of state.data.quotes) if (q.side !== "comment" && c[q.section] != null) c[q.section]++;
   return `${c.Bonds} Bonds · ${c.Gsec} Gsec · ${c.DCM} DCM`;
 }
 
 /** The board: controls + a fixed-height card whose body scrolls internally + a slim provenance footer. */
-function boardChrome(bodyHTML, count) {
-  const total = state.data ? state.data.quotes.length : 0;
-  const showing = count == null ? "" : `<span class="font-semibold text-slate-600">${count}</span> of ${total} quotes`;
+function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
+  const total = totalQuotes == null ? (state.data ? state.data.quotes.length : 0) : totalQuotes;
+  const chatterTag = chatterShown ? ` · <span class="text-slate-400">${chatterShown} chatter</span>` : "";
+  const showing = count == null ? "" : `<span class="font-semibold text-slate-600">${count}</span> of ${total} quotes${chatterTag}`;
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
   return `
     ${controlsHTML()}
@@ -672,6 +676,7 @@ function govtYieldAt(pts, t) {
 function computeUniverse() {
   const quotes = state.data?.quotes || [];
   const total = quotes.length;
+  const quoteTotal = quotes.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0); // tradeable quotes, not chatter
 
   let withUY = 0, withUYT = 0;
   const enriched = [];
@@ -721,7 +726,7 @@ function computeUniverse() {
     b.govtSpread = govtCurve ? Math.round((b.uy - govtYieldAt(govtCurve, b.tenor)) * 100) : null;
   }
 
-  return { total, withUY, withUYT, enriched, corp, govtCurve, bonds };
+  return { total, quoteTotal, withUY, withUYT, enriched, corp, govtCurve, bonds };
 }
 
 /**
@@ -730,7 +735,7 @@ function computeUniverse() {
  * the headline stats.
  */
 function computeSpread() {
-  const { total, withUY, withUYT, govtCurve, corp, bonds } = computeUniverse();
+  const { total, quoteTotal, withUY, withUYT, govtCurve, corp, bonds } = computeUniverse();
 
   // ---- Heatmap: per corp quote, spread vs govt; median per issuer x bucket.
   let issuerRows = [];
@@ -809,7 +814,7 @@ function computeSpread() {
   const cheapest = dispBonds.length && dispBonds[0].gap > 0 ? dispBonds[0] : null;
   const richest = dispBonds.length && dispBonds[dispBonds.length - 1].gap < 0 ? dispBonds[dispBonds.length - 1] : null;
 
-  return { total, withUY, withUYT, govtCurve, rows, buckets, gridStats, bonds: dispBonds, avgPickup, widest, cheapest, richest };
+  return { total, quoteTotal, withUY, withUYT, govtCurve, rows, buckets, gridStats, bonds: dispBonds, avgPickup, widest, cheapest, richest };
 }
 
 /* =========================================================================
@@ -1116,7 +1121,7 @@ function peersBody(c) {
 }
 
 function spreadChrome(bodyHTML, c) {
-  const cov = c ? `<span class="font-semibold text-slate-600">${c.withUYT}</span> of ${c.total} quotes carry a usable yield + tenor` : "";
+  const cov = c ? `<span class="font-semibold text-slate-600">${c.withUYT}</span> of ${c.quoteTotal} quotes carry a usable yield + tenor` : "";
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
   return `
     ${spreadControlsHTML(c)}
@@ -1160,12 +1165,14 @@ function renderSpreadView() {
 
 // color = vivid accent (fills, icon, strength bar); colorInk = AA-safe on white
 // (headline text); bg/text = Tailwind soft chip. One meaning per colour.
+// `plain` = the plain-English one-liner shown on the card (a layperson reads it
+// at a glance); the exact bps stay in the headline number and the tooltip.
 const OPP_CAT = {
-  cheap: { label: "Cheap (buy)", icon: "trending-up", color: T.buy, colorInk: T.buyInk, bg: "bg-emerald-50", text: "text-emerald-700" },
-  tight: { label: "Tight market", icon: "gauge", color: T.act, colorInk: T.actInk, bg: "bg-amber-50", text: "text-amber-700" },
-  pickup: { label: "Big pickup", icon: "landmark", color: T.pickup, colorInk: T.pickupInk, bg: "bg-teal-50", text: "text-teal-700" },
-  twosided: { label: "Two-sided", icon: "arrow-left-right", color: T.info, colorInk: T.infoInk, bg: "bg-blue-50", text: "text-blue-700" },
-  rich: { label: "Rich (sell)", icon: "trending-down", color: T.sell, colorInk: T.sellInk, bg: "bg-rose-50", text: "text-rose-700" },
+  cheap: { label: "Cheap (buy)", icon: "trending-up", color: T.buy, colorInk: T.buyInk, bg: "bg-emerald-50", text: "text-emerald-700", plain: "Cheaper than similar bonds — pays more, worth buying" },
+  tight: { label: "Tight market", icon: "gauge", color: T.act, colorInk: T.actInk, bg: "bg-amber-50", text: "text-amber-700", plain: "Easy to trade — buy & sell prices are very close" },
+  pickup: { label: "Big pickup", icon: "landmark", color: T.pickup, colorInk: T.pickupInk, bg: "bg-teal-50", text: "text-teal-700", plain: "Pays a lot extra over government bonds" },
+  twosided: { label: "Two-sided", icon: "arrow-left-right", color: T.info, colorInk: T.infoInk, bg: "bg-blue-50", text: "text-blue-700", plain: "A buyer & a seller are both active — you could match them" },
+  rich: { label: "Rich (sell)", icon: "trending-down", color: T.sell, colorInk: T.sellInk, bg: "bg-rose-50", text: "text-rose-700", plain: "Pricier than similar bonds — don't overpay" },
 };
 
 // Plausibility guardrails: the LLM occasionally mis-parses a price/level into the
@@ -1382,7 +1389,7 @@ function oppCard(o) {
       </div>
       <div class="text-[11px] text-slate-400 nums">${o.maturity ? fmtDate(o.maturity) : "—"}${o.bucket ? " · " + o.bucket : ""}</div>
       ${primary}
-      <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(o.why)}</div>
+      <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(c.plain || o.why)}</div>
       <div class="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">
         <span class="nums">${fmtCr(o.size)}</span>
         <span class="text-slate-300">·</span>
@@ -1715,7 +1722,7 @@ function pulseBody(p) {
   const market = pulseCard({
     icon: "pie-chart", title: "Market split",
     body: donutSVG(p.sections.map((s) => ({ label: s.label, value: s.count, color: s.color, sub: "section" })),
-      { aria: "Quotes by section", centerBig: p.secTotal, centerSmall: "QUOTES", empty: "No quotes yet" }) + msList,
+      { aria: "Messages by section", centerBig: p.secTotal, centerSmall: "MESSAGES", empty: "No messages yet" }) + msList,
   });
 
   // 3 — Buy vs Sell balance + a plain-language takeaway.
@@ -1753,7 +1760,7 @@ function pulseBody(p) {
 
 function pulseStatChips(p) {
   const chip = (icon, label, value) => `<span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600"><i data-lucide="${icon}" class="h-3 w-3"></i><span class="opacity-70">${label}</span><span class="font-bold nums text-slate-800">${esc(value)}</span></span>`;
-  return chip("layers", "Total quotes", p.stats.total) + chip("users", "Active dealers", p.stats.dealers) + chip("building-2", "Active issuers", p.stats.issuers);
+  return chip("layers", "Messages", p.stats.total) + chip("users", "Active dealers", p.stats.dealers) + chip("building-2", "Active issuers", p.stats.issuers);
 }
 
 function pulseControls(p) {
@@ -1862,23 +1869,28 @@ function renderView() {
   }
 
   const base = filterSectionSearch(state.data.quotes);
+  const baseQuotes = base.filter((q) => q.side !== "comment"); // exclude desk chatter
+  const totalQuotes = state.data.quotes.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0);
   let count;
+  let chatterShown = 0;
   let bodyHTML;
   if (state.grouped) {
-    let groups = groupBonds(base);
+    // Grouping is about tradeable bonds — chatter is never grouped.
+    let groups = groupBonds(baseQuotes);
     if (state.narrowOnly) groups = groups.filter((g) => narrowGap(g.bestBid, g.bestOffer, g.meaning));
     groups = sortGroups(groups);
     count = groups.length;
     bodyHTML = groups.length ? groupedHTML(groups) : emptyHTML();
   } else {
-    let rows = base;
+    let rows = state.showChatter ? base : baseQuotes;
     if (state.narrowOnly) rows = rows.filter(isNarrowRow);
     rows = sortRows(rows);
-    count = rows.length;
+    count = rows.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0); // count real quotes, not chatter
+    chatterShown = rows.length - count;
     bodyHTML = rows.length ? tableHTML(rows) : emptyHTML();
   }
 
-  view.innerHTML = boardChrome(bodyHTML, count);
+  view.innerHTML = boardChrome(bodyHTML, count, totalQuotes, chatterShown);
   afterRender();
 }
 
@@ -1997,6 +2009,7 @@ els.view.addEventListener("click", (e) => {
   if (toggle) {
     if (toggle.dataset.toggle === "grouped") state.grouped = !state.grouped;
     if (toggle.dataset.toggle === "narrow") state.narrowOnly = !state.narrowOnly;
+    if (toggle.dataset.toggle === "chatter") state.showChatter = !state.showChatter;
     renderView();
     return;
   }
