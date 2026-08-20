@@ -17,6 +17,28 @@
 const DATA_URL = "data/quotes.json";
 const POLL_MS = 45000; // re-check the committed file every 45s
 
+/* Design tokens — read once from the CSS custom properties on :root (defined
+   in index.html), so the inline-SVG charts draw from the SAME palette as the
+   CSS. One source of truth; no scattered hex in the JS. Fallbacks keep the
+   charts colored even if getComputedStyle is unavailable. */
+const _root = getComputedStyle(document.documentElement);
+const cv = (name, fallback) => _root.getPropertyValue(name).trim() || fallback;
+const T = {
+  grad1: cv("--grad-1", "#6366f1"), grad2: cv("--grad-2", "#8b5cf6"), grad3: cv("--grad-3", "#ec4899"),
+  buy: cv("--c-buy", "#10b981"), buyInk: cv("--c-buy-ink", "#047857"),
+  sell: cv("--c-sell", "#f43f5e"), sellInk: cv("--c-sell-ink", "#be123c"),
+  act: cv("--c-act", "#f59e0b"), actInk: cv("--c-act-ink", "#b45309"),
+  info: cv("--c-info", "#3b82f6"), infoInk: cv("--c-info-ink", "#1d4ed8"),
+  pickup: cv("--c-pickup", "#14b8a6"), pickupInk: cv("--c-pickup-ink", "#0f766e"),
+  brandInk: cv("--brand-ink", "#4338ca"),
+  bonds: cv("--c-bonds", "#6366f1"), gsec: cv("--c-gsec", "#10b981"), dcm: cv("--c-dcm", "#f59e0b"),
+  heatCool: cv("--heat-cool", "#3b82f6"), heatMid: cv("--heat-mid", "#eef2f6"), heatWarm: cv("--heat-warm", "#10b981"),
+  tintIndigo: cv("--tint-indigo", "#a5b4fc"), tintEmerald: cv("--tint-emerald", "#6ee7b7"), tintAmber: cv("--tint-amber", "#fcd34d"),
+  tintBlue: cv("--tint-blue", "#93c5fd"), tintTeal: cv("--tint-teal", "#5eead4"), tintRose: cv("--tint-rose", "#fda4af"),
+  ink: cv("--n-900", "#0f172a"), n700: cv("--n-700", "#334155"), n600: cv("--n-600", "#475569"),
+  n500: cv("--n-500", "#64748b"), n400: cv("--n-400", "#94a3b8"), n300: cv("--n-300", "#cbd5e1"), n200: cv("--n-200", "#e2e8f0"),
+};
+
 const TABS = [
   { id: "live", label: "Live Board", icon: "layout-list" },
   { id: "spread", label: "Spread Watch", icon: "git-compare-arrows" },
@@ -34,17 +56,20 @@ function tenorBucket(t) {
 /* Spread Watch diverging colors. Heatmap: blue (tight) -> gray (typical) ->
    emerald (wide/attractive), with the bps number shown in every cell as the
    primary read. Peer bars: emerald (cheap) / rose (rich), position primary. */
-const SPREAD_COOL = "#3b82f6"; // tight  (little pickup)
-const SPREAD_MID = "#eef2f6";  // typical (median)
-const SPREAD_WARM = "#10b981"; // wide   (more pickup, attractive)
-const CHEAP = "#10b981";
-const RICH = "#f43f5e";
+const SPREAD_COOL = T.heatCool; // tight  (little pickup)
+const SPREAD_MID = T.heatMid;   // typical (median)
+const SPREAD_WARM = T.heatWarm; // wide   (more pickup, attractive)
+const CHEAP = T.buy;
+const RICH = T.sell;
 
 const SECTION = {
-  Bonds: { label: "Bonds", dot: "#6366f1", acc: "acc-bonds", chip: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
-  Gsec: { label: "Gsec", dot: "#10b981", acc: "acc-gsec", chip: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-  DCM: { label: "DCM", dot: "#f59e0b", acc: "acc-dcm", chip: "bg-amber-50 text-amber-700 border border-amber-200" },
+  Bonds: { label: "Bonds", dot: T.bonds, acc: "acc-bonds", chip: "bg-indigo-50 text-indigo-700 border border-indigo-200" },
+  Gsec: { label: "Gsec", dot: T.gsec, acc: "acc-gsec", chip: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  DCM: { label: "DCM", dot: T.dcm, acc: "acc-dcm", chip: "bg-amber-50 text-amber-700 border border-amber-200" },
 };
+
+/** Section accent colour from the tokens (used for tooltip caps etc.). */
+function sectionColor(sec) { return (SECTION[sec] || SECTION.Bonds).dot; }
 
 const FLAG_LABEL = {
   bid_pls: "bid pls",
@@ -107,6 +132,10 @@ function fmtNum(n, dp) {
   if (dp != null) return n.toFixed(dp);
   return String(Math.round(n * 10000) / 10000);
 }
+
+/** Shared money/percent formatters so ₹cr and % read identically everywhere. */
+const fmtCr = (v) => (isNum(v) ? "₹" + fmtNum(v) + " cr" : "—");
+const fmtPct = (y, dp = 2) => (isNum(y) ? y.toFixed(dp) + "%" : "—");
 
 function parseISODate(s) {
   const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || "");
@@ -326,7 +355,7 @@ function sortChip(key, label) {
 function legendHTML() {
   const dot = (c, t) => `<span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full" style="background:${c}"></span>${t}</span>`;
   return `<div class="hidden items-center gap-3 text-[11px] font-medium text-slate-400 md:flex">
-      ${dot("#10b981", "Bid")}${dot("#f43f5e", "Offer")}${dot("#8b5cf6", "2-way")}
+      ${dot(T.buy, "Bid")}${dot(T.sell, "Offer")}${dot(T.grad2, "2-way")}
       <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-sm bg-amber-400"></span>Narrow</span>
     </div>`;
 }
@@ -429,9 +458,10 @@ function rowHTML(q) {
         .join("")}</span>`
     : "";
 
+  const rowTip = JSON.stringify({ kind: "row", raw: q.raw, dealer: q.dealer || "", firm: q.firm || "", time: q.timestamp || "", accent: sectionColor(q.section) });
   return `
     <tr class="qrow ${narrow ? "narrow-glow" : sec.acc} border-b border-slate-100 cursor-default"
-        data-raw="${esc(q.raw)}" data-dealer="${esc(q.dealer || "")}" data-firm="${esc(q.firm || "")}" data-time="${esc(q.timestamp || "")}">
+        data-tip="${esc(rowTip)}">
       <td class="px-3 py-2.5">
         <div class="flex items-center font-semibold text-slate-800">
           <span class="truncate">${esc(q.issuer || "—")}</span>${secTag}
@@ -789,21 +819,26 @@ function divergingColor(v, min, med, max) {
 
 function renderTip(o) {
   const L = (t) => `<div class="tt-label">${t}</div>`;
-  const row = (k, v) => `<div style="display:flex;justify-content:space-between;gap:18px"><span style="color:#94a3b8">${k}</span><span style="font-variant-numeric:tabular-nums">${v}</span></div>`;
+  const row = (k, v) => `<div style="display:flex;justify-content:space-between;gap:18px"><span style="color:${T.n400}">${k}</span><span style="font-variant-numeric:tabular-nums">${v}</span></div>`;
+  if (o.kind === "row") {
+    const meta = [o.dealer, o.firm].filter(Boolean).join(" · ");
+    const time = o.time ? ` · ${o.time}` : "";
+    return `${L("Original line")}${esc(o.raw)}${meta ? `<div class="tt-label" style="margin-top:6px">${esc(meta)}${esc(time)}</div>` : ""}`;
+  }
   if (o.kind === "info") {
     return `${L("How to read Spread Watch")}<div style="line-height:1.55">
       <b>Yield</b> = the return a bond pays. <b>Spread</b> = the EXTRA yield over a benchmark.
-      <div style="margin-top:6px"><b style="color:#a5b4fc">vs Government</b> — extra yield over the government curve at the same maturity. Bigger = the bond is "cheaper" (pays more) = more attractive to buy.</div>
-      <div style="margin-top:4px"><b style="color:#6ee7b7">vs Peers</b> — how a bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = rich (expensive).</div></div>`;
+      <div style="margin-top:6px"><b style="color:${T.tintIndigo}">vs Government</b> — extra yield over the government curve at the same maturity. Bigger = the bond is "cheaper" (pays more) = more attractive to buy.</div>
+      <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Peers</b> — how a bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = rich (expensive).</div></div>`;
   }
   if (o.kind === "curve") return `${L("Government curve")}${row("Tenor", o.t + "y")}${row("Govt yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Pickup over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}</div>${row("Tenor bucket", o.bucket)}${row("Median spread", fmtBps(o.spread) + " bps")}${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt yield", o.govtY.toFixed(2) + "%")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
-  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than peers (buy)" : "Richer than peers")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Peer median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", "₹" + fmtNum(o.size) + " cr") : ""}`;
+  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than peers (buy)" : "Richer than peers")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Peer median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
-      <div style="margin-top:6px"><b style="color:#6ee7b7">Cheap (buy)</b> — yields more than similar bonds. <b style="color:#fcd34d">Tight market</b> — a two-way with a small bid–offer gap; easy to deal.</div>
-      <div style="margin-top:4px"><b style="color:#5eead4">Big pickup</b> — pays a lot over the government curve. <b style="color:#93c5fd">Two-sided</b> — a buyer and a seller are both active. <b style="color:#fda4af">Rich (sell)</b> — yields less than peers; don't overpay.</div>
-      <div style="margin-top:4px;color:#94a3b8">Sorted strongest-first. All figures are bps unless shown otherwise.</div></div>`;
+      <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Tight market</b> — a two-way with a small bid–offer gap; easy to deal.</div>
+      <div style="margin-top:4px"><b style="color:${T.tintTeal}">Big pickup</b> — pays a lot over the government curve. <b style="color:${T.tintBlue}">Two-sided</b> — a buyer and a seller are both active. <b style="color:${T.tintRose}">Rich (sell)</b> — yields less than peers; don't overpay.</div>
+      <div style="margin-top:4px;color:${T.n400}">Sorted strongest-first. All figures are bps unless shown otherwise.</div></div>`;
   }
   if (o.kind === "opp") {
     const rows = (o.rows || []).map(([k, v]) => row(esc(k), esc(v))).join("");
@@ -813,12 +848,12 @@ function renderTip(o) {
   }
   if (o.kind === "pulseinfo") {
     return `${L("How to read Desk Pulse")}<div style="line-height:1.55">A quick read on the desk today:
-      <div style="margin-top:6px"><b style="color:#a5b4fc">Market split</b> — how many quotes in each section. <b style="color:#6ee7b7">Buy vs sell</b> — is the desk mostly looking to buy or to sell.</div>
+      <div style="margin-top:6px"><b style="color:${T.tintIndigo}">Market split</b> — how many quotes in each section. <b style="color:${T.tintEmerald}">Buy vs sell</b> — is the desk mostly looking to buy or to sell.</div>
       <div style="margin-top:4px"><b>Activity</b> — quotes every 30 minutes, so you can see when it was busiest. <b>Most-active</b> — the issuers and dealers posting the most today.</div>
-      <div style="margin-top:4px;color:#94a3b8">Everything here is a live count from today's quotes — no jargon needed.</div></div>`;
+      <div style="margin-top:4px;color:${T.n400}">Everything here is a live count from today's quotes — no jargon needed.</div></div>`;
   }
   if (o.kind === "donutseg") {
-    return `${L(esc(o.label))}${row("Quotes", o.count)}${row("Share", o.pct + "%")}${o.sub ? `<div style="color:#94a3b8;margin-top:3px">${esc(o.sub)}</div>` : ""}`;
+    return `${L(esc(o.label))}${row("Quotes", o.count)}${row("Share", o.pct + "%")}${o.sub ? `<div style="color:${T.n400};margin-top:3px">${esc(o.sub)}</div>` : ""}`;
   }
   if (o.kind === "timeline") {
     return `${L("Activity")}${row("Time", esc(o.label))}${row("Quotes", o.count)}`;
@@ -827,7 +862,7 @@ function renderTip(o) {
     return `${L(esc(o.name))}${row("Quotes", o.count)}${row("Buy interest", o.buy)}${row("Sell interest", o.sell)}${o.other ? row("Two-way / other", o.other) : ""}`;
   }
   if (o.kind === "rankdealer") {
-    return `${L(esc(o.name))}${o.firm ? `<div style="color:#94a3b8;margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}`;
+    return `${L(esc(o.name))}${o.firm ? `<div style="color:${T.n400};margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}`;
   }
   return "";
 }
@@ -852,18 +887,26 @@ function govtCurveSVG(curve) {
   const line = curve.map((p, i) => `${i ? "L" : "M"}${sx(p.t).toFixed(1)} ${sy(p.y).toFixed(1)}`).join(" ");
   const area = `${line} L${sx(ts[ts.length - 1]).toFixed(1)} ${(H - pb).toFixed(1)} L${sx(ts[0]).toFixed(1)} ${(H - pb).toFixed(1)} Z`;
   let xg = "";
-  for (let t = 0; t <= maxT; t += step) xg += `<line x1="${sx(t).toFixed(1)}" y1="${pt}" x2="${sx(t).toFixed(1)}" y2="${H - pb}" stroke="#eef2f6"/><text x="${sx(t).toFixed(1)}" y="${H - pb + 15}" text-anchor="middle" font-size="10" fill="#94a3b8">${t}y</text>`;
+  for (let t = 0; t <= maxT; t += step) xg += `<text x="${sx(t).toFixed(1)}" y="${H - pb + 16}" text-anchor="middle" font-size="10" fill="${T.n400}">${t}y</text>`;
   const ymid = (dMin + dMax) / 2;
-  const yg = [dMin, ymid, dMax].map((v) => `<line x1="${pl}" y1="${sy(v).toFixed(1)}" x2="${W - pr}" y2="${sy(v).toFixed(1)}" stroke="#f1f5f9"/><text x="${pl - 6}" y="${(sy(v) + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="#94a3b8">${v.toFixed(2)}</text>`).join("");
+  const yg = [dMin, ymid, dMax].map((v) => `<line x1="${pl}" y1="${sy(v).toFixed(1)}" x2="${W - pr}" y2="${sy(v).toFixed(1)}" stroke="${T.n200}" stroke-opacity="0.7"/><text x="${pl - 6}" y="${(sy(v) + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="${T.n400}">${v.toFixed(2)}</text>`).join("");
   const dots = curve.map((p) => {
-    const tip = JSON.stringify({ kind: "curve", t: p.t, y: p.y });
-    return `<circle cx="${sx(p.t).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="4" fill="#6366f1"/><circle cx="${sx(p.t).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="12" fill="transparent" data-tip="${esc(tip)}" style="cursor:pointer"/>`;
+    const X = sx(p.t).toFixed(1), Y = sy(p.y).toFixed(1);
+    const tip = JSON.stringify({ kind: "curve", t: p.t, y: p.y, accent: T.grad1 });
+    // A per-dot crosshair, revealed by the .cd:hover rule; the wide transparent
+    // circle is the hover/hit target that also carries the tooltip.
+    return `<g class="cd">
+      <line class="cross" x1="${X}" y1="${pt}" x2="${X}" y2="${H - pb}" stroke="${T.grad1}" stroke-opacity="0.45" stroke-dasharray="3 3"/>
+      <line class="cross" x1="${pl}" y1="${Y}" x2="${X}" y2="${Y}" stroke="${T.grad1}" stroke-opacity="0.45" stroke-dasharray="3 3"/>
+      <circle cx="${X}" cy="${Y}" r="4" fill="${T.grad1}"/>
+      <circle cx="${X}" cy="${Y}" r="13" fill="transparent" data-tip="${esc(tip)}" style="cursor:pointer"/>
+    </g>`;
   }).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" style="max-height:220px" role="img" aria-label="Government yield curve: yield by tenor">
-    <defs><linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.22"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" style="max-height:224px" role="img" aria-label="Government yield curve: yield by tenor">
+    <defs><linearGradient id="curveFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${T.grad1}" stop-opacity="0.22"/><stop offset="100%" stop-color="${T.grad1}" stop-opacity="0"/></linearGradient></defs>
     ${xg}${yg}
     <path d="${area}" fill="url(#curveFill)"/>
-    <path d="${line}" fill="none" stroke="#6366f1" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="${line}" fill="none" stroke="${T.grad1}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}
   </svg>`;
 }
@@ -883,22 +926,26 @@ function peersBarsSVG(shown) {
   const half = (plotR - labelW) / 2 - 6;
   const maxAbs = Math.max(1, ...shown.map((b) => Math.abs(b.gap)));
   const bx = (g) => zeroX + (g / maxAbs) * half;
-  const hdr = `<text x="${(zeroX + half / 2).toFixed(0)}" y="13" text-anchor="middle" font-size="10" font-weight="600" fill="#059669">cheaper → (buy)</text><text x="${(zeroX - half / 2).toFixed(0)}" y="13" text-anchor="middle" font-size="10" font-weight="600" fill="#e11d48">← richer</text>`;
-  const zero = `<line x1="${zeroX.toFixed(1)}" y1="${top - 2}" x2="${zeroX.toFixed(1)}" y2="${H - bot}" stroke="#cbd5e1" stroke-dasharray="3 3"/>`;
+  const hdr = `<text x="${(zeroX + half / 2).toFixed(0)}" y="13" text-anchor="middle" font-size="10" font-weight="600" fill="${T.buyInk}">cheaper → (buy)</text><text x="${(zeroX - half / 2).toFixed(0)}" y="13" text-anchor="middle" font-size="10" font-weight="600" fill="${T.sellInk}">← richer</text>`;
+  const zero = `<line x1="${zeroX.toFixed(1)}" y1="${top - 2}" x2="${zeroX.toFixed(1)}" y2="${H - bot}" stroke="${T.n300}" stroke-dasharray="3 3"/>`;
   const bars = shown.map((b, i) => {
     const y = top + i * rowH, cy = y + rowH / 2;
     const x2 = bx(b.gap), left = Math.min(zeroX, x2), w = Math.max(2, Math.abs(x2 - zeroX));
-    const col = b.gap >= 0 ? CHEAP : RICH;
+    const col = b.gap >= 0 ? "url(#peerBuy)" : "url(#peerSell)";
     const valX = b.gap >= 0 ? x2 + 4 : x2 - 4, anchor = b.gap >= 0 ? "start" : "end";
-    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size });
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell });
     return `<g data-tip="${esc(tip)}" style="cursor:pointer">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
-      <text x="${labelW - 10}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="#334155">${esc(trunc(b.issuer, 22))}</text>
+      <text x="${labelW - 10}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(b.issuer, 22))}</text>
       <rect x="${left.toFixed(1)}" y="${y + 4}" width="${w.toFixed(1)}" height="${rowH - 8}" rx="3" fill="${col}"/>
-      <text x="${valX.toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="600" fill="${b.gap >= 0 ? "#047857" : "#be123c"}">${fmtBps(b.gap, true)}</text>
+      <text x="${valX.toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" text-anchor="${anchor}" font-size="10" font-weight="600" fill="${b.gap >= 0 ? T.buyInk : T.sellInk}">${fmtBps(b.gap, true)}</text>
     </g>`;
   }).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" role="img" aria-label="Bond yield vs peer median, cheapest to richest">${hdr}${zero}${bars}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="hov w-full" role="img" aria-label="Bond yield vs peer median, cheapest to richest">
+    <defs>
+      <linearGradient id="peerBuy" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${T.buy}" stop-opacity="0.82"/><stop offset="100%" stop-color="${T.buy}"/></linearGradient>
+      <linearGradient id="peerSell" x1="1" y1="0" x2="0" y2="0"><stop offset="0%" stop-color="${T.sell}" stop-opacity="0.82"/><stop offset="100%" stop-color="${T.sell}"/></linearGradient>
+    </defs>${hdr}${zero}${bars}</svg>`;
 }
 
 /* =========================================================================
@@ -917,10 +964,10 @@ function spreadGridHTML(rows, buckets, gridStats) {
       const c = r.cells[bk];
       if (!c) return `<td class="px-2 py-2 text-right"><span class="text-slate-200">·</span></td>`;
       const bg = divergingColor(c.median, gridStats.min, gridStats.med, gridStats.max);
-      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n });
+      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, accent: bg });
       return `<td class="px-1.5 py-1.5 text-right"><span class="inline-block w-full rounded-md px-2 py-1 text-right text-xs font-bold nums" style="background:${bg};color:${textOn(bg)}" data-tip="${esc(tip)}">${fmtBps(c.median)}</span></td>`;
     }).join("");
-    return `<tr class="heat-row border-b border-slate-100">
+    return `<tr class="heat-row hov border-b border-slate-100">
       <td class="heat-issuer sticky left-0 z-10 bg-white px-3 py-1.5">
         <div class="flex items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:190px">${esc(r.issuer)}</span>
         <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></div>
@@ -1093,12 +1140,14 @@ function renderSpreadView() {
    Opportunities — the alert brain (reads the SAME universe as Spread Watch)
    ========================================================================= */
 
+// color = vivid accent (fills, icon, strength bar); colorInk = AA-safe on white
+// (headline text); bg/text = Tailwind soft chip. One meaning per colour.
 const OPP_CAT = {
-  cheap: { label: "Cheap (buy)", icon: "trending-up", color: "#10b981", bg: "bg-emerald-50", text: "text-emerald-700" },
-  tight: { label: "Tight market", icon: "gauge", color: "#f59e0b", bg: "bg-amber-50", text: "text-amber-700" },
-  pickup: { label: "Big pickup", icon: "landmark", color: "#14b8a6", bg: "bg-teal-50", text: "text-teal-700" },
-  twosided: { label: "Two-sided", icon: "arrow-left-right", color: "#3b82f6", bg: "bg-blue-50", text: "text-blue-700" },
-  rich: { label: "Rich (sell)", icon: "trending-down", color: "#f43f5e", bg: "bg-rose-50", text: "text-rose-700" },
+  cheap: { label: "Cheap (buy)", icon: "trending-up", color: T.buy, colorInk: T.buyInk, bg: "bg-emerald-50", text: "text-emerald-700" },
+  tight: { label: "Tight market", icon: "gauge", color: T.act, colorInk: T.actInk, bg: "bg-amber-50", text: "text-amber-700" },
+  pickup: { label: "Big pickup", icon: "landmark", color: T.pickup, colorInk: T.pickupInk, bg: "bg-teal-50", text: "text-teal-700" },
+  twosided: { label: "Two-sided", icon: "arrow-left-right", color: T.info, colorInk: T.infoInk, bg: "bg-blue-50", text: "text-blue-700" },
+  rich: { label: "Rich (sell)", icon: "trending-down", color: T.sell, colorInk: T.sellInk, bg: "bg-rose-50", text: "text-rose-700" },
 };
 
 // Plausibility guardrails: the LLM occasionally mis-parses a price/level into the
@@ -1153,7 +1202,7 @@ function computeOpportunities() {
   const tenOk = (bk) => (state.oppTenor === "All" ? true : bk === state.oppTenor);
   const hitsSearch = (issuer, who) => !term || (issuer || "").toLowerCase().includes(term) || (who || "").toLowerCase().includes(term);
 
-  const pct = (y) => (isNum(y) ? y.toFixed(2) + "%" : "—");
+  const pct = fmtPct; // shared formatter
   const bondWho = (b) => `${b.repr?.q?.dealer || ""} ${b.repr?.q?.firm || ""} ${b.who || ""}`;
 
   const baseFromBond = (b, type) => {
@@ -1283,14 +1332,14 @@ function oppCard(o) {
   const c = OPP_CAT[o.type] || OPP_CAT.cheap;
   const sec = SECTION[o.section] || SECTION.Bonds;
   const fresh = o.fresh ? `<span class="ml-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse" title="fresh quote"></span>` : "";
-  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw });
+  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color });
 
   const primary = o.type === "twosided"
     ? `<div class="mt-2 grid grid-cols-2 gap-1.5">
          <div class="rounded-lg bg-emerald-50 px-2 py-1.5"><div class="text-[9px] font-bold uppercase tracking-wide text-emerald-600">Buyer</div><div class="nums text-sm font-bold text-emerald-700">${esc(o.buy.level)}</div><div class="truncate text-[10px] text-slate-500">${esc(o.buy.dealer)}</div></div>
          <div class="rounded-lg bg-rose-50 px-2 py-1.5"><div class="text-[9px] font-bold uppercase tracking-wide text-rose-600">Seller</div><div class="nums text-sm font-bold text-rose-700">${esc(o.sell.level)}</div><div class="truncate text-[10px] text-slate-500">${esc(o.sell.dealer)}</div></div>
        </div>`
-    : `<div class="mt-2 flex items-baseline gap-1.5"><span class="font-display text-2xl font-extrabold leading-none nums" style="color:${c.color}">${esc(o.headline)}</span><span class="text-[11px] font-semibold text-slate-400">${esc(o.sub || "")}</span></div>`;
+    : `<div class="mt-2 flex items-baseline gap-1.5"><span class="font-display text-2xl font-extrabold leading-none nums" style="color:${c.colorInk}">${esc(o.headline)}</span><span class="text-[11px] font-semibold text-slate-400">${esc(o.sub || "")}</span></div>`;
 
   return `
     <div class="opp-card group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-3.5" style="--opp-accent:${c.color}" data-tip="${esc(tip)}">
@@ -1306,7 +1355,7 @@ function oppCard(o) {
       ${primary}
       <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(o.why)}</div>
       <div class="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">
-        <span class="nums">${isNum(o.size) ? "₹" + fmtNum(o.size) + " cr" : "—"}</span>
+        <span class="nums">${fmtCr(o.size)}</span>
         <span class="text-slate-300">·</span>
         <span class="truncate">${esc(o.dealer || (o.type === "twosided" ? "2 desks" : "—"))}</span>
         <span class="ml-auto nums">${fmtTime(o.time)}</span>
@@ -1315,9 +1364,9 @@ function oppCard(o) {
     </div>`;
 }
 
-function oppChip(id, label, count, color) {
+function oppChip(id, label, count, color, inkColor) {
   const active = state.oppCat === id;
-  return `<button data-opp-cat="${id}" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${active ? "text-white shadow-sm" : "text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"}" style="${active ? `background:${color}` : ""}">
+  return `<button data-opp-cat="${id}" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${active ? "text-white shadow-sm" : "text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-800"}" style="${active ? `background:${inkColor || color}` : ""}">
     ${esc(label)}<span class="rounded-full px-1.5 text-[10px] ${active ? "bg-white/25" : "bg-slate-100 text-slate-500"}">${count}</span></button>`;
 }
 
@@ -1337,12 +1386,12 @@ function oppTenorSelect() {
 function oppControls(o) {
   const counts = o ? o.counts : { cheap: 0, tight: 0, pickup: 0, twosided: 0, rich: 0, actionable: 0 };
   const chips =
-    oppChip("all", "All", counts.actionable, "#6366f1") +
-    oppChip("cheap", "Cheap (buy)", counts.cheap, OPP_CAT.cheap.color) +
-    oppChip("tight", "Tight markets", counts.tight, OPP_CAT.tight.color) +
-    oppChip("pickup", "Big pickup", counts.pickup, OPP_CAT.pickup.color) +
-    oppChip("twosided", "Two-sided", counts.twosided, OPP_CAT.twosided.color) +
-    oppChip("rich", "Rich (sell)", counts.rich, OPP_CAT.rich.color);
+    oppChip("all", "All", counts.actionable, T.brandInk, T.brandInk) +
+    oppChip("cheap", "Cheap (buy)", counts.cheap, OPP_CAT.cheap.color, OPP_CAT.cheap.colorInk) +
+    oppChip("tight", "Tight markets", counts.tight, OPP_CAT.tight.color, OPP_CAT.tight.colorInk) +
+    oppChip("pickup", "Big pickup", counts.pickup, OPP_CAT.pickup.color, OPP_CAT.pickup.colorInk) +
+    oppChip("twosided", "Two-sided", counts.twosided, OPP_CAT.twosided.color, OPP_CAT.twosided.colorInk) +
+    oppChip("rich", "Rich (sell)", counts.rich, OPP_CAT.rich.color, OPP_CAT.rich.colorInk);
   return `<div class="mb-3 space-y-2">
     <div class="flex flex-wrap items-center gap-1.5">${chips}</div>
     <div class="flex flex-wrap items-center gap-2">
@@ -1408,7 +1457,7 @@ function hhmm(sec) {
 }
 
 const PULSE_BUCKET = 1800;        // 30-minute activity buckets
-const PULSE_OTHER = "#cbd5e1";    // two-way / note quotes in the issuer split
+const PULSE_OTHER = T.n300;       // two-way / note quotes in the issuer split
 
 function computePulse() {
   const quotes = state.data?.quotes || [];
@@ -1505,14 +1554,14 @@ function donutSVG(segments, opts = {}) {
     const frac = s.value / total, dash = Math.max(0, frac * C - 1.5);
     const el = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${sw}"
       stroke-dasharray="${dash.toFixed(2)} ${(C - dash).toFixed(2)}" stroke-dashoffset="${(-off * C).toFixed(2)}"
-      class="pk-seg" style="cursor:pointer" data-tip="${esc(JSON.stringify({ kind: "donutseg", label: s.label, count: s.value, pct: +(frac * 100).toFixed(1), sub: s.sub || "" }))}"></circle>`;
+      class="pk-seg" style="cursor:pointer" data-tip="${esc(JSON.stringify({ kind: "donutseg", label: s.label, count: s.value, pct: +(frac * 100).toFixed(1), sub: s.sub || "", accent: s.color }))}"></circle>`;
     off += frac;
     return el;
   }).join("");
   return `<svg viewBox="0 0 ${size} ${size}" class="block" style="max-height:184px;margin:0 auto" role="img" aria-label="${esc(opts.aria || "")}">
-    <g transform="rotate(-90 ${cx} ${cy})">${rings}</g>
-    <text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="27" font-weight="800" fill="#0f172a" style="font-variant-numeric:tabular-nums;pointer-events:none">${esc(String(opts.centerBig ?? total))}</text>
-    <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="0.06em" style="pointer-events:none">${esc(opts.centerSmall || "")}</text>
+    <g class="hov" transform="rotate(-90 ${cx} ${cy})">${rings}</g>
+    <text x="${cx}" y="${cy - 1}" text-anchor="middle" font-size="27" font-weight="800" fill="${T.ink}" style="font-variant-numeric:tabular-nums;pointer-events:none">${esc(String(opts.centerBig ?? total))}</text>
+    <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-size="10" font-weight="700" fill="${T.n400}" letter-spacing="0.06em" style="pointer-events:none">${esc(opts.centerSmall || "")}</text>
   </svg>`;
 }
 
@@ -1523,14 +1572,14 @@ function splitBarSVG(buy, sell, opts = {}) {
   const W = 340, H = 46, r = 12;
   const buyFrac = buy / total, buyW = buyFrac * W;
   const buyPct = Math.round(buyFrac * 100), sellPct = 100 - buyPct;
-  const tip = (label, count, pct, sub) => esc(JSON.stringify({ kind: "donutseg", label, count, pct, sub }));
+  const tip = (label, count, pct, sub, accent) => esc(JSON.stringify({ kind: "donutseg", label, count, pct, sub, accent }));
   const buyTxt = buyW > 34 ? `<text x="14" y="${H / 2 + 4.5}" font-size="13" font-weight="800" fill="#fff" style="font-variant-numeric:tabular-nums">${buyPct}%</text>` : "";
   const sellTxt = (W - buyW) > 34 ? `<text x="${W - 14}" y="${H / 2 + 4.5}" text-anchor="end" font-size="13" font-weight="800" fill="#fff" style="font-variant-numeric:tabular-nums">${sellPct}%</text>` : "";
-  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="max-height:50px" role="img" aria-label="${esc(opts.aria || "")}">
+  return `<svg viewBox="0 0 ${W} ${H}" class="hov w-full" style="max-height:50px" role="img" aria-label="${esc(opts.aria || "")}">
     <defs><clipPath id="pkSplitClip"><rect x="0" y="0" width="${W}" height="${H}" rx="${r}"></rect></clipPath></defs>
     <g clip-path="url(#pkSplitClip)">
-      <rect x="0" y="0" width="${buyW.toFixed(1)}" height="${H}" fill="${CHEAP}" class="pk-seg" style="cursor:pointer" data-tip="${tip("Buy interest", buy, buyPct, "bids / buys")}"></rect>
-      <rect x="${buyW.toFixed(1)}" y="0" width="${(W - buyW).toFixed(1)}" height="${H}" fill="${RICH}" class="pk-seg" style="cursor:pointer" data-tip="${tip("Sell interest", sell, sellPct, "offers / sells")}"></rect>
+      <rect x="0" y="0" width="${buyW.toFixed(1)}" height="${H}" fill="${T.buyInk}" class="pk-seg" style="cursor:pointer" data-tip="${tip("Buy interest", buy, buyPct, "bids / buys", T.buy)}"></rect>
+      <rect x="${buyW.toFixed(1)}" y="0" width="${(W - buyW).toFixed(1)}" height="${H}" fill="${T.sellInk}" class="pk-seg" style="cursor:pointer" data-tip="${tip("Sell interest", sell, sellPct, "offers / sells", T.sell)}"></rect>
       ${buyTxt}${sellTxt}
       <line x1="${buyW.toFixed(1)}" y1="0" x2="${buyW.toFixed(1)}" y2="${H}" stroke="#fff" stroke-width="2"></line>
     </g>
@@ -1548,24 +1597,24 @@ function timelineSVG(timeline, opts = {}) {
   const sy = (c) => pt + plotH - (c / maxC) * plotH;
   const bars = timeline.map((t, i) => {
     const x0 = pl + i * bw, y = sy(t.count), h = pt + plotH - y, pad = Math.min(3, bw * 0.16);
-    const tip = esc(JSON.stringify({ kind: "timeline", label: `${t.label}–${t.endLabel}`, count: t.count }));
+    const tip = esc(JSON.stringify({ kind: "timeline", label: `${t.label}–${t.endLabel}`, count: t.count, accent: T.grad1 }));
     return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
       <rect x="${x0.toFixed(1)}" y="${pt}" width="${bw.toFixed(1)}" height="${plotH}" fill="transparent"></rect>
       <rect x="${(x0 + pad / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - pad).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="2" fill="url(#pkTimeGrad)"></rect>
     </g>`;
   }).join("");
-  const grid = `<line x1="${pl}" y1="${(pt + plotH).toFixed(1)}" x2="${W - pr}" y2="${(pt + plotH).toFixed(1)}" stroke="#e2e8f0"></line>
-    <line x1="${pl}" y1="${pt}" x2="${W - pr}" y2="${pt}" stroke="#f1f5f9"></line>
-    <text x="${pl - 6}" y="${pt + 4}" text-anchor="end" font-size="9" fill="#cbd5e1" style="font-variant-numeric:tabular-nums">${maxC}</text>`;
+  const grid = `<line x1="${pl}" y1="${(pt + plotH).toFixed(1)}" x2="${W - pr}" y2="${(pt + plotH).toFixed(1)}" stroke="${T.n200}"></line>
+    <line x1="${pl}" y1="${pt}" x2="${W - pr}" y2="${pt}" stroke="${T.n200}" stroke-opacity="0.5"></line>
+    <text x="${pl - 6}" y="${pt + 4}" text-anchor="end" font-size="9" fill="${T.n300}" style="font-variant-numeric:tabular-nums">${maxC}</text>`;
   const hours = [];
   timeline.forEach((t, i) => { if (t.startSec % 3600 === 0) hours.push(i); });
   let step = 1; while (hours.length / step > 7) step++;
   const xlabels = hours.filter((_, k) => k % step === 0).map((i) => {
     const cx = pl + (i + 0.5) * bw;
-    return `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9.5" fill="#94a3b8">${timeline[i].label}</text>`;
+    return `<text x="${cx.toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9.5" fill="${T.n400}">${timeline[i].label}</text>`;
   }).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" style="max-height:190px" role="img" aria-label="${esc(opts.aria || "")}">
-    <defs><linearGradient id="pkTimeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8b5cf6"></stop><stop offset="100%" stop-color="#6366f1"></stop></linearGradient></defs>
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="hov w-full" style="max-height:190px" role="img" aria-label="${esc(opts.aria || "")}">
+    <defs><linearGradient id="pkTimeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${T.grad2}"></stop><stop offset="100%" stop-color="${T.grad1}"></stop></linearGradient></defs>
     ${grid}${bars}${xlabels}
   </svg>`;
 }
@@ -1587,21 +1636,21 @@ function rankBarsSVG(items, mode) {
       let cx = labelW;
       const push = (val, col) => { if (val <= 0) return ""; const w = val * unit; const s = `<rect x="${cx.toFixed(1)}" y="${barY}" width="${Math.max(0.4, w).toFixed(1)}" height="${barH}" fill="${col}"></rect>`; cx += w; return s; };
       seg = `<defs><clipPath id="pkRankClip${i}"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3"></rect></clipPath></defs>
-        <g clip-path="url(#pkRankClip${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="#eef2f6"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.other, PULSE_OTHER)}</g>`;
-      tip = esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other }));
+        <g clip-path="url(#pkRankClip${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="${T.heatMid}"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.other, PULSE_OTHER)}</g>`;
+      tip = esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other, accent: T.grad1 }));
     } else {
       seg = `<rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3" fill="url(#pkRankGrad)"></rect>`;
-      tip = esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, firm: it.firm || "" }));
+      tip = esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, firm: it.firm || "", accent: T.grad2 }));
     }
     return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"></rect>
-      <text x="${labelW - 8}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="#334155">${esc(trunc(it.name, 16))}</text>
+      <text x="${labelW - 8}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(it.name, 16))}</text>
       ${seg}
-      <text x="${(end + 5).toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" font-size="10" font-weight="700" fill="#475569" style="font-variant-numeric:tabular-nums">${it.count}</text>
+      <text x="${(end + 5).toFixed(1)}" y="${(cy + 3.5).toFixed(1)}" font-size="10" font-weight="700" fill="${T.n600}" style="font-variant-numeric:tabular-nums">${it.count}</text>
     </g>`;
   }).join("");
-  const grad = mode === "dealer" ? `<defs><linearGradient id="pkRankGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6366f1"></stop><stop offset="100%" stop-color="#8b5cf6"></stop></linearGradient></defs>` : "";
-  return `<svg viewBox="0 0 ${W} ${H}" class="w-full" role="img" aria-label="${esc(mode === "issuer" ? "Most active issuers by quote count" : "Most active dealers by quotes posted")}">${grad}${rows}</svg>`;
+  const grad = mode === "dealer" ? `<defs><linearGradient id="pkRankGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="${T.grad1}"></stop><stop offset="100%" stop-color="${T.grad2}"></stop></linearGradient></defs>` : "";
+  return `<svg viewBox="0 0 ${W} ${H}" class="hov w-full" role="img" aria-label="${esc(mode === "issuer" ? "Most active issuers by quote count" : "Most active dealers by quotes posted")}">${grad}${rows}</svg>`;
 }
 
 /* --------------------------- Desk Pulse — cards --------------------------- */
@@ -1609,7 +1658,7 @@ function rankBarsSVG(items, mode) {
 const pkDot = (c, t) => `<span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full" style="background:${c}"></span>${esc(t)}</span>`;
 
 function pulseCard({ icon, title, legend, body, span }) {
-  return `<section class="${span ? "lg:col-span-2 " : ""}flex flex-col rounded-xl border border-slate-100 bg-white/70 p-3.5">
+  return `<section class="pulse-card ${span ? "lg:col-span-2 " : ""}flex flex-col rounded-xl border border-slate-100 bg-white/70 p-3.5">
     <div class="mb-2.5 flex flex-wrap items-center gap-2">
       <i data-lucide="${icon}" class="h-4 w-4 text-indigo-500"></i>
       <h3 class="font-display text-sm font-bold text-slate-700">${esc(title)}</h3>
@@ -1623,7 +1672,7 @@ function pulseBody(p) {
   // 1 — Activity through the day (wide hero).
   const activity = pulseCard({
     icon: "bar-chart-3", title: "Activity through the day", span: true,
-    legend: `<span class="inline-flex items-center gap-1"><span class="h-2 w-6 rounded-full" style="background:linear-gradient(90deg,#8b5cf6,#6366f1)"></span>quotes / 30 min</span>${p.peak ? `<span>busiest <b class="text-slate-500 nums">${esc(p.peak.label)}</b> · ${p.peak.count}</span>` : ""}`,
+    legend: `<span class="inline-flex items-center gap-1"><span class="h-2 w-6 rounded-full" style="background:linear-gradient(90deg,${T.grad2},${T.grad1})"></span>quotes / 30 min</span>${p.peak ? `<span>busiest <b class="text-slate-500 nums">${esc(p.peak.label)}</b> · ${p.peak.count}</span>` : ""}`,
     body: timelineSVG(p.timeline, { aria: "Quotes per 30 minutes through the day" }),
   });
 
@@ -1642,16 +1691,16 @@ function pulseBody(p) {
 
   // 3 — Buy vs Sell balance + a plain-language takeaway.
   const net = p.buy === p.sell ? "balanced" : p.buy > p.sell ? "net BUYING" : "net SELLING";
-  const netCol = p.buy > p.sell ? CHEAP : p.sell > p.buy ? RICH : "#64748b";
+  const netCol = p.buy > p.sell ? T.buyInk : p.sell > p.buy ? T.sellInk : T.n500;
   const buysell = pulseCard({
     icon: "scale", title: "Buy vs sell balance",
     legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}`,
     body: `<div class="flex h-full flex-col justify-center gap-3">
       ${splitBarSVG(p.buy, p.sell, { aria: "Buy versus sell interest" })}
       <div class="flex items-center justify-between gap-2">
-        <div><div class="nums text-lg font-extrabold" style="color:${CHEAP}">${p.buy}</div><div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Buy interest</div></div>
+        <div><div class="nums text-lg font-extrabold" style="color:${T.buyInk}">${p.buy}</div><div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Buy interest</div></div>
         <div class="text-center"><div class="text-[11px] font-bold uppercase tracking-wide" style="color:${netCol}">${net}</div><div class="nums mt-0.5 text-[10px] text-slate-400">${p.twoway} two-way · ${p.other} notes</div></div>
-        <div class="text-right"><div class="nums text-lg font-extrabold" style="color:${RICH}">${p.sell}</div><div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Sell interest</div></div>
+        <div class="text-right"><div class="nums text-lg font-extrabold" style="color:${T.sellInk}">${p.sell}</div><div class="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Sell interest</div></div>
       </div>
     </div>`,
   });
@@ -1750,7 +1799,7 @@ function renderPill() {
   if (state.error) {
     els.pill.className =
       "inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700";
-    els.pill.querySelector("span.pulse")?.style.setProperty("background", "#f43f5e");
+    els.pill.querySelector("span.pulse")?.style.setProperty("background", T.sell);
     els.pillText.textContent = "Offline";
     return;
   }
@@ -1955,28 +2004,11 @@ function positionTooltip(e) {
   t.style.top = `${Math.max(8, y)}px`;
 }
 
-els.view.addEventListener("mouseover", (e) => {
-  const row = e.target.closest("tr[data-raw]");
-  if (!row) return;
-  const meta = [row.dataset.dealer, row.dataset.firm].filter(Boolean).join(" · ");
-  const time = row.dataset.time ? ` · ${row.dataset.time}` : "";
-  els.tooltip.innerHTML =
-    `<div class="tt-label">Original line</div>${esc(row.dataset.raw)}` +
-    (meta ? `<div class="tt-label" style="margin-top:6px">${esc(meta)}${esc(time)}</div>` : "");
-  els.tooltip.classList.add("show");
-  positionTooltip(e);
-});
-els.view.addEventListener("mousemove", (e) => {
-  if (els.tooltip.classList.contains("show") && e.target.closest("tr[data-raw]")) positionTooltip(e);
-});
-els.view.addEventListener("mouseout", (e) => {
-  const row = e.target.closest("tr[data-raw]");
-  if (row && !row.contains(e.relatedTarget)) els.tooltip.classList.remove("show");
-});
-
-/* Spread Watch: tenor dropdown + rich [data-tip] tooltips (heatmap cells, bars,
-   curve dots, the info button). The payload is JSON in the attribute; the HTML
-   is built at hover time with esc() on every dynamic field. */
+/* Tenor dropdowns + the ONE shared tooltip for every chart AND table (Live
+   Board rows, heatmap cells, peer bars, curve dots, donut/activity/ranking
+   segments, opportunity cards, the info buttons). The payload is JSON in a
+   data-tip attribute; the HTML is built at hover time with esc() on every
+   dynamic field, and the tooltip's colour cap is set from the payload accent. */
 els.view.addEventListener("change", (e) => {
   const sel = e.target.closest("select[data-spread-tenor]");
   if (sel) {
@@ -1996,6 +2028,7 @@ els.view.addEventListener("mouseover", (e) => {
   let obj;
   try { obj = JSON.parse(el.dataset.tip); } catch { return; }
   els.tooltip.innerHTML = renderTip(obj);
+  els.tooltip.style.setProperty("--tt-accent", obj.accent || T.grad2);
   els.tooltip.classList.add("show");
   positionTooltip(e);
 });
