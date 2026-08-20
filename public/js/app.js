@@ -20,7 +20,7 @@ const POLL_MS = 45000; // re-check the committed file every 45s
 const TABS = [
   { id: "live", label: "Live Board", icon: "layout-list" },
   { id: "spread", label: "Spread Watch", icon: "git-compare-arrows" },
-  { id: "opps", label: "Opportunities", icon: "sparkles", soon: true, blurb: "Switches, narrow two-ways and rich/cheap ideas surfaced automatically." },
+  { id: "opps", label: "Opportunities", icon: "sparkles" },
   { id: "pulse", label: "Desk Pulse", icon: "activity", soon: true, blurb: "Who is quoting what, how busy each section is, and where flow is building." },
 ];
 
@@ -78,6 +78,10 @@ const state = {
   spreadView: "govt", // "govt" | "peers"
   spreadSection: "All", // "All" | "Bonds" | "DCM"
   spreadTenor: "All", // "All" | one of TENOR_BUCKETS
+  // Opportunities
+  oppCat: "all", // "all" | "cheap" | "tight" | "pickup" | "twosided" | "rich"
+  oppSection: "All", // "All" | "Bonds" | "Gsec" | "DCM"
+  oppTenor: "All", // "All" | one of TENOR_BUCKETS
 };
 
 const els = {
@@ -118,6 +122,12 @@ function fmtDate(s) {
 function fmtTime(s) {
   const m = /^(\d{1,2}):(\d{2})/.exec(s || "");
   return m ? `${m[1].padStart(2, "0")}:${m[2]}` : "—";
+}
+
+/** "HH:MM:SS" -> seconds since midnight (−1 when absent), for recency ranking. */
+function tsSeconds(s) {
+  const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(s || "");
+  return m ? +m[1] * 3600 + +m[2] * 60 + +(m[3] || 0) : -1;
 }
 
 /** HH:MM from an ISO generated_at that already carries +05:30. */
@@ -625,12 +635,13 @@ function govtYieldAt(pts, t) {
 }
 
 /**
- * The one compute pass Spread Watch renders from. Curve and peer medians are
- * built over the FULL day; the section/search/tenor controls only filter what
- * is displayed. Returns coverage counts, the curve, heatmap rows, peer bonds,
- * and the headline stats.
+ * The shared full-day compute pass. Builds the government curve and the corp
+ * BOND universe (one row per issuer+maturity) with each bond's leave-one-out
+ * peer gap AND its spread over the government curve — the same two Phase-2
+ * measures that Spread Watch and Opportunities both read, computed exactly
+ * once, one way. No display filters here; each caller filters its own view.
  */
-function computeSpread() {
+function computeUniverse() {
   const quotes = state.data?.quotes || [];
   const total = quotes.length;
 
@@ -648,19 +659,26 @@ function computeSpread() {
   const govtCurve = buildGovtCurve(enriched);
   const corp = enriched.filter((e) => e.section === "Bonds" || e.section === "DCM");
 
-  // ---- Peers: aggregate corp quotes -> bonds (issuer+maturity), median yield,
-  //      then peer median over bonds sharing a section + tenor bucket.
+  // Aggregate corp quotes -> bonds (issuer+maturity), median yield; keep the
+  // underlying items so a card can show a representative dealer / time / raw line.
   const bondMap = new Map();
   for (const e of corp) {
     const key = `${e.section}||${e.issuer.toLowerCase()}||${e.maturity}`;
-    if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [], who: new Set() });
+    if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [], who: new Set(), items: [] });
     const b = bondMap.get(key);
     b.uys.push(e.uy);
+    b.items.push(e);
     if (isNum(e.q.size_cr)) b.sizes.push(e.q.size_cr);
     if (e.q.dealer) b.who.add(e.q.dealer);
     if (e.q.firm) b.who.add(e.q.firm);
   }
-  const bonds = [...bondMap.values()].map((b) => ({ issuer: b.issuer, maturity: b.maturity, section: b.section, tenor: b.tenor, bucket: b.bucket, uy: median(b.uys), n: b.uys.length, size: b.sizes.length ? Math.max(...b.sizes) : null, who: [...b.who].join(" ").toLowerCase() }));
+  const bonds = [...bondMap.values()].map((b) => {
+    const repr = b.items.reduce((a, c) => (tsSeconds(c.q.timestamp) >= tsSeconds(a.q.timestamp) ? c : a), b.items[0]);
+    return { issuer: b.issuer, maturity: b.maturity, section: b.section, tenor: b.tenor, bucket: b.bucket, uy: median(b.uys), n: b.uys.length, size: b.sizes.length ? Math.max(...b.sizes) : null, who: [...b.who].join(" ").toLowerCase(), repr };
+  });
+
+  // Leave-one-out peer median (vs Peers) + spread over the govt curve (vs Govt),
+  // attached to every bond.
   const peerGroups = new Map();
   for (const b of bonds) {
     const k = `${b.section}||${b.bucket}`;
@@ -668,14 +686,23 @@ function computeSpread() {
     peerGroups.get(k).push(b);
   }
   for (const b of bonds) {
-    // Benchmark each bond against the OTHER bonds in its group (leave-one-out),
-    // so a bond can't pull its own peer median toward itself. A bond with no
-    // peers has no benchmark, so its gap is unavailable rather than a false zero.
     const others = peerGroups.get(`${b.section}||${b.bucket}`).filter((x) => x !== b);
     const pm = others.length ? median(others.map((x) => x.uy)) : null;
     b.peerMedian = pm;
     b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
+    b.govtSpread = govtCurve ? Math.round((b.uy - govtYieldAt(govtCurve, b.tenor)) * 100) : null;
   }
+
+  return { total, withUY, withUYT, enriched, corp, govtCurve, bonds };
+}
+
+/**
+ * Spread Watch's compute pass: the shared universe + the heatmap + display
+ * filters. Returns coverage counts, the curve, heatmap rows, peer bonds, and
+ * the headline stats.
+ */
+function computeSpread() {
+  const { total, withUY, withUYT, govtCurve, corp, bonds } = computeUniverse();
 
   // ---- Heatmap: per corp quote, spread vs govt; median per issuer x bucket.
   let issuerRows = [];
@@ -792,6 +819,18 @@ function renderTip(o) {
   if (o.kind === "curve") return `${L("Government curve")}${row("Tenor", o.t + "y")}${row("Govt yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Pickup over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}</div>${row("Tenor bucket", o.bucket)}${row("Median spread", fmtBps(o.spread) + " bps")}${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt yield", o.govtY.toFixed(2) + "%")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than peers (buy)" : "Richer than peers")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Peer median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", "₹" + fmtNum(o.size) + " cr") : ""}`;
+  if (o.kind === "oppinfo") {
+    return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
+      <div style="margin-top:6px"><b style="color:#6ee7b7">Cheap (buy)</b> — yields more than similar bonds. <b style="color:#fcd34d">Tight market</b> — a two-way with a small bid–offer gap; easy to deal.</div>
+      <div style="margin-top:4px"><b style="color:#5eead4">Big pickup</b> — pays a lot over the government curve. <b style="color:#93c5fd">Two-sided</b> — a buyer and a seller are both active. <b style="color:#fda4af">Rich (sell)</b> — yields less than peers; don't overpay.</div>
+      <div style="margin-top:4px;color:#94a3b8">Sorted strongest-first. All figures are bps unless shown otherwise.</div></div>`;
+  }
+  if (o.kind === "opp") {
+    const rows = (o.rows || []).map(([k, v]) => row(esc(k), esc(v))).join("");
+    const raws = [o.raw, o.buyRaw, o.sellRaw].filter(Boolean);
+    const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
+    return `${L(esc(o.title || "Opportunity"))}${rows}${rawHtml}`;
+  }
   return "";
 }
 
@@ -1053,6 +1092,311 @@ function renderSpreadView() {
 }
 
 /* =========================================================================
+   Opportunities — the alert brain (reads the SAME universe as Spread Watch)
+   ========================================================================= */
+
+const OPP_CAT = {
+  cheap: { label: "Cheap (buy)", icon: "trending-up", color: "#10b981", bg: "bg-emerald-50", text: "text-emerald-700" },
+  tight: { label: "Tight market", icon: "gauge", color: "#f59e0b", bg: "bg-amber-50", text: "text-amber-700" },
+  pickup: { label: "Big pickup", icon: "landmark", color: "#14b8a6", bg: "bg-teal-50", text: "text-teal-700" },
+  twosided: { label: "Two-sided", icon: "arrow-left-right", color: "#3b82f6", bg: "bg-blue-50", text: "text-blue-700" },
+  rich: { label: "Rich (sell)", icon: "trending-down", color: "#f43f5e", bg: "bg-rose-50", text: "text-rose-700" },
+};
+
+// Plausibility guardrails: the LLM occasionally mis-parses a price/level into the
+// yield field, which would otherwise surface as a nonsense "+1900 bps" alert.
+// Opportunities (a curation layer) drops values outside a real-bond band so the
+// tab only shows things actually worth acting on. The shared math is untouched.
+const OPP_Y_MIN = 3, OPP_Y_MAX = 18; // plausible bond yield %
+const OPP_GAP_CAP = 250;             // bps, |peer gap| beyond this = parse noise
+const OPP_PICKUP_CAP = 600;          // bps, govt spread beyond this = parse noise
+const plausibleY = (y) => isNum(y) && y >= OPP_Y_MIN && y <= OPP_Y_MAX;
+
+const BUY_SIDES = new Set(["bid", "buy"]);
+const SELL_SIDES = new Set(["offer", "sell", "ask"]);
+
+/** Normalize a metric across a category to a 0–100 strength (10..100 so the
+ *  weakest still reads as present); invert for "smaller is stronger" (tight). */
+function assignStrength(items, valueFn, invert) {
+  if (!items.length) return;
+  const vs = items.map(valueFn);
+  const mn = Math.min(...vs), mx = Math.max(...vs);
+  for (const it of items) {
+    if (mx === mn) { it.strength = 100; continue; }
+    let t = (valueFn(it) - mn) / (mx - mn);
+    if (invert) t = 1 - t;
+    it.strength = Math.round(10 + 90 * t);
+  }
+}
+
+function levelStr(q) {
+  const l = levelCell(q);
+  return l.unit ? `${l.main} ${l.unit}` : l.main;
+}
+
+/**
+ * Scan today's quotes for the handful worth acting on now, in five categories,
+ * each with a plain headline + why-line + 0–100 strength. Reuses the Phase-2
+ * peer gap and govt spread verbatim (via computeUniverse). Applies the tab's
+ * section/tenor/search filters, then caps each view so it reads like a short
+ * list of best moves, not a spreadsheet.
+ */
+function computeOpportunities() {
+  const u = computeUniverse();
+  const quotes = state.data?.quotes || [];
+
+  // Freshness: a quote in the most-recent ~15% of the day gets a "fresh" dot.
+  const tss = quotes.map((q) => tsSeconds(q.timestamp)).filter((v) => v >= 0).sort((a, b) => a - b);
+  const freshCut = tss.length ? tss[Math.min(tss.length - 1, Math.floor(tss.length * 0.85))] : Infinity;
+  const isFresh = (q) => q && tsSeconds(q.timestamp) >= 0 && tsSeconds(q.timestamp) >= freshCut;
+
+  const term = state.search.trim().toLowerCase();
+  const secOk = (s) => (state.oppSection === "All" ? true : s === state.oppSection);
+  const tenOk = (bk) => (state.oppTenor === "All" ? true : bk === state.oppTenor);
+  const hitsSearch = (issuer, who) => !term || (issuer || "").toLowerCase().includes(term) || (who || "").toLowerCase().includes(term);
+
+  const pct = (y) => (isNum(y) ? y.toFixed(2) + "%" : "—");
+  const bondWho = (b) => `${b.repr?.q?.dealer || ""} ${b.repr?.q?.firm || ""} ${b.who || ""}`;
+
+  const baseFromBond = (b, type) => {
+    const q = b.repr?.q || {};
+    return {
+      type, key: `${b.section}|${(b.issuer || "").toLowerCase()}|${b.maturity || ""}`,
+      issuer: b.issuer, maturity: b.maturity, section: b.section, bucket: b.bucket, tenor: b.tenor,
+      size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw,
+      _val: 0,
+    };
+  };
+
+  // ---- Bond-level categories from the shared universe (peer gap + govt spread).
+  const cheap = [], rich = [], pickup = [];
+  for (const b of u.bonds) {
+    if (!plausibleY(b.uy) || !secOk(b.section) || !tenOk(b.bucket) || !hitsSearch(b.issuer, bondWho(b))) continue;
+    if (isNum(b.gap) && Math.abs(b.gap) <= OPP_GAP_CAP) {
+      if (b.gap >= 10) {
+        const o = baseFromBond(b, "cheap"); o._val = b.gap;
+        o.headline = `+${b.gap} bps`; o.sub = "vs peers";
+        o.why = `Pays ${b.gap} bps more yield than similar ${b.bucket} bonds — attractive to buy.`;
+        o.rows = [["Its yield", pct(b.uy)], ["Peer median", pct(b.peerMedian)], ["Gap vs peers", fmtBps(b.gap, true) + " bps"]];
+        cheap.push(o);
+      } else if (b.gap <= -10) {
+        const o = baseFromBond(b, "rich"); o._val = -b.gap;
+        o.headline = `${b.gap} bps`; o.sub = "vs peers";
+        o.why = `Yields ${-b.gap} bps LESS than similar bonds — expensive; don't overpay.`;
+        o.rows = [["Its yield", pct(b.uy)], ["Peer median", pct(b.peerMedian)], ["Gap vs peers", fmtBps(b.gap, true) + " bps"]];
+        rich.push(o);
+      }
+    }
+    if (isNum(b.govtSpread) && b.govtSpread >= 100 && b.govtSpread <= OPP_PICKUP_CAP) {
+      const o = baseFromBond(b, "pickup"); o._val = b.govtSpread;
+      const govtY = b.uy - b.govtSpread / 100;
+      o.headline = `+${b.govtSpread} bps`; o.sub = "over govt";
+      o.why = `Pays ${b.govtSpread} bps over the government curve for its maturity — a big yield pickup.`;
+      o.rows = [["Its yield", pct(b.uy)], ["Govt curve", pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
+      pickup.push(o);
+    }
+  }
+
+  // ---- Tight two-way markets (yield two-ways, gap in bps).
+  const tight = [];
+  for (const q of quotes) {
+    if (!q.issuer) continue; // a card needs a bond to name
+    if (q.side !== "two_way" || q.level_meaning !== "yield" || !isNum(q.bid) || !isNum(q.offer)) continue;
+    if (!(q.offer > q.bid) || !plausibleY(q.bid) || !plausibleY(q.offer)) continue;
+    const gap = Math.round((q.offer - q.bid) * 100);
+    if (gap <= 0 || gap > 8) continue;
+    const bucket = tenorBucket(q.tenor_years);
+    if (!secOk(q.section) || !tenOk(bucket) || !hitsSearch(q.issuer, `${q.dealer || ""} ${q.firm || ""}`)) continue;
+    tight.push({
+      type: "tight", key: `${q.section}|${(q.issuer || "").toLowerCase()}|${q.maturity || ""}`,
+      issuer: q.issuer || "—", maturity: q.maturity, section: q.section, bucket, tenor: q.tenor_years,
+      size: q.size_cr, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw, _val: gap,
+      headline: `${gap} bps`, sub: "wide",
+      why: `Only ${gap} bps between bid (${fmtNum(q.bid, 2)}) and offer (${fmtNum(q.offer, 2)}) — a tight, liquid market; easy to deal now.`,
+      rows: [["Bid yield", pct(q.bid)], ["Offer yield", pct(q.offer)], ["Bid-offer", gap + " bps"]],
+    });
+  }
+
+  // ---- Two-sided interest: same bond bid by one desk, offered by another.
+  const twosided = [];
+  const byBond = new Map();
+  for (const q of quotes) {
+    if (!q.issuer) continue;
+    const k = `${q.section}|${q.issuer.toLowerCase()}|${q.maturity || ""}`;
+    if (!byBond.has(k)) byBond.set(k, { issuer: q.issuer, section: q.section, maturity: q.maturity || "", tenor: q.tenor_years, buys: [], sells: [] });
+    const e = byBond.get(k);
+    if (BUY_SIDES.has(q.side)) e.buys.push(q);
+    else if (SELL_SIDES.has(q.side)) e.sells.push(q);
+  }
+  for (const e of byBond.values()) {
+    if (!e.buys.length || !e.sells.length) continue;
+    const dealers = new Set([...e.buys, ...e.sells].map((q) => q.dealer).filter(Boolean));
+    if (dealers.size < 2) continue; // need at least two different desks
+    const bucket = tenorBucket(e.tenor);
+    const whoAll = [...e.buys, ...e.sells].map((q) => `${q.dealer || ""} ${q.firm || ""}`).join(" ");
+    if (!secOk(e.section) || !tenOk(bucket) || !hitsSearch(e.issuer, whoAll)) continue;
+    const recent = (arr) => arr.slice().sort((a, b) => tsSeconds(b.timestamp) - tsSeconds(a.timestamp));
+    const buy = recent(e.buys)[0];
+    const sell = recent(e.sells).find((s) => s.dealer && s.dealer !== buy.dealer) || recent(e.sells)[0];
+    const size = (isNum(buy.size_cr) ? buy.size_cr : 0) + (isNum(sell.size_cr) ? sell.size_cr : 0);
+    const time = tsSeconds(buy.timestamp) >= tsSeconds(sell.timestamp) ? buy.timestamp : sell.timestamp;
+    twosided.push({
+      type: "twosided", key: `${e.section}|${e.issuer.toLowerCase()}|${e.maturity}`,
+      issuer: e.issuer, maturity: e.maturity, section: e.section, bucket, tenor: e.tenor,
+      size: size || null, dealer: null, firm: null, time, fresh: isFresh(buy) || isFresh(sell), raw: null,
+      _val: size + tsSeconds(time) / 100000, // interest + recency
+      headline: "Both sides", sub: "active",
+      buy: { level: levelStr(buy), dealer: buy.dealer || "—", raw: buy.raw },
+      sell: { level: levelStr(sell), dealer: sell.dealer || "—", raw: sell.raw },
+      why: "One desk is bidding and another is offering the same bond — a possible cross.",
+      rows: [["Buyer", `${buy.dealer || "—"} @ ${levelStr(buy)}`], ["Seller", `${sell.dealer || "—"} @ ${levelStr(sell)}`]],
+    });
+  }
+
+  // Strength per category (over the filtered set), strongest first.
+  assignStrength(cheap, (o) => o._val); cheap.sort((a, b) => b.strength - a.strength);
+  assignStrength(rich, (o) => o._val); rich.sort((a, b) => b.strength - a.strength);
+  assignStrength(pickup, (o) => o._val); pickup.sort((a, b) => b.strength - a.strength);
+  assignStrength(tight, (o) => o._val, true); tight.sort((a, b) => b.strength - a.strength);
+  assignStrength(twosided, (o) => o._val); twosided.sort((a, b) => b.strength - a.strength);
+
+  const counts = { cheap: cheap.length, tight: tight.length, pickup: pickup.length, twosided: twosided.length, rich: rich.length };
+  counts.actionable = counts.cheap + counts.tight + counts.pickup + counts.twosided; // rich excluded from "right now"
+
+  // The view. "All" = the strongest across the default categories (not rich),
+  // one card per bond, capped to a readable handful; a category = its own list.
+  let items;
+  if (state.oppCat === "all") {
+    const seen = new Set();
+    items = [...cheap, ...tight, ...pickup, ...twosided]
+      .sort((a, b) => b.strength - a.strength)
+      .filter((o) => (seen.has(o.key) ? false : seen.add(o.key)))
+      .slice(0, 16);
+  } else {
+    items = ({ cheap, tight, pickup, twosided, rich }[state.oppCat] || []).slice(0, 24);
+  }
+
+  return { total: u.total, withUYT: u.withUYT, govtCurve: u.govtCurve, counts, items };
+}
+
+/* --------------------------- Opportunities — UI --------------------------- */
+
+function oppCard(o) {
+  const c = OPP_CAT[o.type] || OPP_CAT.cheap;
+  const sec = SECTION[o.section] || SECTION.Bonds;
+  const fresh = o.fresh ? `<span class="ml-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse" title="fresh quote"></span>` : "";
+  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw });
+
+  const primary = o.type === "twosided"
+    ? `<div class="mt-2 grid grid-cols-2 gap-1.5">
+         <div class="rounded-lg bg-emerald-50 px-2 py-1.5"><div class="text-[9px] font-bold uppercase tracking-wide text-emerald-600">Buyer</div><div class="nums text-sm font-bold text-emerald-700">${esc(o.buy.level)}</div><div class="truncate text-[10px] text-slate-500">${esc(o.buy.dealer)}</div></div>
+         <div class="rounded-lg bg-rose-50 px-2 py-1.5"><div class="text-[9px] font-bold uppercase tracking-wide text-rose-600">Seller</div><div class="nums text-sm font-bold text-rose-700">${esc(o.sell.level)}</div><div class="truncate text-[10px] text-slate-500">${esc(o.sell.dealer)}</div></div>
+       </div>`
+    : `<div class="mt-2 flex items-baseline gap-1.5"><span class="font-display text-2xl font-extrabold leading-none nums" style="color:${c.color}">${esc(o.headline)}</span><span class="text-[11px] font-semibold text-slate-400">${esc(o.sub || "")}</span></div>`;
+
+  return `
+    <div class="opp-card group relative flex flex-col rounded-2xl border border-slate-200 bg-white p-3.5" style="--opp-accent:${c.color}" data-tip="${esc(tip)}">
+      <div class="flex items-center gap-2">
+        <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.bg}"><i data-lucide="${c.icon}" class="h-4 w-4" style="color:${c.color}"></i></span>
+        <span class="text-[10px] font-bold uppercase tracking-wide ${c.text}">${c.label}</span>
+        <span class="ml-auto rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>
+      </div>
+      <div class="mt-2 flex items-center">
+        <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}
+      </div>
+      <div class="text-[11px] text-slate-400 nums">${o.maturity ? fmtDate(o.maturity) : "—"}${o.bucket ? " · " + o.bucket : ""}</div>
+      ${primary}
+      <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(o.why)}</div>
+      <div class="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">
+        <span class="nums">${isNum(o.size) ? "₹" + fmtNum(o.size) + " cr" : "—"}</span>
+        <span class="text-slate-300">·</span>
+        <span class="truncate">${esc(o.dealer || (o.type === "twosided" ? "2 desks" : "—"))}</span>
+        <span class="ml-auto nums">${fmtTime(o.time)}</span>
+      </div>
+      <div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full" style="width:${o.strength}%;background:${c.color}"></div></div>
+    </div>`;
+}
+
+function oppChip(id, label, count, color) {
+  const active = state.oppCat === id;
+  return `<button data-opp-cat="${id}" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${active ? "text-white shadow-sm" : "text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"}" style="${active ? `background:${color}` : ""}">
+    ${esc(label)}<span class="rounded-full px-1.5 text-[10px] ${active ? "bg-white/25" : "bg-slate-100 text-slate-500"}">${count}</span></button>`;
+}
+
+function oppSectionSeg() {
+  const opt = (v) => {
+    const a = state.oppSection === v;
+    return `<button data-opp-section="${v}" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${a ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}">${v}</button>`;
+  };
+  return `<div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1">${["All", "Bonds", "Gsec", "DCM"].map(opt).join("")}</div>`;
+}
+
+function oppTenorSelect() {
+  const opts = ["All", ...TENOR_BUCKETS].map((t) => `<option value="${t}" ${state.oppTenor === t ? "selected" : ""}>${t === "All" ? "All tenors" : t}</option>`).join("");
+  return `<select data-opp-tenor class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200">${opts}</select>`;
+}
+
+function oppControls(o) {
+  const counts = o ? o.counts : { cheap: 0, tight: 0, pickup: 0, twosided: 0, rich: 0, actionable: 0 };
+  const chips =
+    oppChip("all", "All", counts.actionable, "#6366f1") +
+    oppChip("cheap", "Cheap (buy)", counts.cheap, OPP_CAT.cheap.color) +
+    oppChip("tight", "Tight markets", counts.tight, OPP_CAT.tight.color) +
+    oppChip("pickup", "Big pickup", counts.pickup, OPP_CAT.pickup.color) +
+    oppChip("twosided", "Two-sided", counts.twosided, OPP_CAT.twosided.color) +
+    oppChip("rich", "Rich (sell)", counts.rich, OPP_CAT.rich.color);
+  return `<div class="mb-3 space-y-2">
+    <div class="flex flex-wrap items-center gap-1.5">${chips}</div>
+    <div class="flex flex-wrap items-center gap-2">
+      ${oppSectionSeg()}${oppTenorSelect()}
+      <button class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" data-tip="${esc(JSON.stringify({ kind: "oppinfo" }))}" aria-label="How to read Opportunities"><i data-lucide="info" class="h-4 w-4"></i></button>
+      <span class="ml-auto text-xs font-semibold text-slate-500">${o ? `${counts.actionable} opportunities right now` : ""}</span>
+    </div>
+  </div>`;
+}
+
+function oppEmpty() {
+  return spreadEmpty("No opportunities here", "Nothing meets the alert thresholds for these filters right now. Try “All”, a different section/tenor, or clear the search.", "radar");
+}
+
+function oppChrome(bodyHTML, o) {
+  const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
+  const shown = o && state.oppCat === "all" && o.items.length ? `strongest ${o.items.length} across today` : "";
+  return `
+    ${oppControls(o)}
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/50 backdrop-blur">
+      <div class="flex shrink-0 items-center gap-3 border-b border-slate-100 px-4 py-2.5">
+        <div class="flex items-center gap-2"><i data-lucide="sparkles" class="h-4 w-4 text-indigo-500"></i><h2 class="font-display text-sm font-bold text-slate-800">Opportunities</h2></div>
+        <span class="hidden text-xs text-slate-400 sm:inline">act on the strongest first</span>
+        <div class="ml-auto text-xs text-slate-400">${shown}</div>
+      </div>
+      <div class="scroll-y min-h-0 flex-1 overflow-auto">${bodyHTML}</div>
+    </div>
+    <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
+      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Scanned live in your browser from quotes.json</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(state.data?.trading_day || "—")}</span>
+      ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
+    </div>`;
+}
+
+function renderOppsView() {
+  if (state.loading) { els.view.innerHTML = oppChrome(spreadSkeleton(), null); afterRender(); return; }
+  if (state.error) { els.view.innerHTML = oppChrome(errorHTML(), null); afterRender(); return; }
+  const o = computeOpportunities();
+  let body;
+  if (o.withUYT === 0 && o.counts.twosided === 0) {
+    body = spreadEmpty("No opportunities yet", "Today's quotes don't carry enough yields or two-way markets to scan yet. This fills in as the desk quotes through the day.", "radar");
+  } else if (!o.items.length) {
+    body = oppEmpty();
+  } else {
+    body = `<div class="grid gap-3 p-4" style="grid-template-columns:repeat(auto-fill,minmax(248px,1fr))">${o.items.map(oppCard).join("")}</div>`;
+  }
+  els.view.innerHTML = oppChrome(body, o);
+  afterRender();
+}
+
+/* =========================================================================
    Render orchestration
    ========================================================================= */
 
@@ -1091,6 +1435,10 @@ function renderView() {
   const view = els.view;
   if (state.tab === "spread") {
     renderSpreadView();
+    return;
+  }
+  if (state.tab === "opps") {
+    renderOppsView();
     return;
   }
   if (state.tab !== "live") {
@@ -1192,7 +1540,7 @@ els.search.addEventListener("input", (e) => {
   const v = e.target.value;
   searchTimer = setTimeout(() => {
     state.search = v;
-    if ((state.tab === "live" || state.tab === "spread") && !state.loading && !state.error) renderView();
+    if ((state.tab === "live" || state.tab === "spread" || state.tab === "opps") && !state.loading && !state.error) renderView();
   }, 120);
 });
 
@@ -1214,6 +1562,18 @@ els.view.addEventListener("click", (e) => {
   const spreadSecBtn = e.target.closest("button[data-spread-section]");
   if (spreadSecBtn) {
     state.spreadSection = spreadSecBtn.dataset.spreadSection;
+    renderView();
+    return;
+  }
+  const oppCatBtn = e.target.closest("button[data-opp-cat]");
+  if (oppCatBtn) {
+    state.oppCat = oppCatBtn.dataset.oppCat;
+    renderView();
+    return;
+  }
+  const oppSecBtn = e.target.closest("button[data-opp-section]");
+  if (oppSecBtn) {
+    state.oppSection = oppSecBtn.dataset.oppSection;
     renderView();
     return;
   }
@@ -1298,6 +1658,11 @@ els.view.addEventListener("change", (e) => {
   const sel = e.target.closest("select[data-spread-tenor]");
   if (sel) {
     state.spreadTenor = sel.value;
+    renderView();
+  }
+  const oppSel = e.target.closest("select[data-opp-tenor]");
+  if (oppSel) {
+    state.oppTenor = oppSel.value;
     renderView();
   }
 });

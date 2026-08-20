@@ -117,6 +117,18 @@
       .heat-row:hover .heat-issuer {
         background-color: #eef2ff;
       }
+      /* Opportunity cards: colored left accent + gentle lift on hover */
+      .opp-card {
+        box-shadow: inset 4px 0 0 0 var(--opp-accent, transparent);
+        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+      }
+      .opp-card:hover {
+        transform: translateY(-3px);
+        border-color: #e2e8f0;
+        box-shadow:
+          0 12px 26px rgba(2, 6, 23, 0.08),
+          inset 4px 0 0 0 var(--opp-accent, transparent);
+      }
       /* Section left-accent */
       .acc-bonds {
         box-shadow: inset 3px 0 0 0 #6366f1;
