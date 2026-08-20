@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="The Front Desk">
+  <defs>
+    <linearGradient id="fd" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="0.5" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#fd)"/>
+  <g stroke="#ffffff" stroke-width="2" stroke-linecap="round">
+    <line x1="11" y1="7.5" x2="11" y2="24.5"/>
+    <line x1="21" y1="7.5" x2="21" y2="24.5"/>
+  </g>
+  <rect x="8.5" y="11" width="5" height="9" rx="1.6" fill="#ffffff"/>
+  <rect x="18.5" y="14" width="5" height="8" rx="1.6" fill="#ffffff"/>
+</svg>

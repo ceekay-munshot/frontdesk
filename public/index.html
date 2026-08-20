@@ -3,11 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>The Front Desk · Bond Dealing Desk</title>
+    <title>The Front Desk · Live Bond Dealing Desk</title>
     <meta
       name="description"
-      content="The Front Desk — a live, auto-updating board of bond dealing-desk quotes."
+      content="The Front Desk — a live, auto-updating board of Indian bond dealing-desk quotes: Live Board, Spread Watch, Opportunities and Desk Pulse."
     />
+    <meta name="theme-color" content="#6366f1" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="apple-touch-icon" href="favicon.svg" />
 
     <!-- Fonts: Inter for UI, Plus Jakarta Sans for headings -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,208 +26,266 @@
       // Guarded so a blocked/slow CDN degrades to plain HTML instead of throwing.
       window.tailwind &&
         (tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-              display: ['"Plus Jakarta Sans"', "Inter", "sans-serif"],
-            },
-            colors: {
-              brand: {
-                indigo: "#6366f1",
-                purple: "#8b5cf6",
-                pink: "#ec4899",
+          theme: {
+            extend: {
+              fontFamily: {
+                sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+                display: ['"Plus Jakarta Sans"', "Inter", "sans-serif"],
+              },
+              colors: {
+                brand: { indigo: "#6366f1", purple: "#8b5cf6", pink: "#ec4899" },
               },
             },
           },
-        },
-      });
+        });
     </script>
 
     <style>
+      /* =====================================================================
+         DESIGN TOKENS — the single source of truth for the visual system.
+         The whole app (CSS here + inline SVG built in app.js, which reads
+         these at boot) references these; no scattered magic hex/px.
+         ===================================================================== */
       :root {
-        --brand-grad: linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+        /* ---- Brand gradient ---- */
+        --grad-1: #6366f1;
+        --grad-2: #8b5cf6;
+        --grad-3: #ec4899;
+        --brand-grad: linear-gradient(90deg, var(--grad-1) 0%, var(--grad-2) 50%, var(--grad-3) 100%);
+        --brand-grad-135: linear-gradient(135deg, var(--grad-1) 0%, var(--grad-2) 52%, var(--grad-3) 100%);
+        --brand-ink: #4338ca; /* AA-safe indigo for text/active fills on light */
+
+        /* ---- Semantic colours — ONE meaning each, app-wide ---- */
+        --c-buy: #10b981;   --c-buy-ink: #047857;   --c-buy-soft: #ecfdf5;   /* buy / cheap / attractive */
+        --c-sell: #f43f5e;  --c-sell-ink: #be123c;  --c-sell-soft: #fff1f2;  /* sell / rich / expensive */
+        --c-act: #f59e0b;   --c-act-ink: #b45309;   --c-act-soft: #fffbeb;   /* act-fast / tight */
+        --c-info: #3b82f6;  --c-info-ink: #1d4ed8;  --c-info-soft: #eff6ff;  /* info / two-sided */
+        --c-pickup: #14b8a6; --c-pickup-ink: #0f766e;                        /* big pickup over govt (teal) */
+
+        /* ---- Section colours (fixed) ---- */
+        --c-bonds: #6366f1;
+        --c-gsec: #10b981;
+        --c-dcm: #f59e0b;
+
+        /* ---- Chart categorical palette (harmonious, never random) ---- */
+        --cat-1: #6366f1; --cat-2: #8b5cf6; --cat-3: #ec4899; --cat-4: #10b981;
+        --cat-5: #f59e0b; --cat-6: #3b82f6; --cat-7: #14b8a6; --cat-8: #f43f5e;
+
+        /* ---- Heatmap diverging scale ---- */
+        --heat-cool: #3b82f6;  /* tight (little pickup) */
+        --heat-mid: #eef2f6;   /* typical (median) */
+        --heat-warm: #10b981;  /* wide (more pickup) */
+
+        /* ---- On-dark tints (readable on the dark tooltip's explanatory text) ---- */
+        --tint-indigo: #a5b4fc; --tint-emerald: #6ee7b7; --tint-amber: #fcd34d;
+        --tint-blue: #93c5fd; --tint-teal: #5eead4; --tint-rose: #fda4af;
+
+        /* ---- Neutrals ---- */
+        --n-900: #0f172a; --n-700: #334155; --n-600: #475569; --n-500: #64748b;
+        --n-400: #94a3b8; --n-300: #cbd5e1; --n-200: #e2e8f0; --n-100: #f1f5f9; --n-50: #f8fafc;
+
+        /* ---- Surfaces / text / border ---- */
+        --bg: #f4f6fb;
+        --surface: #ffffff;
+        --surface-2: #f8fafc;
+        --surface-glass: rgba(255, 255, 255, 0.9);
+        --border: #e7eaf1;
+        --border-strong: #d7dce8;
+        --text: #0f172a;
+        --text-2: #334155;
+        --text-muted: #64748b;
+        --text-soft: #94a3b8;
+
+        /* ---- Type ---- */
+        --font-ui: "Inter", ui-sans-serif, system-ui, sans-serif;
+        --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+        --fs-display: 22px; --fs-h1: 18px; --fs-h2: 15px; --fs-h3: 13px;
+        --fs-body: 14px; --fs-sm: 12px; --fs-cap: 11px; --fs-micro: 10px;
+
+        /* ---- Radius ---- */
+        --r-sm: 6px; --r-md: 8px; --r-lg: 10px; --r-xl: 12px; --r-2xl: 16px; --r-full: 999px;
+
+        /* ---- Elevation ---- */
+        --sh-sm: 0 1px 2px rgba(2, 6, 23, 0.05);
+        --sh-md: 0 6px 18px rgba(2, 6, 23, 0.06);
+        --sh-lg: 0 14px 34px rgba(2, 6, 23, 0.10);
+        --sh-pop: 0 18px 44px rgba(2, 6, 23, 0.20);
+        --ring-brand: 0 0 0 3px rgba(99, 102, 241, 0.30);
+
+        /* ---- Motion ---- */
+        --dur-fast: 120ms; --dur: 180ms; --dur-slow: 320ms;
+        --ease: cubic-bezier(0.4, 0, 0.2, 1);
       }
-      html,
+
+      html, body { height: 100%; }
       body {
-        height: 100%;
-      }
-      body {
-        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-        color: #0f172a;
+        font-family: var(--font-ui);
+        color: var(--text);
+        /* Softly colour-graded page: three brand washes over a cool base. */
         background:
-          radial-gradient(1200px 560px at 6% -12%, #eef2ff 0%, rgba(238, 242, 255, 0) 55%),
-          radial-gradient(1000px 520px at 112% -8%, #fdf2f8 0%, rgba(253, 242, 248, 0) 52%),
-          #f6f7fb;
+          radial-gradient(1100px 520px at 3% -12%, rgba(99, 102, 241, 0.13), transparent 55%),
+          radial-gradient(1000px 520px at 110% -8%, rgba(236, 72, 153, 0.10), transparent 52%),
+          radial-gradient(900px 640px at 50% 116%, rgba(139, 92, 246, 0.08), transparent 60%),
+          var(--bg);
+        background-attachment: fixed;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
       }
-      .font-display {
-        font-family: "Plus Jakarta Sans", "Inter", sans-serif;
-      }
-      /* Brand gradient text (wordmark, active tab) */
+      .font-display { font-family: var(--font-display); }
+
+      /* Brand gradient text (wordmark, active tab) + bar */
       .grad-text {
         background: var(--brand-grad);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
       }
-      .grad-bar {
-        background: var(--brand-grad);
+      .grad-bar { background: var(--brand-grad); }
+
+      /* Numbers: always tabular */
+      .nums { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+      /* One consistent keyboard focus ring across every control */
+      :focus-visible { outline: none; }
+      button:focus-visible,
+      a:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      [tabindex]:focus-visible {
+        box-shadow: var(--ring-brand);
+        border-radius: var(--r-md);
       }
-      /* Numbers: always tabular + right-aligned where used */
-      .nums {
-        font-variant-numeric: tabular-nums;
-        font-feature-settings: "tnum" 1;
-      }
+
       /* Loading shimmer */
       @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
       }
       .shimmer {
-        background-image: linear-gradient(90deg, #eef1f6 0%, #f6f8fb 50%, #eef1f6 100%);
+        background-image: linear-gradient(90deg, var(--n-100) 0%, var(--surface-2) 50%, var(--n-100) 100%);
         background-size: 200% 100%;
         animation: shimmer 1.4s infinite;
-        border-radius: 6px;
+        border-radius: var(--r-sm);
       }
+
       /* Narrow two-way glow */
       .narrow-glow {
-        box-shadow: inset 3px 0 0 0 #f59e0b;
-        background-image: linear-gradient(90deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0) 42%);
+        box-shadow: inset 3px 0 0 0 var(--c-act);
+        background-image: linear-gradient(90deg, rgba(245, 158, 11, 0.10), rgba(245, 158, 11, 0) 42%);
       }
       .narrow-glow:hover {
-        background-image: linear-gradient(90deg, rgba(251, 191, 36, 0.16), rgba(251, 191, 36, 0) 46%);
+        background-image: linear-gradient(90deg, rgba(245, 158, 11, 0.16), rgba(245, 158, 11, 0) 46%);
       }
+
       /* Row hover */
-      .qrow {
-        transition: background-color 0.14s ease;
-      }
-      .qrow:hover {
-        background-color: #f8fafc;
-      }
+      .qrow { transition: background-color var(--dur) var(--ease); }
+      .qrow:hover { background-color: var(--surface-2); }
+
       /* Spread Watch heatmap row hover */
-      .heat-row {
-        transition: background-color 0.14s ease;
-      }
-      .heat-row:hover td {
-        background-color: #fbfcfe;
-      }
-      .heat-row:hover .heat-issuer {
-        background-color: #eef2ff;
-      }
+      .heat-row { transition: background-color var(--dur) var(--ease); }
+      .heat-row:hover td { background-color: #fbfcfe; }
+      .heat-row:hover .heat-issuer { background-color: #eef2ff; }
+
       /* Opportunity cards: colored left accent + gentle lift on hover */
       .opp-card {
         box-shadow: inset 4px 0 0 0 var(--opp-accent, transparent);
-        transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+        transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease);
       }
       .opp-card:hover {
         transform: translateY(-3px);
-        border-color: #e2e8f0;
-        box-shadow:
-          0 12px 26px rgba(2, 6, 23, 0.08),
-          inset 4px 0 0 0 var(--opp-accent, transparent);
+        border-color: var(--border-strong);
+        box-shadow: var(--sh-lg), inset 4px 0 0 0 var(--opp-accent, transparent);
       }
-      /* Desk Pulse chart segments: subtle hover feedback (donut, bars, rankings) */
-      .pk-seg {
-        transition: opacity 0.12s ease;
-      }
-      .pk-seg:hover {
-        opacity: 0.82;
-      }
+
+      /* Desk Pulse cards: quiet lift on hover */
+      .pulse-card { transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+      .pulse-card:hover { border-color: var(--border-strong); box-shadow: var(--sh-md); }
+
+      /* Chart focus: the hovered mark stays bright while its peers gently dim.
+         Applies to every hand-rolled chart AND the heatmap table via .hov. */
+      [data-tip] { transition: opacity var(--dur) var(--ease); }
+      .hov:hover [data-tip] { opacity: 0.5; }
+      .hov [data-tip]:hover { opacity: 1; }
+      /* Yield-curve crosshair, revealed on dot hover */
+      .cd .cross { opacity: 0; transition: opacity var(--dur) var(--ease); }
+      .cd:hover .cross { opacity: 1; }
+
       /* Section left-accent */
-      .acc-bonds {
-        box-shadow: inset 3px 0 0 0 #6366f1;
-      }
-      .acc-gsec {
-        box-shadow: inset 3px 0 0 0 #10b981;
-      }
-      .acc-dcm {
-        box-shadow: inset 3px 0 0 0 #f59e0b;
-      }
-      /* Thin, tasteful scrollbar for the table body */
-      .scroll-y {
-        scrollbar-width: thin;
-        scrollbar-color: #cbd5e1 transparent;
-      }
-      .scroll-y::-webkit-scrollbar {
-        width: 10px;
-      }
+      .acc-bonds { box-shadow: inset 3px 0 0 0 var(--c-bonds); }
+      .acc-gsec { box-shadow: inset 3px 0 0 0 var(--c-gsec); }
+      .acc-dcm { box-shadow: inset 3px 0 0 0 var(--c-dcm); }
+
+      /* Thin, tasteful scrollbar for the scrolling card body */
+      .scroll-y { scrollbar-width: thin; scrollbar-color: var(--n-300) transparent; }
+      .scroll-y::-webkit-scrollbar { width: 10px; }
       .scroll-y::-webkit-scrollbar-thumb {
         background: #d3dae6;
-        border-radius: 999px;
+        border-radius: var(--r-full);
         border: 3px solid transparent;
         background-clip: padding-box;
       }
-      .scroll-y::-webkit-scrollbar-thumb:hover {
-        background: #b8c2d4;
-        background-clip: padding-box;
-      }
+      .scroll-y::-webkit-scrollbar-thumb:hover { background: #b8c2d4; background-clip: padding-box; }
+
       /* Live pulse dot */
       @keyframes pulse-dot {
-        0%,
-        100% {
-          opacity: 1;
-          transform: scale(1);
-        }
-        50% {
-          opacity: 0.45;
-          transform: scale(0.82);
-        }
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.45; transform: scale(0.82); }
       }
-      .pulse {
-        animation: pulse-dot 1.8s ease-in-out infinite;
-      }
+      .pulse { animation: pulse-dot 1.8s ease-in-out infinite; }
+
       /* Brief flash when new data lands */
       @keyframes flashUpdate {
-        0% {
-          background-color: rgba(16, 185, 129, 0.18);
-        }
-        100% {
-          background-color: transparent;
-        }
+        0% { background-color: rgba(16, 185, 129, 0.18); }
+        100% { background-color: transparent; }
       }
-      .flash {
-        animation: flashUpdate 1.1s ease-out;
-      }
-      /* Custom tooltip */
+      .flash { animation: flashUpdate 1.1s ease-out; }
+
+      /* Subtle, layout-shift-free fade when a tab's content (re)renders —
+         opacity only, so no reflow, no jank; also cues fresh data on refresh. */
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      #view > * { animation: fadeIn var(--dur) var(--ease) both; }
+
+      /* ONE shared tooltip for every chart AND table: a small rounded card
+         with a colour-accented cap, bold value, muted labels, soft shadow. */
       #tooltip {
         position: fixed;
         z-index: 60;
         max-width: 460px;
-        padding: 8px 11px;
-        border-radius: 10px;
-        background: #0f172a;
+        padding: 9px 12px;
+        border-radius: var(--r-lg);
+        border-top: 3px solid var(--tt-accent, var(--grad-2));
+        background: rgba(15, 23, 42, 0.95);
         color: #e2e8f0;
-        font-size: 12px;
+        font-size: var(--fs-sm);
         line-height: 1.45;
-        box-shadow: 0 12px 30px rgba(2, 6, 23, 0.28);
+        box-shadow: var(--sh-pop);
+        backdrop-filter: blur(5px);
         pointer-events: none;
         opacity: 0;
-        transform: translateY(4px);
-        transition: opacity 0.12s ease, transform 0.12s ease;
+        transform: translateY(4px) scale(0.99);
+        transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
       }
-      #tooltip.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      #tooltip.show { opacity: 1; transform: translateY(0) scale(1); }
       #tooltip .tt-label {
-        color: #94a3b8;
-        font-size: 10px;
+        color: var(--text-soft);
+        font-size: var(--fs-micro);
         text-transform: uppercase;
         letter-spacing: 0.06em;
         margin-bottom: 3px;
-        font-weight: 600;
+        font-weight: 700;
       }
+
       /* Sticky table head */
-      thead.sticky-head th {
-        position: sticky;
-        top: 0;
-        z-index: 5;
+      thead.sticky-head th { position: sticky; top: 0; z-index: 5; }
+
+      /* Respect users who prefer reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+          scroll-behavior: auto !important;
+        }
       }
     </style>
   </head>
@@ -305,7 +366,7 @@
       </main>
     </div>
 
-    <!-- Custom hover tooltip (shows the original raw chat line) -->
+    <!-- Custom hover tooltip (shared by every chart and table) -->
     <div id="tooltip" role="tooltip"></div>
 
     <!-- Lucide icons -->
