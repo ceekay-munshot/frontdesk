@@ -275,8 +275,17 @@
         font-weight: 700;
       }
 
-      /* Sticky table head */
-      thead.sticky-head th { position: sticky; top: 0; z-index: 5; }
+      /* Sticky table head. The background MUST sit on the sticky <th> cells
+         themselves — a background on the <tr> does not paint behind pinned
+         cells, so rows would show through the header as you scroll. The inset
+         shadow keeps the header's bottom rule while it is stuck. */
+      thead.sticky-head th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: var(--surface-2);
+        box-shadow: inset 0 -1px 0 var(--border);
+      }
 
       /* Respect users who prefer reduced motion */
       @media (prefers-reduced-motion: reduce) {
