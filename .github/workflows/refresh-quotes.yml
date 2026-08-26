@@ -101,7 +101,7 @@ jobs:
           fi
 
           git add public/data/quotes.json
-          git commit -m "data: refresh quotes.json [skip ci]"
+          git commit -m "data: refresh quotes.json"
 
           n=0
           until [ "$n" -ge 4 ]; do

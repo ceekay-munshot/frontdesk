@@ -188,6 +188,42 @@ function markerSection(line) {
   return s === "bonds" ? "Bonds" : s === "gsec" ? "Gsec" : "DCM";
 }
 
+/* ---------------------------------------------------------------------------
+   Day markers — "show only the latest day".
+
+   The shared doc is a running chat log: over time it accumulates several trading
+   days under one section, and the junior trader dates each day's block with a
+   bare line like "25-Aug-2026". We read those markers so the board can show only
+   the most recent day and drop the older pile-up (see latestDayOnly()).
+   ------------------------------------------------------------------------- */
+
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+
+/**
+ * Recognise a standalone day-separator line the trader typed to date the chat
+ * below it. Accept a line ONLY when the whole line is a single calendar date,
+ * it is NOT indented (portfolio maturity dumps are tab-indented, e.g.
+ * "\t18-Mar-30"), and the date falls in a recent window ending at the run day.
+ * That window is the safety net: it rejects a stray FUTURE maturity date (e.g.
+ * "01-Jul-2027") that would otherwise be read as "the latest day" and hide every
+ * real quote. Returns an ISO "YYYY-MM-DD" or null.
+ */
+function dayMarker(rawLine, runDay) {
+  if (/^[ \t]/.test(rawLine)) return null; // indented -> a maturity date, not a day marker
+  const t = rawLine.replace(/^﻿/, "").trim();
+  let d, mo, y, m;
+  if ((m = t.match(/^(\d{1,2})[-/ ]([A-Za-z]{3,4})[-/ ](\d{4})$/))) { d = +m[1]; mo = MONTHS[m[2].toLowerCase()]; y = +m[3]; } // 25-Aug-2026
+  else if ((m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/))) { d = +m[1]; mo = +m[2]; y = +m[3]; } // 25-08-2026 / 25/08/2026
+  else if ((m = t.match(/^([A-Za-z]{3,4})\.?\s+(\d{1,2}),?\s+(\d{4})$/))) { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = +m[3]; } // Aug 25, 2026
+  else return null;
+  if (!mo || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const iso = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  // Recent window only: desk chat is today or the recent past, never the future.
+  const diff = Math.floor(Date.parse(runDay) / 864e5) - Math.floor(Date.parse(iso) / 864e5);
+  if (!Number.isFinite(diff) || diff < 0 || diff > 60) return null;
+  return iso;
+}
+
 /** Firm brand words a dealer header names, and the corporate suffix it ends in.
  *  Dealer headers carry NO digits (a quote line like "Tata Capital Ltd. 8.01% ..."
  *  does), which is what keeps bond issuers from being misread as headers. */
@@ -210,11 +246,13 @@ function splitHeader(line) {
 }
 
 /**
- * Walk the doc top-to-bottom, carrying the current section (default "Bonds")
- * and the current dealer/firm. Returns { records, sectionsFound, sectionCounts }.
- * A record is { section, dealer, firm, raw }.
+ * Walk the doc top-to-bottom, carrying the current section (default "Bonds"),
+ * the current dealer/firm, and the current day marker.
+ * Returns { records, sectionsFound, sectionCounts }.
+ * A record is { section, dealer, firm, raw, date } — date is the ISO day the
+ * trader stamped above it, or null when that block carries no day marker.
  */
-function sectionize(text) {
+function sectionize(text, runDay) {
   const lines = text.replace(/^﻿/, "").replace(/\r\n?/g, "\n").split("\n");
   const records = [];
   const sectionsFound = new Set();
@@ -223,6 +261,7 @@ function sectionize(text) {
   let section = "Bonds";
   let dealer = null;
   let firm = null;
+  let curDate = null;
 
   for (const rawLine of lines) {
     const line = rawLine.replace(/\t/g, " ").trimEnd();
@@ -235,6 +274,15 @@ function sectionize(text) {
       sectionsFound.add(marker);
       dealer = null; // a new section resets the header context
       firm = null;
+      curDate = null; // ...and its day: each section dates its own blocks
+      continue;
+    }
+
+    // A bare day-separator line ("25-Aug-2026") dates every quote beneath it,
+    // until the next marker or section. It is not itself a quote.
+    const dm = dayMarker(rawLine, runDay);
+    if (dm) {
+      curDate = dm;
       continue;
     }
 
@@ -243,13 +291,37 @@ function sectionize(text) {
       continue;
     }
 
-    records.push({ section, dealer, firm, raw: t });
+    records.push({ section, dealer, firm, raw: t, date: curDate });
     sectionCounts[section]++;
   }
 
   // "Bonds" is the implicit opener, so count it as found once it has any lines.
   if (sectionCounts.Bonds > 0) sectionsFound.add("Bonds");
   return { records, sectionsFound, sectionCounts };
+}
+
+/**
+ * "Show only the latest day." Keep, per section, only the rows on that section's
+ * most recent dated day; drop rows we can positively place on an OLDER day.
+ * Rows with no day marker are always kept — we never blank a section just because
+ * the trader forgot to date it (or dated only some sections). Returns
+ * { kept, dropped, sectionLatest, latestDay }.
+ */
+function latestDayOnly(records) {
+  const sectionLatest = {}; // section -> most recent ISO day seen in it
+  for (const r of records) {
+    if (r.date && (!sectionLatest[r.section] || r.date > sectionLatest[r.section])) {
+      sectionLatest[r.section] = r.date;
+    }
+  }
+  const days = Object.values(sectionLatest);
+  const latestDay = days.length ? days.slice().sort().at(-1) : null;
+
+  const keepRow = (r) => !r.date || !sectionLatest[r.section] || r.date === sectionLatest[r.section];
+  const kept = [];
+  const dropped = [];
+  for (const r of records) (keepRow(r) ? kept : dropped).push(r);
+  return { kept, dropped, sectionLatest, latestDay };
 }
 
 /** Does the day carry any quote-like content at all? Guards against a doc that
@@ -359,8 +431,8 @@ async function main() {
   console.log(llmBanner());
   console.log(`[frontdesk] source: ${DOC_URL}`);
 
-  const tradingDay = istDay();
-  console.log(`[frontdesk] trading day (IST): ${tradingDay}`);
+  const runDay = istDay();
+  console.log(`[frontdesk] run day (IST): ${runDay}`);
 
   // 1. Fetch (reject-bad-keep-old on any failure).
   let text;
@@ -371,8 +443,8 @@ async function main() {
   }
   if (!text || !text.trim()) keepOld("doc came back empty");
 
-  // 2. Section + attribute.
-  const { records, sectionsFound, sectionCounts } = sectionize(text);
+  // 2. Section + attribute (day markers detected relative to the run day).
+  const { records, sectionsFound, sectionCounts } = sectionize(text, runDay);
   const found = ["Bonds", "Gsec", "DCM"].filter((s) => sectionsFound.has(s));
   const missing = ["Bonds", "Gsec", "DCM"].filter((s) => !sectionsFound.has(s));
   console.log(
@@ -387,12 +459,35 @@ async function main() {
   }
 
   if (!records.length) keepOld("no quote lines after sectioning");
-  if (!hasQuoteish(records)) keepOld("no quote-like lines in the doc");
+
+  // 2b. Show only the latest day: keep each section's most recent dated day and
+  //     drop the older pile-up. Falls back to ALL rows when the doc carries no
+  //     day markers, so a missing date never blanks the board. Filtering here
+  //     (before the LLM) also means we never pay to structure stale days.
+  const { kept, dropped, sectionLatest, latestDay } = latestDayOnly(records);
+  const workRecords = kept.length ? kept : records; // safety: never send nothing
+  const tradingDay = latestDay || runDay;
+
+  if (latestDay) {
+    const perSection = Object.entries(sectionLatest).map(([s, d]) => `${s} ${d}`).join(", ");
+    console.log(`[frontdesk] latest day: ${tradingDay} (per section: ${perSection || "—"})`);
+    if (dropped.length) {
+      const olderDays = [...new Set(dropped.map((r) => r.date))].sort();
+      console.log(
+        `[frontdesk] showing latest day only — dropped ${dropped.length} line(s) from ` +
+          `${olderDays.length} earlier day(s): ${olderDays.join(", ")}`
+      );
+    }
+  } else {
+    console.log(`[frontdesk] no day markers in doc — showing all ${records.length} line(s) as ${tradingDay}`);
+  }
+
+  if (!hasQuoteish(workRecords)) keepOld("no quote-like lines in the doc");
 
   // 3. Annotate + chunk.
-  const annotated = records.map(annotate);
+  const annotated = workRecords.map(annotate);
   const chunks = chunk(annotated, CHUNK_LINES);
-  console.log(`[frontdesk] ${records.length} quote lines -> ${chunks.length} LLM chunk(s)`);
+  console.log(`[frontdesk] ${workRecords.length} quote lines -> ${chunks.length} LLM chunk(s)`);
 
   if (DRY_RUN) {
     console.log("\n[frontdesk] DRY RUN — skipping LLM. Sample annotated lines:\n");
