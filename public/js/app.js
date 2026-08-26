@@ -166,6 +166,16 @@ function fmtGenerated(iso) {
   return m ? m[1] : null;
 }
 
+/** "25 Aug 2026" from an ISO "YYYY-MM-DD" trading day (null if unparseable). */
+const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function fmtDay(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  if (!m) return null;
+  const mo = +m[2];
+  if (mo < 1 || mo > 12) return null;
+  return `${+m[3]} ${MONTHS_SHORT[mo - 1]} ${m[1]}`;
+}
+
 /* =========================================================================
    Quote semantics
    ========================================================================= */
@@ -409,7 +419,7 @@ function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="file-text" class="h-3 w-3"></i>Source: shared Google Doc</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(state.data?.trading_day || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Auto-refreshes every 10 min${gen ? ` · last ${gen}` : ""}</span>
     </div>`;
 }
@@ -1146,7 +1156,7 @@ function spreadChrome(bodyHTML, c) {
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Spreads computed live in your browser from quotes.json</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(state.data?.trading_day || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
 }
@@ -1468,7 +1478,7 @@ function oppChrome(bodyHTML, o) {
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Scanned live in your browser from quotes.json</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(state.data?.trading_day || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
 }
@@ -1802,7 +1812,7 @@ function pulseChrome(bodyHTML, p) {
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Counted live in your browser from quotes.json</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(state.data?.trading_day || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
 }
@@ -1850,9 +1860,14 @@ function renderPill() {
     return;
   }
   const gen = fmtGenerated(state.data?.generated_at);
-  // "Latest desk chat" (not "today") while the doc holds several days at once;
-  // reverts to a today/live label once date-splitting lands.
-  els.pillText.textContent = gen ? `Latest desk chat · updated ${gen}` : "Latest desk chat";
+  // Date-splitting keeps the board to a single day, so name that day outright.
+  // The per-tab footers carry the "updated HH:MM" freshness, so the pill stays short.
+  const day = fmtDay(state.data?.trading_day);
+  els.pillText.textContent = day
+    ? `Desk chat · ${day}`
+    : gen
+      ? `Latest desk chat · updated ${gen}`
+      : "Latest desk chat";
 }
 
 function renderView() {
