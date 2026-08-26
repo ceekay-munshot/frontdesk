@@ -176,6 +176,34 @@ function fmtDay(iso) {
   return `${+m[3]} ${MONTHS_SHORT[mo - 1]} ${m[1]}`;
 }
 
+/** Newest day present across quotes (ISO YYYY-MM-DD), or null when none carry a date. */
+function latestQuoteDay(quotes) {
+  let m = null;
+  for (const q of quotes || []) if (q.date && (m === null || q.date > m)) m = q.date;
+  return m;
+}
+
+/** Distinct days present across quotes, newest first. */
+function daysPresent(quotes) {
+  return [...new Set((quotes || []).map((q) => q.date).filter(Boolean))].sort().reverse();
+}
+
+/** Quotes from the latest (live) day only. Older days feed the board's history
+ *  but NOT the analysis tabs — a stale price there would invent a "deal" that is
+ *  already gone. The live day is the authoritative `trading_day`, NOT merely the
+ *  newest surviving quote: if the latest day's rows all failed to generate, we
+ *  return an empty set (analysis shows "no data today") rather than silently
+ *  treating an older day as current. Falls back to all quotes for legacy data
+ *  that carries no per-quote date at all. */
+function liveDayQuotes(quotes) {
+  const all = quotes || [];
+  if (!all.some((q) => q.date)) return all; // legacy data: no per-quote dates
+  const td = state.data?.trading_day;
+  if (td && /^\d{4}-\d{2}-\d{2}$/.test(td)) return all.filter((q) => q.date === td);
+  const d = latestQuoteDay(all); // no valid trading_day: fall back to newest present
+  return d ? all.filter((q) => q.date === d) : all;
+}
+
 /* =========================================================================
    Quote semantics
    ========================================================================= */
@@ -398,6 +426,9 @@ function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
   const chatterTag = chatterShown ? ` · <span class="text-slate-400">${chatterShown} chatter</span>` : "";
   const showing = count == null ? "" : `<span class="font-semibold text-slate-600">${count}</span> of ${total} quotes${chatterTag}`;
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
+  const days = state.data ? daysPresent(state.data.quotes) : [];
+  const latestLabel = fmtDay(state.data?.trading_day) || state.data?.trading_day || "—";
+  const dayChip = days.length >= 2 ? `Showing ${days.length} days · latest ${latestLabel}` : `Trading day: ${latestLabel}`;
   return `
     ${controlsHTML()}
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/50 backdrop-blur">
@@ -419,7 +450,7 @@ function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="file-text" class="h-3 w-3"></i>Source: shared Google Doc</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>${esc(dayChip)}</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Auto-refreshes every 10 min${gen ? ` · last ${gen}` : ""}</span>
     </div>`;
 }
@@ -457,8 +488,45 @@ function tableHTML(rows) {
       </tr>
     </thead>`;
 
-  const body = rows.map(rowHTML).join("");
+  // When the board holds more than one day, split it into date sections, newest
+  // day first, each under a labelled divider (the latest day flagged "Live" — it
+  // is the day the analysis tabs read). One day (or date-less data) renders flat.
+  const dates = daysPresent(rows);
+  let body;
+  if (dates.length >= 2) {
+    const parts = [];
+    for (const d of dates) {
+      const dayRows = rows.filter((r) => r.date === d);
+      const n = dayRows.reduce((a, r) => a + (r.side !== "comment" ? 1 : 0), 0);
+      // "Live" marks the authoritative trading day (the day the analysis tabs
+      // read), not merely the newest day left after section/search filters.
+      parts.push(dayHeaderRow(d, n, d === state.data?.trading_day));
+      parts.push(dayRows.map(rowHTML).join(""));
+    }
+    const undated = rows.filter((r) => !r.date);
+    if (undated.length) {
+      parts.push(dayHeaderRow(null, undated.reduce((a, r) => a + (r.side !== "comment" ? 1 : 0), 0), false));
+      parts.push(undated.map(rowHTML).join(""));
+    }
+    body = parts.join("");
+  } else {
+    body = rows.map(rowHTML).join("");
+  }
   return `<table class="w-full min-w-[880px] border-collapse text-sm">${COLGROUP}${head}<tbody>${body}</tbody></table>`;
+}
+
+/** A full-width date divider inside the board body, separating one day's quotes
+ *  from the next. The newest day carries a "Live" tag — that is the day the
+ *  Spread / Opportunities / Pulse tabs analyse. */
+function dayHeaderRow(iso, quoteCount, isLive) {
+  const label = fmtDay(iso) || iso || "Undated";
+  const live = isLive
+    ? `<span class="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">Live</span>`
+    : "";
+  return `<tr class="day-sep"><td colspan="7" class="border-y border-slate-200 bg-slate-100/80 px-3 py-1.5">
+      <span class="text-[11px] font-bold uppercase tracking-wide text-slate-500">${esc(label)}</span>
+      <span class="ml-1.5 text-[11px] text-slate-400">· ${quoteCount} ${quoteCount === 1 ? "quote" : "quotes"}</span>${live}
+    </td></tr>`;
 }
 
 function rowHTML(q) {
@@ -694,7 +762,7 @@ function govtYieldAt(pts, t) {
  * once, one way. No display filters here; each caller filters its own view.
  */
 function computeUniverse() {
-  const quotes = state.data?.quotes || [];
+  const quotes = liveDayQuotes(state.data?.quotes || []); // analysis reads the live day only
   const total = quotes.length;
   const quoteTotal = quotes.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0); // tradeable quotes, not chatter
 
@@ -1235,7 +1303,7 @@ function levelStr(q) {
  */
 function computeOpportunities() {
   const u = computeUniverse();
-  const quotes = state.data?.quotes || [];
+  const quotes = liveDayQuotes(state.data?.quotes || []); // analysis reads the live day only
 
   // Freshness: a quote in the most-recent ~15% of the day gets a "fresh" dot.
   const tss = quotes.map((q) => tsSeconds(q.timestamp)).filter((v) => v >= 0).sort((a, b) => a - b);
@@ -1516,7 +1584,7 @@ const PULSE_BUCKET = 1800;        // 30-minute activity buckets
 const PULSE_OTHER = T.n300;       // two-way / note quotes in the issuer split
 
 function computePulse() {
-  const quotes = state.data?.quotes || [];
+  const quotes = liveDayQuotes(state.data?.quotes || []); // analysis reads the live day only
   const total = quotes.length;
 
   // --- Section mix (donut).
@@ -1902,8 +1970,11 @@ function renderView() {
   let chatterShown = 0;
   let bodyHTML;
   if (state.grouped) {
-    // Grouping is about tradeable bonds — chatter is never grouped.
-    let groups = groupBonds(baseQuotes);
+    // Grouping is about tradeable bonds — chatter is never grouped. It pools
+    // bid/offer per bond into a best bid/offer/spread, which is only meaningful
+    // within ONE day; restrict to the live day so a historical quote can never
+    // synthesise a cross-day spread. (The flat board still shows every day.)
+    let groups = groupBonds(liveDayQuotes(baseQuotes));
     if (state.narrowOnly) groups = groups.filter((g) => narrowGap(g.bestBid, g.bestOffer, g.meaning));
     groups = sortGroups(groups);
     count = groups.length;
