@@ -190,10 +190,18 @@ function daysPresent(quotes) {
 
 /** Quotes from the latest (live) day only. Older days feed the board's history
  *  but NOT the analysis tabs — a stale price there would invent a "deal" that is
- *  already gone. Falls back to all quotes when the data carries no per-quote date. */
+ *  already gone. The live day is the authoritative `trading_day`, NOT merely the
+ *  newest surviving quote: if the latest day's rows all failed to generate, we
+ *  return an empty set (analysis shows "no data today") rather than silently
+ *  treating an older day as current. Falls back to all quotes for legacy data
+ *  that carries no per-quote date at all. */
 function liveDayQuotes(quotes) {
-  const d = latestQuoteDay(quotes);
-  return d ? (quotes || []).filter((q) => q.date === d) : (quotes || []);
+  const all = quotes || [];
+  if (!all.some((q) => q.date)) return all; // legacy data: no per-quote dates
+  const td = state.data?.trading_day;
+  if (td && /^\d{4}-\d{2}-\d{2}$/.test(td)) return all.filter((q) => q.date === td);
+  const d = latestQuoteDay(all); // no valid trading_day: fall back to newest present
+  return d ? all.filter((q) => q.date === d) : all;
 }
 
 /* =========================================================================
@@ -490,7 +498,9 @@ function tableHTML(rows) {
     for (const d of dates) {
       const dayRows = rows.filter((r) => r.date === d);
       const n = dayRows.reduce((a, r) => a + (r.side !== "comment" ? 1 : 0), 0);
-      parts.push(dayHeaderRow(d, n, d === dates[0]));
+      // "Live" marks the authoritative trading day (the day the analysis tabs
+      // read), not merely the newest day left after section/search filters.
+      parts.push(dayHeaderRow(d, n, d === state.data?.trading_day));
       parts.push(dayRows.map(rowHTML).join(""));
     }
     const undated = rows.filter((r) => !r.date);
@@ -1960,8 +1970,11 @@ function renderView() {
   let chatterShown = 0;
   let bodyHTML;
   if (state.grouped) {
-    // Grouping is about tradeable bonds — chatter is never grouped.
-    let groups = groupBonds(baseQuotes);
+    // Grouping is about tradeable bonds — chatter is never grouped. It pools
+    // bid/offer per bond into a best bid/offer/spread, which is only meaningful
+    // within ONE day; restrict to the live day so a historical quote can never
+    // synthesise a cross-day spread. (The flat board still shows every day.)
+    let groups = groupBonds(liveDayQuotes(baseQuotes));
     if (state.narrowOnly) groups = groups.filter((g) => narrowGap(g.bestBid, g.bestOffer, g.meaning));
     groups = sortGroups(groups);
     count = groups.length;
