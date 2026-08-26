@@ -34,6 +34,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
@@ -423,6 +424,22 @@ async function main() {
   }
   if (!text || !text.trim()) keepOld("doc came back empty");
 
+  // 1b. Document fingerprint — the cost/runtime bound. The refresh fires every
+  //     10 min, but the shared doc only changes when the desk actually pastes. If
+  //     the fetched text is byte-for-byte what produced the current quotes.json,
+  //     skip the whole LLM pass and keep the existing output — no blind
+  //     reprocessing of unchanged history every tick, and no LLM nondeterminism
+  //     rewriting an unchanged day. A real change reprocesses in full, so each
+  //     output is a clean single-run snapshot (no stale-cache / mixed-model /
+  //     partial-day hazards that a per-day cache would introduce).
+  const docHash = createHash("sha256").update(text).digest("hex");
+  let prevHash = null;
+  try { prevHash = JSON.parse(readFileSync(OUT_PATH, "utf8"))?.source_hash ?? null; } catch { /* no prior output */ }
+  if (prevHash === docHash) {
+    if (!DRY_RUN) keepOld("document unchanged since last run — skipping LLM");
+    console.log("[frontdesk] document unchanged since last run (dry run: continuing to show parse)");
+  }
+
   // 2. Section + attribute (day markers detected relative to the run day).
   const { records, sectionsFound, sectionCounts } = sectionize(text, runDay);
   const found = ["Bonds", "Gsec", "DCM"].filter((s) => sectionsFound.has(s));
@@ -546,6 +563,7 @@ async function main() {
   const payload = {
     generated_at: istIso(),
     source: DOC_URL,
+    source_hash: docHash, // lets the next run skip the LLM when the doc is unchanged
     trading_day: tradingDay,
     quote_count: quotes.length,
     model: activeModel(),
