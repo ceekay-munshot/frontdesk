@@ -144,6 +144,14 @@ is not an exhaustive list): "Can switch REC Dec 28 with NAB Sep 28 : 25 crs, 10 
 "Switch X to Y", "Sell 5/10 NTPC CP and buy 6/11 NTPC CP", "what bid in 21/9 hdfc cd?", "px pls",
 "offers pls", "bids pls", "any bid?", "offer?", "level pls".
 
+ALWAYS emit a row for DONE / DEALT trade prints — a bond that actually TRADED. These executed levels
+are prime market color and must never be dropped. Examples that MUST become a row:
+"7.48 NABARD SEP2028 7.63 dealt 25 cr - Bajaj mf to bandhan", "7.85 PFC 03/04/2028 7.50 dltmkt bandhan
+mf sold to pnb", "83 dealt ..25cr each", "CHK got @ 73 75crs". The words "dealt", "done", "dltmkt",
+"dlt", "traded", "sold to", "bought from", or a "<counterparty> to <counterparty>" hand-off all mark a
+print. Put the traded level in the right numeric field (yield/level) and the whole line in \`raw\`; use
+the dealer's own side only when the line clearly states one, otherwise side "comment".
+
 SKIP only PURE noise and do not emit a row for it: counterparty or mutual-fund tags on their own line
 (e.g. "axis mf", "nippon mf", "isec", "bob mf", "ECL fin", "birla pen", "emf"), general non-market
 chatter (e.g. "zoom bandh raka hain kya"), and chat read markers ("Today", "Unread messages").
