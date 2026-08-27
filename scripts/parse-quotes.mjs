@@ -390,9 +390,10 @@ function cleanRow(q, idx) {
     size_cr: num(q.size_cr),
     yield: num(q.yield),
     timestamp: str(q.timestamp),
-    // The trading day this quote was said on (from the doc's date markers),
-    // attached downstream as `_day`. Lets the board group all days newest-first.
-    date: /^\d{4}-\d{2}-\d{2}$/.test(q._day) ? q._day : null,
+    // The day this quote was said on, from the doc's date headers (attached
+    // downstream as `_day`; null for lines before the first header). Drives the
+    // board's day selector and per-day tenor.
+    quote_date: /^\d{4}-\d{2}-\d{2}$/.test(q._day) ? q._day : null,
     flags: Array.isArray(q.flags) ? q.flags.filter((f) => typeof f === "string") : [],
     raw: q.raw.trim(),
     confidence: num(q.confidence),
@@ -458,46 +459,60 @@ async function main() {
   if (!records.length) keepOld("no quote lines after sectioning");
   if (!hasQuoteish(records)) keepOld("no quote-like lines in the doc");
 
-  // 2b. Keep EVERY day the doc holds and remember which day each line belongs to,
-  //     so the board can show all days (newest at the top) while the analysis
-  //     tabs focus on the live day. Days come from the trader's date markers;
-  //     a line with no marker falls to the latest day so nothing is lost, and a
-  //     doc with no markers at all is simply one day (the run day). `trading_day`
-  //     is the newest day present — the live market the analysis tabs read.
-  const datedDays = records.map((r) => r.date).filter(Boolean);
-  const latestDay = datedDays.length ? datedDays.slice().sort().at(-1) : null;
-  const tradingDay = latestDay || runDay;
-  const dayFor = (r) => r.date || tradingDay;
-
-  const byDay = new Map();
+  // 2b. Split the doc into its DATED days. The trader dates each day's block with
+  //     a bare header line ("27-Aug-2026"); sectionize() has already stamped every
+  //     record with the date of the header above it (null before the first header
+  //     in a section, or throughout when the doc carries no headers at all). Group
+  //     by that raw date so each day is structured — and tagged — on its own.
+  const byDate = new Map(); // key: "YYYY-MM-DD" | null  ->  records[]
   for (const r of records) {
-    const d = dayFor(r);
-    if (!byDay.has(d)) byDay.set(d, []);
-    byDay.get(d).push(r);
+    const k = r.date || null;
+    if (!byDate.has(k)) byDate.set(k, []);
+    byDate.get(k).push(r);
   }
-  const orderedDays = [...byDay.keys()].sort().reverse(); // newest day first
+  const datedDays = [...byDate.keys()].filter(Boolean).sort(); // ascending
+  const latestDay = datedDays.at(-1) || null;
+  const tradingDay = latestDay || runDay; // fallback: no headers -> the run day
+
+  // Bound the output: keep only the most recent KEEP_DAYS dated days, so the file
+  // (and each run's LLM work) can't grow without limit as history piles up.
+  const KEEP_DAYS = 5;
+  const keptDates = datedDays.slice(-KEEP_DAYS); // newest KEEP_DAYS, ascending
+  const droppedDates = datedDays.slice(0, -KEEP_DAYS);
+  if (droppedDates.length) {
+    console.log(`[frontdesk] bounding to the latest ${KEEP_DAYS} day(s); dropping older: ${droppedDates.join(", ")}`);
+  }
+  // Process newest kept day first, then any undated (pre-header) lines last —
+  // those attach to the live day in the view but keep quote_date null.
+  const processKeys = [...keptDates].reverse();
+  if (byDate.has(null)) processKeys.push(null);
   console.log(
-    `[frontdesk] days in doc (newest first): ${orderedDays.map((d) => `${d} ${byDay.get(d).length}`).join(", ")}` +
-      ` — trading day ${tradingDay}`
+    `[frontdesk] dated days: ${datedDays.join(", ") || "none"} — trading day ${tradingDay}` +
+      (byDate.has(null) ? ` (+ ${byDate.get(null).length} undated line(s))` : "")
   );
 
-  // 3. Annotate + chunk, never crossing a day boundary, so every chunk's rows
-  //    can be tagged with exactly one day downstream.
+  // 3. Annotate + chunk, never crossing a day boundary, so every chunk's rows can
+  //    be tagged with exactly one day. chunkOutDate is the quote_date to stamp
+  //    (null for undated lines); chunkPromptDay is the day the model dates tenor
+  //    from (the run/live day for undated lines).
   const chunks = [];
-  const chunkDay = [];
-  for (const day of orderedDays) {
-    const annotated = byDay.get(day).map(annotate);
+  const chunkOutDate = [];
+  const chunkPromptDay = [];
+  for (const key of processKeys) {
+    const annotated = byDate.get(key).map(annotate);
     for (const c of chunk(annotated, CHUNK_LINES)) {
       chunks.push(c);
-      chunkDay.push(day);
+      chunkOutDate.push(key);
+      chunkPromptDay.push(key || tradingDay);
     }
   }
-  console.log(`[frontdesk] ${records.length} quote lines -> ${chunks.length} LLM chunk(s) across ${orderedDays.length} day(s)`);
+  const keptLines = chunks.reduce((n, c) => n + c.length, 0);
+  console.log(`[frontdesk] ${keptLines} quote lines -> ${chunks.length} LLM chunk(s) across ${processKeys.length} group(s)`);
 
   if (DRY_RUN) {
     console.log("\n[frontdesk] DRY RUN — skipping LLM. Sample annotated lines:\n");
     for (const l of chunks.flat().slice(0, 25)) console.log("  " + l);
-    console.log(`\n[frontdesk] ...and ${Math.max(0, records.length - 25)} more.`);
+    console.log(`\n[frontdesk] ...and ${Math.max(0, keptLines - 25)} more.`);
     return;
   }
 
@@ -518,7 +533,7 @@ async function main() {
   const results = new Array(chunks.length).fill(null);
 
   const runChunk = async (i) => {
-    const user = `TRADING DAY: ${chunkDay[i]} (Asia/Kolkata).\n\nOrganize these chat lines into the schema:\n\n${chunks[i].join("\n")}`;
+    const user = `TRADING DAY: ${chunkPromptDay[i]} (Asia/Kolkata).\n\nOrganize these chat lines into the schema:\n\n${chunks[i].join("\n")}`;
     try {
       console.log(`[frontdesk] chunk ${i + 1}/${chunks.length} -> LLM (${chunks[i].length} lines)`);
       const out = await llmStructured({
@@ -545,12 +560,12 @@ async function main() {
     await Promise.all(Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length - 1) }, worker));
   }
 
-  // Tag every row with its chunk's day before merging, so each quote carries the
-  // day it was said on (used by the board to group newest-first).
+  // Tag every row with its chunk's output date before merging, so each quote
+  // carries the day it was said on (null for undated pre-header lines).
   const merged = [];
   for (let i = 0; i < results.length; i++) {
     if (!results[i]) continue;
-    for (const q of results[i]) merged.push({ ...q, _day: chunkDay[i] });
+    for (const q of results[i]) merged.push({ ...q, _day: chunkOutDate[i] });
   }
 
   // 5. Validate, drop junk, re-id. Rows stay in newest-day-first order.
@@ -559,12 +574,22 @@ async function main() {
 
   if (!quotes.length) keepOld("0 valid rows after validation");
 
+  // The days a dealer can pick on the board: every dated day present in the
+  // output, newest first, and always the trading day itself (so the fallback
+  // no-headers case still offers one option). Undated quotes carry quote_date
+  // null and show under the trading day.
+  const days_available = [...new Set([tradingDay, ...quotes.map((q) => q.quote_date).filter(Boolean)])]
+    .sort()
+    .reverse();
+  console.log(`[frontdesk] days_available (newest first): ${days_available.join(", ")}`);
+
   // 6. Write.
   const payload = {
     generated_at: istIso(),
     source: DOC_URL,
     source_hash: docHash, // lets the next run skip the LLM when the doc is unchanged
     trading_day: tradingDay,
+    days_available,
     quote_count: quotes.length,
     model: activeModel(),
     quotes,
