@@ -491,23 +491,64 @@ async function main() {
       (byDate.has(null) ? ` (+ ${byDate.get(null).length} undated line(s))` : "")
   );
 
-  // 3. Annotate + chunk, never crossing a day boundary, so every chunk's rows can
-  //    be tagged with exactly one day. chunkOutDate is the quote_date to stamp
-  //    (null for undated lines); chunkPromptDay is the day the model dates tenor
-  //    from (the run/live day for undated lines).
+  // Annotate each kept day and fingerprint its content, so unchanged days can be
+  // reused instead of re-sent to the LLM every run.
+  const dayLines = new Map(); // key -> annotated line[]
+  const dayHash = new Map();  // dated key -> sha256 of its content
+  for (const key of processKeys) {
+    const ann = byDate.get(key).map(annotate);
+    dayLines.set(key, ann);
+    if (key !== null) dayHash.set(key, createHash("sha256").update(ann.join("\n")).digest("hex"));
+  }
+
+  // 2c. Per-day reuse. An older dated day whose content is byte-identical to the
+  //     last output (and was completely structured then) is reused verbatim — no
+  //     LLM. Only the live day, the undated group, and any day whose content
+  //     changed / was left incomplete / is new get re-structured. This keeps each
+  //     run's LLM work to roughly the live day, so a big doc can't make every
+  //     refresh overrun the cron and stall the schedule.
+  const prevByDay = new Map(); // quote_date | null -> quotes[]
+  let prevDayHashes = {};
+  let prevIncomplete = new Set();
+  try {
+    const prev = JSON.parse(readFileSync(OUT_PATH, "utf8"));
+    prevDayHashes = prev.day_hashes || {};
+    prevIncomplete = new Set(prev.incomplete_days || []);
+    for (const q of prev.quotes || []) {
+      const k = q.quote_date || null;
+      if (!prevByDay.has(k)) prevByDay.set(k, []);
+      prevByDay.get(k).push(q);
+    }
+  } catch { /* no prior output -> structure everything this run */ }
+
+  const reuse = new Set(); // dated keys reused verbatim from the last output
+  for (const key of keptDates) {
+    if (key === tradingDay) continue; // the live day is still filling in
+    if (prevByDay.has(key) && prevDayHashes[key] === dayHash.get(key) && !prevIncomplete.has(key)) {
+      reuse.add(key);
+    }
+  }
+  const processNow = processKeys.filter((k) => !reuse.has(k));
+
+  // 3. Annotate + chunk the days we must (re)structure, never crossing a day
+  //    boundary. chunkOutDate is the quote_date to stamp (null for undated lines);
+  //    chunkPromptDay is the day the model dates tenor from.
   const chunks = [];
   const chunkOutDate = [];
   const chunkPromptDay = [];
-  for (const key of processKeys) {
-    const annotated = byDate.get(key).map(annotate);
-    for (const c of chunk(annotated, CHUNK_LINES)) {
+  for (const key of processNow) {
+    for (const c of chunk(dayLines.get(key), CHUNK_LINES)) {
       chunks.push(c);
       chunkOutDate.push(key);
       chunkPromptDay.push(key || tradingDay);
     }
   }
   const keptLines = chunks.reduce((n, c) => n + c.length, 0);
-  console.log(`[frontdesk] ${keptLines} quote lines -> ${chunks.length} LLM chunk(s) across ${processKeys.length} group(s)`);
+  console.log(
+    `[frontdesk] structuring ${processNow.filter(Boolean).length} day(s) [${processNow.filter(Boolean).join(", ") || "none"}]` +
+      `${reuse.size ? `, reusing ${reuse.size} unchanged [${[...reuse].join(", ")}]` : ""}` +
+      ` -> ${keptLines} lines, ${chunks.length} chunk(s)`
+  );
 
   if (DRY_RUN) {
     console.log("\n[frontdesk] DRY RUN — skipping LLM. Sample annotated lines:\n");
@@ -547,7 +588,7 @@ async function main() {
       results[i] = got;
     } catch (err) {
       console.warn(`[frontdesk]   chunk ${i + 1}/${chunks.length} failed: ${String(err.message || err).slice(0, 200)}`);
-      results[i] = [];
+      results[i] = null; // null = FAILED (distinct from a successful, genuinely empty [])
     }
   };
 
@@ -560,12 +601,51 @@ async function main() {
     await Promise.all(Array.from({ length: Math.min(CHUNK_CONCURRENCY, chunks.length - 1) }, worker));
   }
 
-  // Tag every row with its chunk's output date before merging, so each quote
-  // carries the day it was said on (null for undated pre-header lines).
+  // Collect freshly-structured rows per reprocessed day, tracking whether EVERY
+  // chunk of that day succeeded (a failed chunk makes the day incomplete).
+  const freshByDay = new Map();
+  const dayComplete = new Map();
+  for (let i = 0; i < chunks.length; i++) {
+    const k = chunkOutDate[i];
+    if (!dayComplete.has(k)) dayComplete.set(k, true);
+    if (results[i] == null) { dayComplete.set(k, false); continue; }
+    if (!freshByDay.has(k)) freshByDay.set(k, []);
+    for (const q of results[i]) freshByDay.get(k).push({ ...q, _day: k });
+  }
+
+  // Assemble every kept day newest-first: reused days come straight from the last
+  // output; reprocessed days prefer a COMPLETE fresh result, else keep the last
+  // good copy (never overwritten by a partial), else write a partial. Days that
+  // are not fully settled are flagged for retry, and their fingerprint is NOT
+  // stored, so the next run re-structures them.
   const merged = [];
-  for (let i = 0; i < results.length; i++) {
-    if (!results[i]) continue;
-    for (const q of results[i]) merged.push({ ...q, _day: chunkOutDate[i] });
+  const newDayHashes = {};
+  const newIncomplete = new Set();
+  for (const key of processKeys) {
+    if (reuse.has(key)) {
+      for (const q of prevByDay.get(key)) merged.push({ ...q, _day: key });
+      if (key !== null) newDayHashes[key] = dayHash.get(key); // unchanged -> settled
+      continue;
+    }
+    const hasFresh = freshByDay.has(key);
+    const complete = dayComplete.get(key) === true && hasFresh;
+    const cacheGood = prevByDay.has(key) && !prevIncomplete.has(key); // a complete prior copy
+    if (complete) {
+      merged.push(...freshByDay.get(key));
+      if (key !== null) newDayHashes[key] = dayHash.get(key); // freshly structured -> settled
+    } else if (cacheGood) {
+      // reprocess came back incomplete but we have a COMPLETE prior copy — keep it
+      // and retry next run (its fingerprint is NOT stored, so reuse won't skip it).
+      for (const q of prevByDay.get(key)) merged.push({ ...q, _day: key });
+      if (key !== null) newIncomplete.add(key);
+    } else if (hasFresh) {
+      merged.push(...freshByDay.get(key)); // partial fresh, no good cache to protect
+      if (key !== null) newIncomplete.add(key);
+    } else if (prevByDay.has(key)) {
+      for (const q of prevByDay.get(key)) merged.push({ ...q, _day: key }); // stale/incomplete cache
+      if (key !== null) newIncomplete.add(key);
+    }
+    // else: nothing for this day (failed, uncached) -> absent, retried next run
   }
 
   // 5. Validate, drop junk, re-id. Rows stay in newest-day-first order.
@@ -583,6 +663,16 @@ async function main() {
     .reverse();
   console.log(`[frontdesk] days_available (newest first): ${days_available.join(", ")}`);
 
+  // Per-day bookkeeping for the next run: which days are settled (fingerprint, so
+  // they can be reused) and which were only partially structured (retry). Keep
+  // markers only for days that actually made it into the output.
+  const writtenDays = new Set(quotes.map((q) => q.quote_date).filter(Boolean));
+  const day_hashes = Object.fromEntries(Object.entries(newDayHashes).filter(([d]) => writtenDays.has(d)));
+  const incomplete_days = [...newIncomplete].filter((d) => writtenDays.has(d)).sort().reverse();
+  if (reuse.size || incomplete_days.length) {
+    console.log(`[frontdesk] reused ${reuse.size} day(s); incomplete (retry next run): ${incomplete_days.join(", ") || "none"}`);
+  }
+
   // 6. Write.
   const payload = {
     generated_at: istIso(),
@@ -590,6 +680,8 @@ async function main() {
     source_hash: docHash, // lets the next run skip the LLM when the doc is unchanged
     trading_day: tradingDay,
     days_available,
+    day_hashes, // per-day content fingerprints -> reuse unchanged days next run
+    incomplete_days, // days only partially structured -> re-structure next run
     quote_count: quotes.length,
     model: activeModel(),
     quotes,
