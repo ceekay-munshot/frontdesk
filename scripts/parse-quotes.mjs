@@ -136,15 +136,25 @@ Each input line is prefixed with a tag: [SECTION | Dealer Name @ Firm].
 Copy SECTION verbatim into \`section\`, the dealer name into \`dealer\`, and the firm into \`firm\`.
 Everything after the "] " is the original chat message — put it, unchanged, in \`raw\`.
 
-Emit ONE row per genuine quote / order / desk-action line. SKIP pure noise and do not emit a row for
-it: counterparty or mutual-fund tags on their own line (e.g. "axis mf", "nippon mf", "isec", "bob mf",
-"ECL fin", "birla pen", "emf"), general chatter (e.g. "zoom bandh raka hain kya"), and chat read
-markers ("Today", "Unread messages"). When in doubt whether a line is a real quote, skip it.
+Emit ONE row per genuine quote / order / desk-action line.
+
+ALWAYS emit a row for SWITCH IDEAS and TRADE REQUESTS — set side "comment" and keep the exact text in
+\`raw\`. The desk trades on these, so never drop them. Examples that MUST become a "comment" row (this
+is not an exhaustive list): "Can switch REC Dec 28 with NAB Sep 28 : 25 crs, 10 bps to recv",
+"Switch X to Y", "Sell 5/10 NTPC CP and buy 6/11 NTPC CP", "what bid in 21/9 hdfc cd?", "px pls",
+"offers pls", "bids pls", "any bid?", "offer?", "level pls".
+
+SKIP only PURE noise and do not emit a row for it: counterparty or mutual-fund tags on their own line
+(e.g. "axis mf", "nippon mf", "isec", "bob mf", "ECL fin", "birla pen", "emf"), general non-market
+chatter (e.g. "zoom bandh raka hain kya"), and chat read markers ("Today", "Unread messages").
+Rule of thumb: if a line names a bond/instrument, or asks for a price / bid / offer / switch, KEEP it
+(as a quote when it states a side or level, otherwise as a "comment"). Only skip a line when it is
+clearly pure noise with no bond and no request in it.
 
 FIELD RULES:
 - side: "bid" or "buy" when the dealer wants to BUY; "offer", "sell" or "ask" when they want to SELL;
   "two_way" when BOTH a bid and an offer are quoted; "comment" for a desk action with no clear side
-  (a switch idea, "done", a request like "px pls" / "offers pls").
+  (a switch idea, "done", or a request like "px pls" / "offers pls" / "any bid?" — always keep these).
 - A number immediately followed by "cr" or "crs" is size_cr — e.g. "100crs" -> size_cr 100, "25 cr" -> 25.
 - "@ 6.35", or a standalone yield-looking value (roughly 5 to 9 with decimals), -> yield.
 - coupon: a percent rate stated with the bond, e.g. "7.3%" or a leading "7.43 Sidbi" -> coupon 7.43.
