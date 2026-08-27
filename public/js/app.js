@@ -94,6 +94,7 @@ const state = {
   data: null,
   section: "All",
   search: "",
+  selectedDay: null, // which dated day the whole board shows (null -> trading_day)
   narrowOnly: false,
   grouped: false,
   showChatter: false, // Live Board hides "comment"/NOTE chatter by default
@@ -176,32 +177,39 @@ function fmtDay(iso) {
   return `${+m[3]} ${MONTHS_SHORT[mo - 1]} ${m[1]}`;
 }
 
-/** Newest day present across quotes (ISO YYYY-MM-DD), or null when none carry a date. */
-function latestQuoteDay(quotes) {
-  let m = null;
-  for (const q of quotes || []) if (q.date && (m === null || q.date > m)) m = q.date;
-  return m;
+/** The day a quote belongs to for the day picker: its own quote_date, or the
+ *  trading day when it has none (undated pre-header lines show under the latest day). */
+function dayOfQuote(q) {
+  return q.quote_date || state.data?.trading_day || null;
 }
 
-/** Distinct days present across quotes, newest first. */
-function daysPresent(quotes) {
-  return [...new Set((quotes || []).map((q) => q.date).filter(Boolean))].sort().reverse();
+/** Days a dealer can pick, newest first — from the engine's days_available, else
+ *  derived from the quotes, and always including the trading day. */
+function availableDays() {
+  const fromMeta = Array.isArray(state.data?.days_available) ? state.data.days_available.slice() : [];
+  if (fromMeta.length) return fromMeta;
+  const set = new Set((state.data?.quotes || []).map((q) => q.quote_date).filter(Boolean));
+  if (state.data?.trading_day) set.add(state.data.trading_day);
+  return [...set].sort().reverse();
 }
 
-/** Quotes from the latest (live) day only. Older days feed the board's history
- *  but NOT the analysis tabs — a stale price there would invent a "deal" that is
- *  already gone. The live day is the authoritative `trading_day`, NOT merely the
- *  newest surviving quote: if the latest day's rows all failed to generate, we
- *  return an empty set (analysis shows "no data today") rather than silently
- *  treating an older day as current. Falls back to all quotes for legacy data
- *  that carries no per-quote date at all. */
-function liveDayQuotes(quotes) {
+/** The day currently shown: the user's selection while it's still available,
+ *  otherwise the trading day (newest). */
+function currentDay() {
+  const days = availableDays();
+  if (state.selectedDay && days.includes(state.selectedDay)) return state.selectedDay;
+  return state.data?.trading_day || days[0] || null;
+}
+
+/** Quotes for the day currently shown. Every tab reads through this, so the whole
+ *  board — Live Board and all analysis — reflects exactly one day; a stale price
+ *  from another day can never leak into a "deal". Legacy data that carries no
+ *  per-quote date at all is shown as-is (a single undated day). */
+function dayQuotes(quotes) {
   const all = quotes || [];
-  if (!all.some((q) => q.date)) return all; // legacy data: no per-quote dates
-  const td = state.data?.trading_day;
-  if (td && /^\d{4}-\d{2}-\d{2}$/.test(td)) return all.filter((q) => q.date === td);
-  const d = latestQuoteDay(all); // no valid trading_day: fall back to newest present
-  return d ? all.filter((q) => q.date === d) : all;
+  const day = currentDay();
+  if (!day || !all.some((q) => q.quote_date)) return all;
+  return all.filter((q) => dayOfQuote(q) === day);
 }
 
 /* =========================================================================
@@ -372,6 +380,22 @@ function toggleButton({ on, id, icon, label, tone }) {
       <i data-lucide="${icon}" class="h-3.5 w-3.5"></i>${esc(label)}</button>`;
 }
 
+/** Day picker — shown only when the doc holds more than one dated day. Switching
+ *  it re-renders every tab for that day. */
+function dayPickerHTML() {
+  const days = availableDays();
+  if (days.length < 2) return "";
+  const cur = currentDay();
+  const opts = days
+    .map((d) => `<option value="${esc(d)}"${d === cur ? " selected" : ""}>${esc(fmtDay(d) || d)}</option>`)
+    .join("");
+  return `
+    <label class="inline-flex items-center gap-1.5 rounded-xl bg-slate-100/80 px-2.5 py-1.5 text-xs font-semibold text-slate-600" title="Trading day">
+      <i data-lucide="calendar-days" class="h-3.5 w-3.5 text-slate-400"></i>
+      <select data-day aria-label="Trading day" class="cursor-pointer bg-transparent font-semibold text-slate-700 focus-visible:outline-none">${opts}</select>
+    </label>`;
+}
+
 function controlsHTML() {
   return `
   <div class="mb-3 flex flex-wrap items-center gap-2">
@@ -379,6 +403,8 @@ function controlsHTML() {
     <div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1" role="tablist" aria-label="Section">
       ${["All", "Bonds", "Gsec", "DCM"].map((s) => segButton(s, s)).join("")}
     </div>
+
+    ${dayPickerHTML()}
 
     <div class="mx-1 hidden h-5 w-px bg-slate-200 sm:block"></div>
 
@@ -415,8 +441,9 @@ function legendHTML() {
 function sectionSummary() {
   if (!state.data) return "";
   const c = { Bonds: 0, Gsec: 0, DCM: 0 };
-  // Count tradeable quotes only — desk chatter (side "comment") isn't a quote.
-  for (const q of state.data.quotes) if (q.side !== "comment" && c[q.section] != null) c[q.section]++;
+  // Count tradeable quotes for the selected day only — desk chatter (side
+  // "comment") isn't a quote.
+  for (const q of dayQuotes(state.data.quotes)) if (q.side !== "comment" && c[q.section] != null) c[q.section]++;
   return `${c.Bonds} Bonds · ${c.Gsec} Gsec · ${c.DCM} DCM`;
 }
 
@@ -426,9 +453,8 @@ function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
   const chatterTag = chatterShown ? ` · <span class="text-slate-400">${chatterShown} chatter</span>` : "";
   const showing = count == null ? "" : `<span class="font-semibold text-slate-600">${count}</span> of ${total} quotes${chatterTag}`;
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
-  const days = state.data ? daysPresent(state.data.quotes) : [];
-  const latestLabel = fmtDay(state.data?.trading_day) || state.data?.trading_day || "—";
-  const dayChip = days.length >= 2 ? `Showing ${days.length} days · latest ${latestLabel}` : `Trading day: ${latestLabel}`;
+  const dayLabel = fmtDay(currentDay()) || currentDay() || "—";
+  const dayChip = `Day shown: ${dayLabel}`;
   return `
     ${controlsHTML()}
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/50 backdrop-blur">
@@ -488,45 +514,10 @@ function tableHTML(rows) {
       </tr>
     </thead>`;
 
-  // When the board holds more than one day, split it into date sections, newest
-  // day first, each under a labelled divider (the latest day flagged "Live" — it
-  // is the day the analysis tabs read). One day (or date-less data) renders flat.
-  const dates = daysPresent(rows);
-  let body;
-  if (dates.length >= 2) {
-    const parts = [];
-    for (const d of dates) {
-      const dayRows = rows.filter((r) => r.date === d);
-      const n = dayRows.reduce((a, r) => a + (r.side !== "comment" ? 1 : 0), 0);
-      // "Live" marks the authoritative trading day (the day the analysis tabs
-      // read), not merely the newest day left after section/search filters.
-      parts.push(dayHeaderRow(d, n, d === state.data?.trading_day));
-      parts.push(dayRows.map(rowHTML).join(""));
-    }
-    const undated = rows.filter((r) => !r.date);
-    if (undated.length) {
-      parts.push(dayHeaderRow(null, undated.reduce((a, r) => a + (r.side !== "comment" ? 1 : 0), 0), false));
-      parts.push(undated.map(rowHTML).join(""));
-    }
-    body = parts.join("");
-  } else {
-    body = rows.map(rowHTML).join("");
-  }
+  // The board shows one day at a time (chosen with the day picker), so rows
+  // render flat — no date dividers.
+  const body = rows.map(rowHTML).join("");
   return `<table class="w-full min-w-[880px] border-collapse text-sm">${COLGROUP}${head}<tbody>${body}</tbody></table>`;
-}
-
-/** A full-width date divider inside the board body, separating one day's quotes
- *  from the next. The newest day carries a "Live" tag — that is the day the
- *  Spread / Opportunities / Pulse tabs analyse. */
-function dayHeaderRow(iso, quoteCount, isLive) {
-  const label = fmtDay(iso) || iso || "Undated";
-  const live = isLive
-    ? `<span class="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">Live</span>`
-    : "";
-  return `<tr class="day-sep"><td colspan="7" class="border-y border-slate-200 bg-slate-100/80 px-3 py-1.5">
-      <span class="text-[11px] font-bold uppercase tracking-wide text-slate-500">${esc(label)}</span>
-      <span class="ml-1.5 text-[11px] text-slate-400">· ${quoteCount} ${quoteCount === 1 ? "quote" : "quotes"}</span>${live}
-    </td></tr>`;
 }
 
 function rowHTML(q) {
@@ -762,7 +753,7 @@ function govtYieldAt(pts, t) {
  * once, one way. No display filters here; each caller filters its own view.
  */
 function computeUniverse() {
-  const quotes = liveDayQuotes(state.data?.quotes || []); // analysis reads the live day only
+  const quotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
   const total = quotes.length;
   const quoteTotal = quotes.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0); // tradeable quotes, not chatter
 
@@ -1142,6 +1133,7 @@ function spreadStatChips(c) {
 
 function spreadControlsHTML(c) {
   return `<div class="mb-3 flex flex-wrap items-center gap-2">
+    ${dayPickerHTML()}
     ${spreadViewToggle()}
     <div class="mx-1 hidden h-5 w-px bg-slate-200 sm:block"></div>
     ${spreadSectionSeg()}
@@ -1303,7 +1295,7 @@ function levelStr(q) {
  */
 function computeOpportunities() {
   const u = computeUniverse();
-  const quotes = liveDayQuotes(state.data?.quotes || []); // analysis reads the live day only
+  const quotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
 
   // Freshness: a quote in the most-recent ~15% of the day gets a "fresh" dot.
   const tss = quotes.map((q) => tsSeconds(q.timestamp)).filter((v) => v >= 0).sort((a, b) => a - b);
@@ -1519,7 +1511,7 @@ function oppControls(o) {
   return `<div class="mb-3 space-y-2">
     <div class="flex flex-wrap items-center gap-1.5">${chips}</div>
     <div class="flex flex-wrap items-center gap-2">
-      ${oppSectionSeg()}${oppTenorSelect()}
+      ${dayPickerHTML()}${oppSectionSeg()}${oppTenorSelect()}
       <button class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" data-tip="${esc(JSON.stringify({ kind: "oppinfo" }))}" aria-label="How to read Opportunities"><i data-lucide="info" class="h-4 w-4"></i></button>
       <span class="ml-auto text-xs font-semibold text-slate-500">${o ? `${counts.actionable} opportunities right now` : ""}</span>
     </div>
@@ -1584,7 +1576,7 @@ const PULSE_BUCKET = 1800;        // 30-minute activity buckets
 const PULSE_OTHER = T.n300;       // two-way / note quotes in the issuer split
 
 function computePulse() {
-  const quotes = liveDayQuotes(state.data?.quotes || []); // analysis reads the live day only
+  const quotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
   const total = quotes.length;
 
   // --- Section mix (donut).
@@ -1853,8 +1845,9 @@ function pulseStatChips(p) {
 
 function pulseControls(p) {
   return `<div class="mb-3 flex flex-wrap items-center gap-2">
+    ${dayPickerHTML()}
     <button class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" data-tip="${esc(JSON.stringify({ kind: "pulseinfo" }))}" aria-label="How to read Desk Pulse"><i data-lucide="info" class="h-4 w-4"></i></button>
-    <span class="text-xs font-semibold text-slate-500">Desk overview · today</span>
+    <span class="text-xs font-semibold text-slate-500">Desk overview · ${esc(fmtDay(currentDay()) || "today")}</span>
     <div class="ml-auto flex flex-wrap items-center gap-2">${p ? pulseStatChips(p) : ""}</div>
   </div>`;
 }
@@ -1928,14 +1921,14 @@ function renderPill() {
     return;
   }
   const gen = fmtGenerated(state.data?.generated_at);
-  // Date-splitting keeps the board to a single day, so name that day outright.
-  // The per-tab footers carry the "updated HH:MM" freshness, so the pill stays short.
-  const day = fmtDay(state.data?.trading_day);
+  // The board shows one day at a time (the day picker's selection), so the pill
+  // names that day outright: "Live · <day>".
+  const day = fmtDay(currentDay());
   els.pillText.textContent = day
-    ? `Desk chat · ${day}`
+    ? `Live · ${day}`
     : gen
-      ? `Latest desk chat · updated ${gen}`
-      : "Latest desk chat";
+      ? `Live desk chat · updated ${gen}`
+      : "Live desk chat";
 }
 
 function renderView() {
@@ -1963,18 +1956,17 @@ function renderView() {
     return;
   }
 
-  const base = filterSectionSearch(state.data.quotes);
+  const dayAll = dayQuotes(state.data.quotes); // the selected day only
+  const base = filterSectionSearch(dayAll);
   const baseQuotes = base.filter((q) => q.side !== "comment"); // exclude desk chatter
-  const totalQuotes = state.data.quotes.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0);
+  const totalQuotes = dayAll.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0);
   let count;
   let chatterShown = 0;
   let bodyHTML;
   if (state.grouped) {
-    // Grouping is about tradeable bonds — chatter is never grouped. It pools
-    // bid/offer per bond into a best bid/offer/spread, which is only meaningful
-    // within ONE day; restrict to the live day so a historical quote can never
-    // synthesise a cross-day spread. (The flat board still shows every day.)
-    let groups = groupBonds(liveDayQuotes(baseQuotes));
+    // Grouping pools bid/offer per bond into a best bid/offer/spread — meaningful
+    // only within one day, which is exactly what the board already shows.
+    let groups = groupBonds(baseQuotes);
     if (state.narrowOnly) groups = groups.filter((g) => narrowGap(g.bestBid, g.bestOffer, g.meaning));
     groups = sortGroups(groups);
     count = groups.length;
@@ -2156,6 +2148,12 @@ function positionTooltip(e) {
    data-tip attribute; the HTML is built at hover time with esc() on every
    dynamic field, and the tooltip's colour cap is set from the payload accent. */
 els.view.addEventListener("change", (e) => {
+  const daySel = e.target.closest("select[data-day]");
+  if (daySel) {
+    state.selectedDay = daySel.value;
+    render(); // re-render everything (pill + all tabs) for the chosen day
+    return;
+  }
   const sel = e.target.closest("select[data-spread-tenor]");
   if (sel) {
     state.spreadTenor = sel.value;
