@@ -208,8 +208,33 @@ function currentDay() {
 function dayQuotes(quotes) {
   const all = quotes || [];
   const day = currentDay();
-  if (!day || !all.some((q) => q.quote_date)) return all;
-  return all.filter((q) => dayOfQuote(q) === day);
+  const scoped = !day || !all.some((q) => q.quote_date) ? all : all.filter((q) => dayOfQuote(q) === day);
+  return dedupeExact(scoped);
+}
+
+/** Collapse byte-for-byte re-pastes so the board reads clean. The shared doc
+ *  re-pastes the same line a lot; two rows with the SAME day + section + raw text
+ *  (timestamp and all) are the same message pasted twice, not two quotes. Keep the
+ *  first, and hang `_repeats` on it (how many identical copies there were) so the
+ *  row can show a small "×N" and every count stays honest. A genuine re-quote at a
+ *  new time or level has different raw text and is never collapsed. Display-side
+ *  only: we clone the surviving row, so quotes.json / state.data.quotes are never
+ *  mutated. Every tab reads through here, so this dedup is uniform board-wide. */
+function dedupeExact(list) {
+  const seen = new Map(); // key -> surviving (cloned) row
+  const out = [];
+  for (const q of list) {
+    const key = `${dayOfQuote(q)} ${q.section} ${q.raw || ""}`;
+    const hit = seen.get(key);
+    if (hit) {
+      hit._repeats++;
+      continue;
+    }
+    const row = { ...q, _repeats: 1 };
+    seen.set(key, row);
+    out.push(row);
+  }
+  return out;
 }
 
 /* =========================================================================
@@ -537,6 +562,12 @@ function rowHTML(q) {
       ? `<span class="ml-1.5 rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>`
       : "";
 
+  // Exact re-pastes of this line were collapsed into this one row; show a quiet
+  // "×N" so nothing looks hidden. (De-dup happens in dayQuotes; see dedupeExact.)
+  const repeats = q._repeats > 1
+    ? `<span class="ml-1.5 shrink-0 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold text-slate-400" title="${q._repeats} identical re-pastes collapsed into one row">×${q._repeats}</span>`
+    : "";
+
   const flags = Array.isArray(q.flags) && q.flags.length
     ? `<span class="ml-0.5 inline-flex flex-wrap gap-1 align-middle">${q.flags
         .map((f) => `<span class="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">${esc(FLAG_LABEL[f] || f)}</span>`)
@@ -549,7 +580,7 @@ function rowHTML(q) {
         data-tip="${esc(rowTip)}">
       <td class="px-3 py-2.5">
         <div class="flex items-center font-semibold text-slate-800">
-          <span class="truncate">${esc(q.issuer || "—")}</span>${secTag}
+          <span class="truncate">${esc(q.issuer || "—")}</span>${secTag}${repeats}
         </div>
         <div class="mt-0.5 flex items-center text-[11px] text-slate-400">
           <span>${sub || "&nbsp;"}</span>${flags}
