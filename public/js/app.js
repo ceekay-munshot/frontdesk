@@ -760,16 +760,36 @@ function fmtBps(v, signed) {
    in, it rescales the whole curve chart. Same spirit as the tenor guard above
    and the Opportunities plausibility band. */
 const GOVT_Y_MIN = 2, GOVT_Y_MAX = 12;
+// The government curve is upward-sloping and its yields cluster in a tight band.
+// A 2y+ govvie sitting near the T-bill floor (~5%) is not a real point — it is a
+// mis-dated/mis-parsed chat line (an ambiguous "05/11" read as a 4y maturity when
+// the ~5.2% yield really belongs to a short bill), and it puts a sharp dip in the
+// curve. Hold 2y+ points to a realistic floor while leaving the genuine sub-2y
+// short end (T-bills ~5%) alone.
+const GOVT_MIDLONG_MIN_TENOR = 2, GOVT_MIDLONG_Y_MIN = 5.8;
 function buildGovtCurve(enriched) {
-  const byTenor = new Map();
+  // Aggregate to standard curve NODES — 0.5y steps at the short end, whole years
+  // beyond — and take the median yield per node. A messy chat throws off many
+  // near-duplicate and single-observation tenors; plotting each one drew a jagged,
+  // spiky line. Nodes + median make one stray quote unable to spike the curve, so
+  // it reads like a real yield curve. Each node is plotted at its MEDIAN tenor
+  // (an honest x-position), not the rounded key.
+  const nodeKey = (t) => (t < 1 ? Math.round(t * 2) / 2 : Math.round(t));
+  const byNode = new Map(); // key -> { ts:[], ys:[] }
   for (const e of enriched) {
     if (e.section !== "Gsec") continue;
     if (!(e.tenor > 0 && e.tenor <= 50)) continue; // ignore implausible tenors (bad LLM data)
     if (!(e.uy >= GOVT_Y_MIN && e.uy <= GOVT_Y_MAX)) continue; // ignore implausible yields (bad LLM data)
-    if (!byTenor.has(e.tenor)) byTenor.set(e.tenor, []);
-    byTenor.get(e.tenor).push(e.uy);
+    if (e.tenor >= GOVT_MIDLONG_MIN_TENOR && e.uy < GOVT_MIDLONG_Y_MIN) continue; // 2y+ govvie can't sit at T-bill yields
+    const k = nodeKey(e.tenor);
+    if (!byNode.has(k)) byNode.set(k, { ts: [], ys: [] });
+    const b = byNode.get(k);
+    b.ts.push(e.tenor);
+    b.ys.push(e.uy);
   }
-  const pts = [...byTenor.entries()].map(([t, ys]) => ({ t, y: median(ys) })).sort((a, b) => a.t - b.t);
+  const pts = [...byNode.values()]
+    .map((b) => ({ t: median(b.ts), y: median(b.ys) }))
+    .sort((a, b) => a.t - b.t);
   return pts.length >= 2 ? pts : null;
 }
 
@@ -969,13 +989,13 @@ function renderTip(o) {
   }
   if (o.kind === "info") {
     return `${L("How to read Spread Watch")}<div style="line-height:1.55">
-      <b>Yield</b> = the return a bond pays. <b>Spread</b> = the EXTRA yield over a benchmark.
-      <div style="margin-top:6px"><b style="color:${T.tintIndigo}">vs Government</b> — extra yield over the government curve at the same maturity. Bigger = the bond is "cheaper" (pays more) = more attractive to buy.</div>
-      <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Peers</b> — how a bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = rich (expensive).</div></div>`;
+      <b>Yield</b> = what a bond pays you. This tab shows the <b>extra</b> yield a corporate bond pays over a safe benchmark — more extra = cheaper = more worth buying.
+      <div style="margin-top:6px"><b style="color:${T.tintIndigo}">vs Government</b> — extra yield over government bonds of the same maturity. Bigger = pays more = cheaper.</div>
+      <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
   if (o.kind === "curve") return `${L("Government curve")}${row("Tenor", o.t + "y")}${row("Govt yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Pickup over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}</div>${row("Tenor bucket", o.bucket)}${row("Median spread", fmtBps(o.spread) + " bps")}${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt yield", o.govtY.toFixed(2) + "%")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
-  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than peers (buy)" : "Richer than peers")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Peer median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
+  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
       <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Easy to trade</b> — a two-way with a small bid–offer gap; easy to deal.</div>
@@ -1121,7 +1141,7 @@ function spreadGridHTML(rows, buckets, gridStats) {
 
 function peersTableHTML(shown) {
   const head = `<thead class="sticky-head"><tr class="border-b border-slate-200 bg-slate-50/95 backdrop-blur">
-    ${th("Bond", "left")}${th("Its yield", "right")}${th("Peer median", "right")}${th("Gap (bps)", "right")}${th("Size (₹cr)", "right")}</tr></thead>`;
+    ${th("Bond", "left")}${th("Its yield", "right")}${th("Similar median", "right")}${th("Gap (bps)", "right")}${th("Size (₹cr)", "right")}</tr></thead>`;
   const body = shown.map((b) => {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
@@ -1145,7 +1165,7 @@ function spreadViewToggle() {
     const a = state.spreadView === v;
     return `<button data-spread-view="${v}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${a ? "grad-bar text-white shadow-sm shadow-indigo-500/25" : "text-slate-500 hover:text-slate-700"}"><i data-lucide="${icon}" class="h-3.5 w-3.5"></i>${label}</button>`;
   };
-  return `<div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1">${opt("govt", "vs Government", "landmark")}${opt("peers", "vs Peers", "users")}</div>`;
+  return `<div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1">${opt("govt", "vs Government", "landmark")}${opt("peers", "vs Similar bonds", "users")}</div>`;
 }
 
 function spreadSectionSeg() {
@@ -1164,11 +1184,11 @@ function spreadTenorSelect() {
 function spreadStatChips(c) {
   const chip = (icon, label, value, tone) => `<span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] ${tone}"><i data-lucide="${icon}" class="h-3 w-3"></i><span class="opacity-70">${label}</span><span class="font-bold nums">${esc(value)}</span></span>`;
   if (state.spreadView === "govt") {
-    return chip("trending-up", "Avg pickup", c.avgPickup != null ? fmtBps(c.avgPickup) + " bps" : "—", "border-indigo-200 bg-indigo-50 text-indigo-700") +
+    return chip("trending-up", "Avg extra vs govt", c.avgPickup != null ? fmtBps(c.avgPickup) + " bps" : "—", "border-indigo-200 bg-indigo-50 text-indigo-700") +
       chip("flame", "Widest", c.widest ? `${trunc(c.widest.issuer, 15)} ${fmtBps(c.widest.v)}` : "—", "border-emerald-200 bg-emerald-50 text-emerald-700");
   }
   return chip("arrow-up-right", "Cheapest", c.cheapest ? `${trunc(c.cheapest.issuer, 14)} ${fmtBps(c.cheapest.gap, true)}` : "—", "border-emerald-200 bg-emerald-50 text-emerald-700") +
-    chip("arrow-down-right", "Richest", c.richest ? `${trunc(c.richest.issuer, 14)} ${fmtBps(c.richest.gap, true)}` : "—", "border-rose-200 bg-rose-50 text-rose-700");
+    chip("arrow-down-right", "Priciest", c.richest ? `${trunc(c.richest.issuer, 14)} ${fmtBps(c.richest.gap, true)}` : "—", "border-rose-200 bg-rose-50 text-rose-700");
 }
 
 function spreadControlsHTML(c) {
@@ -1185,10 +1205,10 @@ function spreadControlsHTML(c) {
 
 function spreadLegend() {
   if (state.spreadView === "govt") {
-    return `<div class="hidden items-center gap-2 text-[11px] font-medium text-slate-400 md:flex"><span>tight</span><span class="h-2 w-16 rounded-full" style="background:linear-gradient(90deg,${SPREAD_COOL},${SPREAD_MID},${SPREAD_WARM})"></span><span>wide · more pickup</span></div>`;
+    return `<div class="hidden items-center gap-2 text-[11px] font-medium text-slate-400 md:flex"><span>small</span><span class="h-2 w-16 rounded-full" style="background:linear-gradient(90deg,${SPREAD_COOL},${SPREAD_MID},${SPREAD_WARM})"></span><span>big extra yield</span></div>`;
   }
   const dot = (col, t) => `<span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full" style="background:${col}"></span>${t}</span>`;
-  return `<div class="hidden items-center gap-3 text-[11px] font-medium text-slate-400 md:flex">${dot(CHEAP, "cheap (buy)")}${dot(RICH, "rich")}</div>`;
+  return `<div class="hidden items-center gap-3 text-[11px] font-medium text-slate-400 md:flex">${dot(CHEAP, "cheap (buy)")}${dot(RICH, "pricey")}</div>`;
 }
 
 function spreadEmpty(title, msg, icon) {
@@ -1216,8 +1236,8 @@ function govtBody(c) {
     <section>
       <div class="mb-2 flex flex-wrap items-center gap-2">
         <i data-lucide="grid-3x3" class="h-4 w-4 text-indigo-500"></i>
-        <h3 class="font-display text-sm font-bold text-slate-700">Spread grid — pickup over government (bps)</h3>
-        <div class="ml-auto flex items-center gap-2 text-[11px] text-slate-400"><span>tight</span><span class="h-2.5 w-24 rounded-full" style="background:linear-gradient(90deg,${SPREAD_COOL},${SPREAD_MID},${SPREAD_WARM})"></span><span>wide (more pickup)</span></div>
+        <h3 class="font-display text-sm font-bold text-slate-700">Extra yield over government (bps)</h3>
+        <div class="ml-auto flex items-center gap-2 text-[11px] text-slate-400"><span>small</span><span class="h-2.5 w-24 rounded-full" style="background:linear-gradient(90deg,${SPREAD_COOL},${SPREAD_MID},${SPREAD_WARM})"></span><span>bigger extra</span></div>
       </div>
       <div class="overflow-x-auto rounded-xl border border-slate-100">${spreadGridHTML(c.rows, c.buckets, c.gridStats)}</div>
     </section>
@@ -1226,12 +1246,12 @@ function govtBody(c) {
 
 function peersBody(c) {
   const shown = peersShown(c.bonds);
-  if (!shown.length) return spreadEmpty("No peer comparisons yet", "No Bonds/DCM bonds with a usable yield match these filters.", "users");
+  if (!shown.length) return spreadEmpty("No similar-bond comparisons yet", "No Bonds/DCM bonds with a usable yield match these filters.", "users");
   return `<div class="space-y-4 p-4">
     <section>
       <div class="mb-2 flex flex-wrap items-center gap-2">
         <i data-lucide="arrow-left-right" class="h-4 w-4 text-indigo-500"></i>
-        <h3 class="font-display text-sm font-bold text-slate-700">Cheapest &amp; richest vs peers (bps)</h3>
+        <h3 class="font-display text-sm font-bold text-slate-700">Cheapest &amp; priciest vs similar bonds (bps)</h3>
         <span class="text-[11px] text-slate-400">green = cheaper (buy) · red = richer · hover a bar</span>
       </div>
       <div class="rounded-xl border border-slate-100 bg-white/60 p-2">${peersBarsSVG(shown)}</div>
@@ -1241,7 +1261,7 @@ function peersBody(c) {
 }
 
 function spreadChrome(bodyHTML, c) {
-  const cov = c ? `<span class="font-semibold text-slate-600">${c.withUYT}</span> of ${c.quoteTotal} quotes carry a usable yield + tenor` : "";
+  const cov = c ? `<span class="font-semibold text-slate-600">${c.withUYT}</span> of ${c.quoteTotal} quotes have a yield we can compare` : "";
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
   return `
     ${spreadControlsHTML(c)}
@@ -1271,7 +1291,7 @@ function renderSpreadView() {
   } else if (state.spreadView === "govt") {
     body = c.govtCurve
       ? govtBody(c)
-      : spreadEmpty("Government curve unavailable today", "We need at least two Gsec quotes with a usable yield to build the curve. Switch to <b>vs Peers</b> — it doesn't need the curve.", "triangle-alert");
+      : spreadEmpty("Government curve unavailable today", "We need at least two Gsec quotes with a usable yield to build the curve. Switch to <b>vs Similar bonds</b> — it doesn't need the curve.", "triangle-alert");
   } else {
     body = peersBody(c);
   }
@@ -1367,15 +1387,15 @@ function computeOpportunities() {
     if (isNum(b.gap) && Math.abs(b.gap) <= OPP_GAP_CAP) {
       if (b.gap >= 10) {
         const o = baseFromBond(b, "cheap"); o._val = b.gap;
-        o.headline = `+${b.gap} bps`; o.sub = "vs peers";
+        o.headline = `+${b.gap} bps`; o.sub = "vs similar";
         o.why = `Pays ${b.gap} bps more yield than similar ${b.bucket} bonds — attractive to buy.`;
-        o.rows = [["Its yield", pct(b.uy)], ["Peer median", pct(b.peerMedian)], ["Gap vs peers", fmtBps(b.gap, true) + " bps"]];
+        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
         cheap.push(o);
       } else if (b.gap <= -10) {
         const o = baseFromBond(b, "rich"); o._val = -b.gap;
-        o.headline = `${b.gap} bps`; o.sub = "vs peers";
+        o.headline = `${b.gap} bps`; o.sub = "vs similar";
         o.why = `Yields ${-b.gap} bps LESS than similar bonds — expensive; don't overpay.`;
-        o.rows = [["Its yield", pct(b.uy)], ["Peer median", pct(b.peerMedian)], ["Gap vs peers", fmtBps(b.gap, true) + " bps"]];
+        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
         rich.push(o);
       }
     }
@@ -1383,7 +1403,7 @@ function computeOpportunities() {
       const o = baseFromBond(b, "pickup"); o._val = b.govtSpread;
       const govtY = b.uy - b.govtSpread / 100;
       o.headline = `+${b.govtSpread} bps`; o.sub = "over govt";
-      o.why = `Pays ${b.govtSpread} bps over the government curve for its maturity — a big yield pickup.`;
+      o.why = `Pays ${b.govtSpread} bps over the government curve for its maturity — a big extra yield.`;
       o.rows = [["Its yield", pct(b.uy)], ["Govt curve", pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
       pickup.push(o);
     }
