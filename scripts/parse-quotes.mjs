@@ -453,10 +453,25 @@ async function main() {
   //     partial-day hazards that a per-day cache would introduce).
   const docHash = createHash("sha256").update(text).digest("hex");
   let prevHash = null;
-  try { prevHash = JSON.parse(readFileSync(OUT_PATH, "utf8"))?.source_hash ?? null; } catch { /* no prior output */ }
-  if (prevHash === docHash) {
+  let prevIncompleteCount = 0;
+  try {
+    const prevOut = JSON.parse(readFileSync(OUT_PATH, "utf8"));
+    prevHash = prevOut?.source_hash ?? null;
+    prevIncompleteCount = Array.isArray(prevOut?.incomplete_days) ? prevOut.incomplete_days.length : 0;
+  } catch { /* no prior output */ }
+  // Fast path only when the doc is byte-identical AND the last output is fully
+  // settled. If a day is still flagged incomplete (a chunk failed on an earlier
+  // run), we must NOT short-circuit — fall through so the per-day retry can
+  // re-structure it, even though the doc hasn't changed. Otherwise a transient
+  // LLM failure strands a partial/stale day on the board until the desk's next
+  // paste (potentially overnight or over a weekend, given the market-hours cron).
+  // Per-day reuse still skips the unchanged, already-settled days, so this retry
+  // stays cheap — it only re-sends the incomplete day(s) and the live day.
+  if (prevHash === docHash && prevIncompleteCount === 0) {
     if (!DRY_RUN) keepOld("document unchanged since last run — skipping LLM");
     console.log("[frontdesk] document unchanged since last run (dry run: continuing to show parse)");
+  } else if (prevHash === docHash && prevIncompleteCount) {
+    console.log(`[frontdesk] document unchanged, but ${prevIncompleteCount} day(s) flagged incomplete — reprocessing to retry them`);
   }
 
   // 2. Section + attribute (day markers detected relative to the run day).

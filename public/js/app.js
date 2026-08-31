@@ -146,7 +146,10 @@ function parseISODate(s) {
 
 function fmtDate(s) {
   const p = parseISODate(s);
-  return p ? `${String(p.d).padStart(2, "0")} ${MON[p.mo - 1]} '${String(p.y).slice(2)}` : "—";
+  // Guard the month range (like fmtDay) so a malformed maturity such as
+  // "2026-13-01" renders "—", never "01 undefined 26".
+  if (!p || p.mo < 1 || p.mo > 12) return "—";
+  return `${String(p.d).padStart(2, "0")} ${MON[p.mo - 1]} '${String(p.y).slice(2)}`;
 }
 
 /** HH:MM from a "HH:MM:SS" chat timestamp. */
@@ -313,15 +316,21 @@ function filterSectionSearch(quotes) {
 function sortRows(rows) {
   const dir = state.sortDir === "asc" ? 1 : -1;
   const key = state.sortKey;
-  const val = (q) => (key === "maturity" ? q.maturity || "" : q.timestamp || "");
+  // Maturity compares ISO strings (which sort correctly); time compares SECONDS,
+  // not the raw "HH:MM:SS" string — a stray unpadded "9:30:00" would otherwise
+  // sort after "10:15:00" ("9" > "1"). Missing values (empty maturity, or
+  // tsSeconds() === -1) always sort to the bottom, regardless of direction.
+  const read = (q) =>
+    key === "maturity"
+      ? { v: q.maturity || "", missing: !q.maturity }
+      : { v: tsSeconds(q.timestamp), missing: tsSeconds(q.timestamp) < 0 };
   return rows.slice().sort((a, b) => {
-    const av = val(a);
-    const bv = val(b);
-    // Missing values always sort to the bottom regardless of direction.
-    if (!av && !bv) return 0;
-    if (!av) return 1;
-    if (!bv) return -1;
-    return av < bv ? -1 * dir : av > bv ? 1 * dir : 0;
+    const A = read(a);
+    const B = read(b);
+    if (A.missing && B.missing) return 0;
+    if (A.missing) return 1;
+    if (B.missing) return -1;
+    return A.v < B.v ? -1 * dir : A.v > B.v ? 1 * dir : 0;
   });
 }
 
