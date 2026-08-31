@@ -1397,7 +1397,7 @@ function computeOpportunities() {
       type: "tight", key: `${q.section}|${(q.issuer || "").toLowerCase()}|${q.maturity || ""}`,
       issuer: q.issuer || "—", maturity: q.maturity, section: q.section, bucket, tenor: q.tenor_years,
       size: q.size_cr, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw, _val: gap,
-      headline: `${gap} bps`, sub: "wide",
+      headline: `${gap} bps`, sub: "bid–offer",
       why: `Only ${gap} bps between bid (${fmtNum(q.bid, 2)}) and offer (${fmtNum(q.offer, 2)}) — a tight, liquid market; easy to deal now.`,
       rows: [["Bid yield", pct(q.bid)], ["Offer yield", pct(q.offer)], ["Bid-offer", gap + " bps"]],
     });
@@ -1951,6 +1951,11 @@ function renderPill() {
     els.pillText.textContent = "Offline";
     return;
   }
+  // Restore the live (emerald) look — an earlier error may have recoloured the
+  // pill and its dot to the "Offline" rose, and nothing else resets them.
+  els.pill.className =
+    "inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700";
+  els.pill.querySelector("span.pulse")?.style.removeProperty("background");
   const gen = fmtGenerated(state.data?.generated_at);
   // The board shows one day at a time (the day picker's selection), so the pill
   // names that day outright: "Live · <day>".
