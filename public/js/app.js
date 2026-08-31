@@ -509,7 +509,6 @@ function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
     </div>
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="file-text" class="h-3 w-3"></i>Source: shared Google Doc</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>${esc(dayChip)}</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Auto-refreshes every 10 min${gen ? ` · last ${gen}` : ""}</span>
     </div>`;
@@ -1274,8 +1273,7 @@ function spreadChrome(bodyHTML, c) {
       <div class="scroll-y min-h-0 flex-1 overflow-auto">${bodyHTML}</div>
     </div>
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
-      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Spreads computed live in your browser from quotes.json</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Spreads computed live</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
@@ -1596,8 +1594,7 @@ function oppChrome(bodyHTML, o) {
       <div class="scroll-y min-h-0 flex-1 overflow-auto">${bodyHTML}</div>
     </div>
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
-      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Scanned live in your browser from quotes.json</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Opportunities scanned live</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
@@ -1931,8 +1928,7 @@ function pulseChrome(bodyHTML, p) {
       <div class="scroll-y min-h-0 flex-1 overflow-auto">${bodyHTML}</div>
     </div>
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
-      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Counted live in your browser from quotes.json</span>
-      <span class="inline-flex items-center gap-1"><i data-lucide="cpu" class="h-3 w-3"></i>Model: ${esc(state.data?.model || "—")}</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Desk activity counted live</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
