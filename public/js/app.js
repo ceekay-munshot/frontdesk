@@ -978,8 +978,8 @@ function renderTip(o) {
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than peers (buy)" : "Richer than peers")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Peer median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
-      <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Tight market</b> — a two-way with a small bid–offer gap; easy to deal.</div>
-      <div style="margin-top:4px"><b style="color:${T.tintTeal}">Big pickup</b> — pays a lot over the government curve. <b style="color:${T.tintBlue}">Two-sided</b> — a buyer and a seller are both active. <b style="color:${T.tintRose}">Rich (sell)</b> — yields less than peers; don't overpay.</div>
+      <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Easy to trade</b> — a two-way with a small bid–offer gap; easy to deal.</div>
+      <div style="margin-top:4px"><b style="color:${T.tintTeal}">Pays extra vs govt</b> — pays a lot over the government curve. <b style="color:${T.tintBlue}">Buyer &amp; seller</b> — a buyer and a seller are both active. <b style="color:${T.tintRose}">Pricey (sell)</b> — yields less than peers; don't overpay.</div>
       <div style="margin-top:4px;color:${T.n400}">Sorted strongest-first. All figures are bps unless shown otherwise.</div></div>`;
   }
   if (o.kind === "opp") {
@@ -1289,10 +1289,10 @@ function renderSpreadView() {
 // at a glance); the exact bps stay in the headline number and the tooltip.
 const OPP_CAT = {
   cheap: { label: "Cheap (buy)", icon: "trending-up", color: T.buy, colorInk: T.buyInk, bg: "bg-emerald-50", text: "text-emerald-700", plain: "Cheaper than similar bonds — pays more, worth buying" },
-  tight: { label: "Tight market", icon: "gauge", color: T.act, colorInk: T.actInk, bg: "bg-amber-50", text: "text-amber-700", plain: "Easy to trade — buy & sell prices are very close" },
-  pickup: { label: "Big pickup", icon: "landmark", color: T.pickup, colorInk: T.pickupInk, bg: "bg-teal-50", text: "text-teal-700", plain: "Pays a lot extra over government bonds" },
-  twosided: { label: "Two-sided", icon: "arrow-left-right", color: T.info, colorInk: T.infoInk, bg: "bg-blue-50", text: "text-blue-700", plain: "A buyer & a seller are both active — you could match them" },
-  rich: { label: "Rich (sell)", icon: "trending-down", color: T.sell, colorInk: T.sellInk, bg: "bg-rose-50", text: "text-rose-700", plain: "Pricier than similar bonds — don't overpay" },
+  tight: { label: "Easy to trade", icon: "gauge", color: T.act, colorInk: T.actInk, bg: "bg-amber-50", text: "text-amber-700", plain: "Easy to trade — buy & sell prices are very close" },
+  pickup: { label: "Pays extra vs govt", icon: "landmark", color: T.pickup, colorInk: T.pickupInk, bg: "bg-teal-50", text: "text-teal-700", plain: "Pays a lot extra over government bonds" },
+  twosided: { label: "Buyer & seller", icon: "arrow-left-right", color: T.info, colorInk: T.infoInk, bg: "bg-blue-50", text: "text-blue-700", plain: "A buyer & a seller are both active — you could match them" },
+  rich: { label: "Pricey (sell)", icon: "trending-down", color: T.sell, colorInk: T.sellInk, bg: "bg-rose-50", text: "text-rose-700", plain: "Pricier than similar bonds — don't overpay" },
 };
 
 // Plausibility guardrails: the LLM occasionally mis-parses a price/level into the
@@ -1544,10 +1544,10 @@ function oppControls(o) {
   const chips =
     oppChip("all", "All", counts.actionable, T.brandInk, T.brandInk) +
     oppChip("cheap", "Cheap (buy)", counts.cheap, OPP_CAT.cheap.color, OPP_CAT.cheap.colorInk) +
-    oppChip("tight", "Tight markets", counts.tight, OPP_CAT.tight.color, OPP_CAT.tight.colorInk) +
-    oppChip("pickup", "Big pickup", counts.pickup, OPP_CAT.pickup.color, OPP_CAT.pickup.colorInk) +
-    oppChip("twosided", "Two-sided", counts.twosided, OPP_CAT.twosided.color, OPP_CAT.twosided.colorInk) +
-    oppChip("rich", "Rich (sell)", counts.rich, OPP_CAT.rich.color, OPP_CAT.rich.colorInk);
+    oppChip("tight", "Easy to trade", counts.tight, OPP_CAT.tight.color, OPP_CAT.tight.colorInk) +
+    oppChip("pickup", "Pays extra vs govt", counts.pickup, OPP_CAT.pickup.color, OPP_CAT.pickup.colorInk) +
+    oppChip("twosided", "Buyer & seller", counts.twosided, OPP_CAT.twosided.color, OPP_CAT.twosided.colorInk) +
+    oppChip("rich", "Pricey (sell)", counts.rich, OPP_CAT.rich.color, OPP_CAT.rich.colorInk);
   return `<div class="mb-3 space-y-2">
     <div class="flex flex-wrap items-center gap-1.5">${chips}</div>
     <div class="flex flex-wrap items-center gap-2">
