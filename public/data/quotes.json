@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T18:53:12+05:30",
+  "generated_at": "2026-09-02T20:42:37+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "881e939084c043c8756d8d520c981c349fc15ae1b18581457e52c993ae11fbfa",
   "trading_day": "2026-09-01",
@@ -59,19 +59,19 @@
     "source": "NSDL",
     "as_of": "2026-09-02",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_31.08.2026.xls",
+      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_01.09.2026.xls",
       "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_01-09-2026.xls",
       "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-28.08.2026.xlsx"
     },
     "counts": {
-      "bond": 27386,
-      "cp": 1973,
+      "bond": 27408,
+      "cp": 2003,
       "cd": 458
     },
-    "securities_count": 277,
+    "securities_count": 278,
     "matched": {
-      "confirmed": 1309,
-      "rated": 3921
+      "confirmed": 1314,
+      "rated": 3927
     }
   },
   "securities": {
@@ -800,6 +800,14 @@
       "issuer": "GODREJ INDUSTRIES LIMITED",
       "coupon": null,
       "maturity": "2026-10-12",
+      "rating": "A1",
+      "type": "cp"
+    },
+    "INE110O14JP2": {
+      "name": "AXIS SECURITIES LIMITED 91D CP 01DEC26",
+      "issuer": "AXIS SECURITIES LIMITED",
+      "coupon": null,
+      "maturity": "2026-12-01",
       "rating": "A1",
       "type": "cp"
     },
@@ -44586,7 +44594,9 @@
       "quote_date": "2026-08-31",
       "flags": [],
       "raw": "Axis Securities Ltd - 01 Sep - 01 Dec - 7.05 offer - 200 crs 10:52:24",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE110O14JP2",
+      "rating": "A1"
     },
     {
       "id": "q1775",
@@ -44609,7 +44619,9 @@
       "quote_date": "2026-08-31",
       "flags": [],
       "raw": "Primary  Axis Securities Ltd - 01 Sep - 01 Dec - 7.05 offer - 200 crs 10:52:33",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE110O14JP2",
+      "rating": "A1"
     },
     {
       "id": "q1776",
@@ -44681,7 +44693,9 @@
       "quote_date": "2026-08-31",
       "flags": [],
       "raw": "Axis Securities Ltd - 01 Sep - 01 Dec - 7.05 offer - 200 crs 10:52:43",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE110O14JP2",
+      "rating": "A1"
     },
     {
       "id": "q1779",
@@ -47779,7 +47793,9 @@
       "quote_date": "2026-08-31",
       "flags": [],
       "raw": "Axis Securities Ltd - 01 Sep - 01 Dec - 7.08 offer - 200 crs 12:50:21",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE110O14JP2",
+      "rating": "A1"
     },
     {
       "id": "q1904",
@@ -81380,7 +81396,9 @@
       "quote_date": "2026-08-28",
       "flags": [],
       "raw": "Axis Securities Ltd - 01 Sep - 01 Dec - 7.10 offer - 100 crs",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE110O14JP2",
+      "rating": "A1"
     },
     {
       "id": "q3294",
@@ -198436,7 +198454,9 @@
         "bid_pls"
       ],
       "raw": "7.70 SIDBI oct 2029 (FV) need bids 09:14:46",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "rating": "AAA",
+      "series": 2
     },
     {
       "id": "q8139",
