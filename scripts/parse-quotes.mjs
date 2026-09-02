@@ -38,6 +38,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
+import { fetchGovtBenchmark } from "./ccil.mjs";
 
 /* ---------------------------------------------------------------------------
    Configuration.
@@ -706,6 +707,17 @@ async function main() {
     console.log(`[frontdesk] reused ${reuse.size} day(s); incomplete (retry next run): ${incomplete_days.join(", ") || "none"}`);
   }
 
+  // 5b. CCIL government benchmark (traded T-bills + G-Secs) — the desk prices
+  //     corporate bonds as a spread over the matching-maturity govt security, so
+  //     the frontend needs real govt levels, not an average of the chat's own
+  //     Gsec lines. Fetch fresh; on failure keep the previous snapshot so a flaky
+  //     CCIL endpoint never blanks the benchmark (reject-bad-keep-old).
+  let govt_benchmark = await fetchGovtBenchmark();
+  if (!govt_benchmark) {
+    try { govt_benchmark = JSON.parse(readFileSync(OUT_PATH, "utf8")).govt_benchmark ?? null; } catch { govt_benchmark = null; }
+    if (govt_benchmark) console.log("[frontdesk] CCIL unavailable — keeping previous benchmark snapshot");
+  }
+
   // 6. Write.
   const payload = {
     generated_at: istIso(),
@@ -717,6 +729,7 @@ async function main() {
     incomplete_days, // days only partially structured -> re-structure next run
     quote_count: quotes.length,
     model: activeModel(),
+    govt_benchmark, // CCIL T-bill + G-Sec snapshot for matching-maturity spreads
     quotes,
   };
 

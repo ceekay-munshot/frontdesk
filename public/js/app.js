@@ -887,6 +887,42 @@ const GOVT_Y_MIN = 2, GOVT_Y_MAX = 12;
 // curve. Hold 2y+ points to a realistic floor while leaving the genuine sub-2y
 // short end (T-bills ~5%) alone.
 const GOVT_MIDLONG_MIN_TENOR = 2, GOVT_MIDLONG_Y_MIN = 5.8;
+
+/** The government benchmark curve from the CCIL snapshot in quotes.json (real
+ *  traded T-bills + G-Secs). Tenor is measured from the shown day to each
+ *  security's maturity. Returns sorted [{t, y, name, type}] or null when the
+ *  snapshot is absent — in which case callers fall back to the chat's own Gsec
+ *  lines. This is the client's requested source: spreads vs the matching-
+ *  maturity government security, not an average of the desk's own quotes. */
+function ccilCurve() {
+  const pts = state.data?.govt_benchmark?.points;
+  if (!Array.isArray(pts) || pts.length < 2) return null;
+  const day = currentDay() || state.data?.trading_day;
+  const dayMs = day ? Date.parse(day) : Date.now();
+  const out = [];
+  for (const p of pts) {
+    const mMs = Date.parse(p.maturity);
+    if (!Number.isFinite(mMs) || !isNum(p.yield)) continue;
+    const t = (mMs - dayMs) / (365.25 * 864e5);
+    if (t > 0 && t <= 50) out.push({ t: Math.round(t * 100) / 100, y: p.yield, name: p.name, type: p.type });
+  }
+  out.sort((a, b) => a.t - b.t);
+  return out.length >= 2 ? out : null;
+}
+
+/** The nearest benchmark security to a given tenor (for "which govt did you use?"
+ *  in tooltips/popups). Only CCIL points carry a name; chat-curve points don't. */
+function nearestBenchmark(curve, tenor) {
+  if (!curve || !isNum(tenor)) return null;
+  let best = null;
+  for (const p of curve) {
+    if (!p.name) continue;
+    const d = Math.abs(p.t - tenor);
+    if (!best || d < best.d) best = { d, name: p.name, t: p.t, y: p.y, type: p.type };
+  }
+  return best;
+}
+
 function buildGovtCurve(enriched) {
   // Aggregate to standard curve NODES — 0.5y steps at the short end, whole years
   // beyond — and take the median yield per node. A messy chat throws off many
@@ -948,7 +984,12 @@ function computeUniverse() {
     }
   }
 
-  const govtCurve = buildGovtCurve(enriched);
+  // Prefer the CCIL benchmark (real traded T-bills + G-Secs) for spreads; fall
+  // back to the desk chat's own Gsec lines only when CCIL is unavailable.
+  const chatCurve = buildGovtCurve(enriched);
+  const benchCurve = ccilCurve();
+  const govtCurve = benchCurve || chatCurve;
+  const govtSource = benchCurve ? "CCIL" : chatCurve ? "chat" : null;
   const corp = enriched.filter((e) => e.section === "Bonds" || e.section === "DCM");
 
   // Aggregate corp quotes -> bonds (issuer+maturity), median yield; keep the
@@ -989,9 +1030,10 @@ function computeUniverse() {
     b.peerMedian = pm;
     b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
     b.govtSpread = govtCurve ? Math.round((b.uy - govtYieldAt(govtCurve, b.tenor)) * 100) : null;
+    b.bench = nearestBenchmark(govtCurve, b.tenor); // which govt security this maps to (CCIL)
   }
 
-  return { total, quoteTotal, withUY, withUYT, enriched, corp, govtCurve, bonds };
+  return { total, quoteTotal, withUY, withUYT, enriched, corp, govtCurve, govtSource, bonds };
 }
 
 /**
@@ -1000,7 +1042,7 @@ function computeUniverse() {
  * the headline stats.
  */
 function computeSpread() {
-  const { total, quoteTotal, withUY, withUYT, govtCurve, corp, bonds } = computeUniverse();
+  const { total, quoteTotal, withUY, withUYT, govtCurve, govtSource, corp, bonds } = computeUniverse();
 
   // ---- Heatmap: per corp quote, spread vs govt; median per issuer x bucket.
   let issuerRows = [];
@@ -1080,7 +1122,7 @@ function computeSpread() {
   const cheapest = dispBonds.length && dispBonds[0].gap > 0 ? dispBonds[0] : null;
   const richest = dispBonds.length && dispBonds[dispBonds.length - 1].gap < 0 ? dispBonds[dispBonds.length - 1] : null;
 
-  return { total, quoteTotal, withUY, withUYT, govtCurve, rows, buckets, gridStats, bonds: dispBonds, avgPickup, widest, cheapest, richest };
+  return { total, quoteTotal, withUY, withUYT, govtCurve, govtSource, rows, buckets, gridStats, bonds: dispBonds, avgPickup, widest, cheapest, richest };
 }
 
 /* =========================================================================
@@ -1120,7 +1162,7 @@ function renderTip(o) {
       <div style="margin-top:6px"><b style="color:${T.tintIndigo}">vs Government</b> — extra yield over government bonds of the same maturity. Bigger = pays more = cheaper.</div>
       <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
-  if (o.kind === "curve") return `${L("Government curve")}${row("Tenor", o.t + "y")}${row("Govt yield", o.y.toFixed(2) + "%")}`;
+  if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Pickup over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}</div>${row("Tenor bucket", o.bucket)}${row("Median spread", fmtBps(o.spread) + " bps")}${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt yield", o.govtY.toFixed(2) + "%")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
@@ -1181,7 +1223,7 @@ function govtCurveSVG(curve) {
   const yg = [dMin, ymid, dMax].map((v) => `<line x1="${pl}" y1="${sy(v).toFixed(1)}" x2="${W - pr}" y2="${sy(v).toFixed(1)}" stroke="${T.n200}" stroke-opacity="0.7"/><text x="${pl - 6}" y="${(sy(v) + 3).toFixed(1)}" text-anchor="end" font-size="10" fill="${T.n400}">${v.toFixed(2)}</text>`).join("");
   const dots = curve.map((p) => {
     const X = sx(p.t).toFixed(1), Y = sy(p.y).toFixed(1);
-    const tip = JSON.stringify({ kind: "curve", t: p.t, y: p.y, accent: T.grad1 });
+    const tip = JSON.stringify({ kind: "curve", t: p.t, y: p.y, name: p.name || "", accent: T.grad1 });
     // A per-dot crosshair, revealed by the .cd:hover rule; the wide transparent
     // circle is the hover/hit target that also carries the tooltip.
     return `<g class="cd">
@@ -1357,6 +1399,7 @@ function govtBody(c) {
       <div class="mb-1 flex flex-wrap items-center gap-2">
         <i data-lucide="line-chart" class="h-4 w-4 text-indigo-500"></i>
         <h3 class="font-display text-sm font-bold text-slate-700">Government yield curve</h3>
+        <span class="rounded-full px-2 py-0.5 text-[10px] font-semibold ${c.govtSource === "CCIL" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}">${c.govtSource === "CCIL" ? "CCIL — traded T-bills & G-Secs" : "from desk chat (CCIL unavailable)"}</span>
         <span class="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-600">${c.govtCurve.length} points · hover a dot</span>
       </div>
       ${govtCurveSVG(c.govtCurve)}
@@ -1391,6 +1434,12 @@ function peersBody(c) {
 function spreadChrome(bodyHTML, c) {
   const cov = c ? `<span class="font-semibold text-slate-600">${c.withUYT}</span> of ${c.quoteTotal} quotes have a yield we can compare` : "";
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
+  const asOf = state.data?.govt_benchmark?.as_of;
+  const bench = c && c.govtSource === "CCIL"
+    ? `CCIL${asOf ? ` · ${esc(String(asOf).slice(0, 16))}` : ""}`
+    : c && c.govtSource === "chat"
+      ? "desk chat (CCIL unavailable)"
+      : "—";
   return `
     ${spreadControlsHTML(c)}
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white/90 shadow-sm shadow-slate-200/50 backdrop-blur">
@@ -1403,6 +1452,7 @@ function spreadChrome(bodyHTML, c) {
     </div>
     <div class="mt-2 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 px-1 text-[11px] text-slate-400">
       <span class="inline-flex items-center gap-1"><i data-lucide="calculator" class="h-3 w-3"></i>Spreads computed live</span>
+      <span class="inline-flex items-center gap-1"><i data-lucide="landmark" class="h-3 w-3"></i>Govt benchmark: ${bench}</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>Trading day: ${esc(fmtDay(state.data?.trading_day) || state.data?.trading_day || "—")}</span>
       ${gen ? `<span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Updated ${gen}</span>` : ""}
     </div>`;
@@ -1531,8 +1581,8 @@ function computeOpportunities() {
       const o = baseFromBond(b, "pickup"); o._val = b.govtSpread;
       const govtY = b.uy - b.govtSpread / 100;
       o.headline = `+${b.govtSpread} bps`; o.sub = "over govt";
-      o.why = `Pays ${b.govtSpread} bps over the government curve for its maturity — a big extra yield.`;
-      o.rows = [["Its yield", pct(b.uy)], ["Govt curve", pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
+      o.why = `Pays ${b.govtSpread} bps over ${b.bench ? b.bench.name : "the government curve"} for its maturity — a big extra yield.`;
+      o.rows = [["Its yield", pct(b.uy)], [b.bench ? "Benchmark" : "Govt curve", b.bench ? `${b.bench.name} · ${pct(govtY)}` : pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
       pickup.push(o);
     }
   }
