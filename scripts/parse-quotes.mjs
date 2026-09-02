@@ -38,6 +38,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
+import { fetchGovtBenchmark } from "./ccil.mjs";
 
 /* ---------------------------------------------------------------------------
    Configuration.
@@ -171,11 +172,19 @@ FIELD RULES:
 - Two-way with small integers ("35/39") -> side "two_way", bid & offer = those integers,
   level_meaning "price_or_spread".
 - A bare number just before OFFER/BID with none of the above -> level, level_meaning "unknown".
-- maturity: output as an ISO date "YYYY-MM-DD" whenever you can parse one, else null. Parse messy
-  forms: 01DEC27, 31/8/2026, "Dec 2029" (assume the 1st), "27 MAR 2035", "23-11-2029",
-  "MD 12/10/2028", "(01/07/2030)", "Jun-2028", "Sept 2028".
-- tenor_years: whole years plus a decimal from the TRADING DAY (given below) to maturity, e.g. 3.4.
-  null when there is no maturity.
+- maturity: output as an ISO date "YYYY-MM-DD" whenever you can parse one, else null. NEVER guess a
+  default (never a flat "1 year" for CP or "~4 years" for a bond) — always use the actual stated date.
+  * CORPORATE BONDS (Bonds section) ALWAYS state a maturity here — a year ("2030", or just "29"/"30")
+    or a fuller date. Always parse it; do not leave a bond's maturity null. A bare year -> that year,
+    01 July ("2030" -> "2030-07-01", "29" -> "2029-07-01"). Fuller forms: 01DEC27, 31/8/2026,
+    "Dec 2029", "27 MAR 2035", "23-11-2029", "MD 12/10/2028", "(01/07/2030)", "Jun-2028", "Sept 2028".
+  * MONEY-MARKET (DCM: CP/CD) is quoted as a BARE DATE that IS the maturity, always within ~1 year:
+    "16 Nov", "16/11", "16-11", "1611", "1511", "OC"/"OCT", "JUN"/"JLY", sometimes misspelled. Read it
+    as that day+month in the CURRENT year; if that date is already PAST the trading day, use NEXT year
+    (so the maturity stays within ~1 year). e.g. on trading day 2026-09-01: "16 Nov" -> "2026-11-16",
+    "15 Jan" -> "2027-01-15".
+- tenor_years: whole years plus a decimal from the quote's TRADING DAY (given below) to maturity, e.g.
+  3.4. null ONLY when there is genuinely no maturity (rare for bonds; a CP/CD always has one).
 - flags: the subset of ["bid_pls","offer_pls","cbc","can_buy_more","can_sell","done","switch"] that
   the line expresses ("bid pls" -> bid_pls, "cbc" -> cbc, "can buy more" -> can_buy_more,
   "can sell" -> can_sell, "switch" -> switch, "done" -> done).
@@ -368,6 +377,38 @@ function istIso(d = new Date()) {
 function istDay(d = new Date()) {
   const p = istParts(d);
   return `${p.year}-${p.month}-${p.day}`;
+}
+
+/* ---------------------------------------------------------------------------
+   Deterministic maturity / tenor. The desk's rule: bonds always state a
+   maturity, money-market (CP/CD) is a bare date within a year — never a guessed
+   default. We recompute tenor from (quote day -> maturity) in code rather than
+   trusting the model's date arithmetic, and fill an obvious missed CP/CD date.
+   ------------------------------------------------------------------------- */
+
+const MON_ABBR = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, jly: 7, aug: 8, sep: 9, sept: 9, oct: 10, oc: 10, nov: 11, dec: 12 };
+
+/** Whole years + 1 decimal from dayISO to matISO, or null if either won't parse. */
+function tenorFromMaturity(matISO, dayISO) {
+  const m = Date.parse(matISO), d = Date.parse(dayISO);
+  if (!Number.isFinite(m) || !Number.isFinite(d)) return null;
+  return Math.round(((m - d) / (365.25 * 864e5)) * 10) / 10;
+}
+
+/** A money-market bare-date maturity ("16 Nov", "16-nov", "16nov") from a raw
+ *  line, in the current year — or next year if that date is already past the
+ *  trading day (so a CP/CD maturity stays within ~1 year). A conservative
+ *  safety net for the clear month-name form; the model handles the messier
+ *  numeric/misspelled cases via the prompt. Returns ISO or null. */
+function parseDcmMaturity(raw, dayISO) {
+  const s = String(raw || "").toLowerCase();
+  const m = s.match(/\b(\d{1,2})\s*[-/ ]?\s*(jan|feb|mar|apr|may|jun|jul|jly|aug|sep|sept|oct|oc|nov|dec)\b/);
+  if (!m) return null;
+  const d = +m[1], mo = MON_ABBR[m[2]];
+  if (!(mo >= 1 && mo <= 12 && d >= 1 && d <= 31)) return null;
+  const y0 = +String(dayISO).slice(0, 4);
+  const iso = (y) => `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  return Date.parse(iso(y0)) < Date.parse(dayISO) ? iso(y0 + 1) : iso(y0);
 }
 
 /* ---------------------------------------------------------------------------
@@ -685,6 +726,21 @@ async function main() {
   const quotes = merged.map((q, i) => cleanRow(q, i)).filter(Boolean).map((q, i) => ({ ...q, id: `q${i + 1}` }));
   console.log(`[frontdesk] ${merged.length} raw rows -> ${quotes.length} valid rows`);
 
+  // A1: deterministic maturity/tenor — never a guessed default. Fill an obvious
+  // missed money-market bare date, then recompute EVERY tenor in code from the
+  // quote's day to its maturity, so tenor always matches maturity (and is null
+  // exactly when there is no maturity, rather than a model-invented ~4 years).
+  let dcmFilled = 0;
+  for (const q of quotes) {
+    const day = q.quote_date || tradingDay;
+    if (!q.maturity && q.section === "DCM") {
+      const m = parseDcmMaturity(q.raw, day);
+      if (m) { q.maturity = m; dcmFilled++; }
+    }
+    q.tenor_years = q.maturity ? tenorFromMaturity(q.maturity, day) : null;
+  }
+  if (dcmFilled) console.log(`[frontdesk] filled ${dcmFilled} money-market maturity date(s) the model missed`);
+
   if (!quotes.length) keepOld("0 valid rows after validation");
 
   // The days a dealer can pick on the board: every dated day present in the
@@ -706,6 +762,17 @@ async function main() {
     console.log(`[frontdesk] reused ${reuse.size} day(s); incomplete (retry next run): ${incomplete_days.join(", ") || "none"}`);
   }
 
+  // 5b. CCIL government benchmark (traded T-bills + G-Secs) — the desk prices
+  //     corporate bonds as a spread over the matching-maturity govt security, so
+  //     the frontend needs real govt levels, not an average of the chat's own
+  //     Gsec lines. Fetch fresh; on failure keep the previous snapshot so a flaky
+  //     CCIL endpoint never blanks the benchmark (reject-bad-keep-old).
+  let govt_benchmark = await fetchGovtBenchmark();
+  if (!govt_benchmark) {
+    try { govt_benchmark = JSON.parse(readFileSync(OUT_PATH, "utf8")).govt_benchmark ?? null; } catch { govt_benchmark = null; }
+    if (govt_benchmark) console.log("[frontdesk] CCIL unavailable — keeping previous benchmark snapshot");
+  }
+
   // 6. Write.
   const payload = {
     generated_at: istIso(),
@@ -717,6 +784,7 @@ async function main() {
     incomplete_days, // days only partially structured -> re-structure next run
     quote_count: quotes.length,
     model: activeModel(),
+    govt_benchmark, // CCIL T-bill + G-Sec snapshot for matching-maturity spreads
     quotes,
   };
 
