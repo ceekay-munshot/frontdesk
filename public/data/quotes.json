@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-02T18:12:07+05:30",
+  "generated_at": "2026-09-02T18:53:12+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "881e939084c043c8756d8d520c981c349fc15ae1b18581457e52c993ae11fbfa",
   "trading_day": "2026-09-01",
@@ -296510,5 +296510,40 @@
       "raw": "24/6 Indian CD 92 gone. nothing further 16:43:55",
       "confidence": 0.55
     }
-  ]
+  ],
+  "govt_benchmark": {
+    "as_of": "2026-09-02 16:59:59",
+    "points": [
+      {
+        "type": "gsec",
+        "name": "06.94 GS 2036",
+        "maturity": "2036-07-01",
+        "yield": 6.9754
+      },
+      {
+        "type": "tbill",
+        "name": "091 DTB 03122026",
+        "maturity": "2026-12-03",
+        "yield": 5.2599
+      },
+      {
+        "type": "gsec",
+        "name": "06.36 GS 2031",
+        "maturity": "2031-07-01",
+        "yield": 6.5617
+      },
+      {
+        "type": "gsec",
+        "name": "07.06 GS 2041",
+        "maturity": "2041-07-01",
+        "yield": 7.126
+      },
+      {
+        "type": "tbill",
+        "name": "364 DTB 02092027",
+        "maturity": "2027-09-02",
+        "yield": 5.9049
+      }
+    ]
+  }
 }
