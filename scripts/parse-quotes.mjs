@@ -35,10 +35,11 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
 import { fetchGovtBenchmark } from "./ccil.mjs";
+import { fetchNsdlSources, fetchNsdlDirectory, buildNsdlIndex, resolveSecurity } from "./nsdl.mjs";
 
 /* ---------------------------------------------------------------------------
    Configuration.
@@ -49,6 +50,11 @@ const DOC_URL =
 
 /** Output file, resolved relative to this script so cwd never matters. */
 const OUT_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta.url));
+
+/** NSDL security-master cache (repo root, NOT served to the browser). Rebuilt
+ *  only when NSDL posts new dated lists (~every 20 days); otherwise reused so a
+ *  refresh never re-downloads ~30 MB. Committed alongside quotes.json. */
+const NSDL_CACHE_PATH = fileURLToPath(new URL("../data/nsdl-directory.json", import.meta.url));
 
 /** Quote lines per LLM call. Each input line expands into a verbose 20-field
  *  JSON object, so the OUTPUT bounds the chunk, not the input: 300-line chunks
@@ -492,6 +498,77 @@ async function refreshBenchmarkAndExit() {
   keepOld(fresh ? "document unchanged and benchmark unchanged" : "document unchanged, CCIL unavailable");
 }
 
+/**
+ * The NSDL security master, from cache when the posted lists are unchanged, or
+ * rebuilt (downloading the data files) when NSDL has posted new dated lists.
+ * Reject-bad-keep-old at every step: a page outage or a parse failure falls back
+ * to whatever cache exists, so enrichment degrades to "as of last good build"
+ * rather than vanishing. Returns { as_of, sources, counts, securities } or null.
+ */
+async function loadNsdlDirectory() {
+  let cache = null;
+  try { cache = JSON.parse(readFileSync(NSDL_CACHE_PATH, "utf8")); } catch { /* first run */ }
+  const sources = await fetchNsdlSources();
+  if (cache?.securities?.length && sources && JSON.stringify(sources) === JSON.stringify(cache.sources)) {
+    console.log(`[nsdl] directory cache current — ${cache.securities.length} securities (as of ${cache.as_of})`);
+    return cache;
+  }
+  if (!sources) { // page unreachable this run
+    if (cache) console.log("[nsdl] page unreachable — using existing directory cache");
+    return cache;
+  }
+  console.log(cache ? "[nsdl] NSDL posted new lists — rebuilding directory" : "[nsdl] no cache — building directory");
+  const fresh = await fetchNsdlDirectory(istDay());
+  if (!fresh) { if (cache) console.log("[nsdl] rebuild failed — keeping existing cache"); return cache; }
+  try {
+    mkdirSync(dirname(NSDL_CACHE_PATH), { recursive: true });
+    writeFileSync(NSDL_CACHE_PATH, JSON.stringify(fresh) + "\n");
+    console.log(`[nsdl] wrote directory cache — ${fresh.securities.length} securities`);
+  } catch (err) { console.warn(`[nsdl] could not write cache: ${err.message}`); }
+  return fresh;
+}
+
+/**
+ * Enrich quotes in place against the NSDL master: attach q.isin (only when the
+ * ISIN is uniquely determined — safe to show as THE security), q.rating (when a
+ * rating is confident, even across several same-issuer series), and q.series (how
+ * many series a quote could still be). Returns { securities, reference } for the
+ * payload: securities is the deduped ISIN->details table the frontend renders,
+ * reference is provenance. Never throws — enrichment is best-effort.
+ */
+export async function enrichWithNsdl(quotes) {
+  let dir = null;
+  try { dir = await loadNsdlDirectory(); } catch (err) { console.warn(`[nsdl] directory unavailable: ${err.message}`); }
+  if (!dir?.securities?.length) return { securities: null, reference: null };
+  const index = buildNsdlIndex(dir.securities);
+  const securities = {};
+  let confirmed = 0, rated = 0;
+  for (const q of quotes) {
+    delete q.isin; delete q.rating; delete q.series; // idempotent — never carry a stale prior match
+    if (q.side === "comment" || !q.issuer) continue;
+    if (q.section !== "Bonds" && q.section !== "DCM") continue;
+    const r = resolveSecurity(index, q);
+    if (!r) continue;
+    if (r.isin) {
+      q.isin = r.isin;
+      if (!securities[r.isin]) securities[r.isin] = { name: r.name, issuer: r.issuer, coupon: r.coupon, maturity: r.maturity, rating: r.rating || null, type: r.type };
+      confirmed++;
+    }
+    if (r.rating) { q.rating = r.rating; rated++; }
+    if (r.count > 1) q.series = r.count; // exact ISIN ambiguous among N same-issuer series
+  }
+  const reference = {
+    source: "NSDL",
+    as_of: dir.as_of,
+    sources: dir.sources,
+    counts: dir.counts,
+    securities_count: Object.keys(securities).length,
+    matched: { confirmed, rated },
+  };
+  console.log(`[nsdl] enriched: ${confirmed} confirmed ISIN, ${rated} rated, ${Object.keys(securities).length} distinct securities`);
+  return { securities, reference };
+}
+
 async function main() {
   console.log(llmBanner());
   console.log(`[frontdesk] source: ${DOC_URL}`);
@@ -786,6 +863,11 @@ async function main() {
     console.log(`[frontdesk] reused ${reuse.size} day(s); incomplete (retry next run): ${incomplete_days.join(", ") || "none"}`);
   }
 
+  // 5a2. NSDL security master — confirm each quote's ISIN + official name where
+  //      unique, and attach a confident credit rating (even across same-issuer
+  //      series). Best-effort: degrades to "as of last good build" on any outage.
+  const { securities, reference } = await enrichWithNsdl(quotes);
+
   // 5b. CCIL government benchmark (traded T-bills + G-Secs) — the desk prices
   //     corporate bonds as a spread over the matching-maturity govt security, so
   //     the frontend needs real govt levels, not an average of the chat's own
@@ -809,6 +891,8 @@ async function main() {
     quote_count: quotes.length,
     model: activeModel(),
     govt_benchmark, // CCIL T-bill + G-Sec snapshot for matching-maturity spreads
+    reference, // NSDL provenance: as-of date, source files, match counts
+    securities, // deduped ISIN -> { name, issuer, coupon, maturity, rating, type }
     quotes,
   };
 
@@ -817,7 +901,10 @@ async function main() {
   console.log(`[frontdesk] wrote ${OUT_PATH} — ${quotes.length} quotes, model ${activeModel()}`);
 }
 
-main().catch((err) => {
+// Only run the pipeline when invoked directly (node scripts/parse-quotes.mjs);
+// importing the module (e.g. to reuse enrichWithNsdl in a test) must not fetch.
+const isEntry = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isEntry) main().catch((err) => {
   // A crash must not blank the board either: leave quotes.json as-is, exit 0 so
   // the workflow's commit step simply finds nothing changed.
   console.error(`[frontdesk] ERROR: ${err.stack || err.message || err}`);

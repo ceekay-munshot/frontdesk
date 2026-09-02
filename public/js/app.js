@@ -202,6 +202,40 @@ function catChip(cat) {
   return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide border border-slate-200 bg-slate-100 text-slate-600">${esc(cat)}</span>`;
 }
 
+/* ---- NSDL security master: ratings + confirmed identity (identity + rating
+ *      for each quote, matched against the depository master in the pipeline). */
+
+/** The confirmed security details for an ISIN, from the quotes.json table. */
+const secOf = (isin) => (isin && state.data?.securities?.[isin]) || null;
+
+/** Colour band for a credit rating: high grade green, single-A amber, the rest
+ *  rose. Handles bond scale (AAA/AA/A) and money-market scale (A1+/A1/A2). */
+function ratingClass(r) {
+  const u = String(r || "").toUpperCase();
+  if (/^(AAA|AA|A1\+?|SOV)/.test(u)) return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  if (/^(A\b|A[+-]|A2|A3)/.test(u)) return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-rose-200 bg-rose-50 text-rose-700";
+}
+
+/** A small rating chip. `series` (>1) notes that the exact ISIN is one of N
+ *  same-issuer series that all carry this rating — honest about the ambiguity. */
+function ratingChip(rating, series) {
+  if (!rating) return "";
+  const t = series > 1
+    ? `Credit rating ${esc(rating)} — NSDL. ${series} same-issuer series match; all rated ${esc(rating)} (exact ISIN not unique)`
+    : `Credit rating ${esc(rating)} — NSDL depository master`;
+  return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${ratingClass(rating)}" title="${t}">${esc(rating)}</span>`;
+}
+
+/** A muted "confirmed against NSDL" line: the official instrument name + ISIN,
+ *  shown only when the ISIN is uniquely determined. Empty otherwise. */
+function secConfirmLine(isin) {
+  const s = secOf(isin);
+  if (!s) return "";
+  const nm = s.name ? esc(s.name) : esc(s.issuer || "");
+  return `<div class="mt-0.5 flex items-center gap-1 text-[10px] text-emerald-600" title="Confirmed against NSDL depository master: ${esc(s.name || s.issuer || "")}"><span class="font-semibold">✓ ${esc(isin)}</span><span class="truncate text-emerald-700/70" style="max-width:230px">${nm}</span></div>`;
+}
+
 /* =========================================================================
    State
    ========================================================================= */
@@ -494,7 +528,10 @@ function groupBonds(rows) {
     // The bid-offer WIDTH (magnitude): yield two-ways arrive in mixed orientation,
     // so a signed offer-bid would flip sign meaninglessly across rows.
     const spread = bestBid != null && bestOffer != null ? Math.round(Math.abs(bestOffer - bestBid) * 100) / 100 : null;
-    groups.push({ ...g, bestBid, bestOffer, spread, meaning, count: g.items.length });
+    const isin = g.items.map((q) => q.isin).find(Boolean) ?? null;
+    const rating = g.items.map((q) => q.rating).find(Boolean) ?? null;
+    const series = g.items.map((q) => q.series).find(isNum) ?? null;
+    groups.push({ ...g, bestBid, bestOffer, spread, meaning, count: g.items.length, isin, rating, series });
   }
   return groups;
 }
@@ -632,7 +669,16 @@ function boardChrome(bodyHTML, count, totalQuotes, chatterShown = 0) {
       <span class="inline-flex items-center gap-1"><i data-lucide="file-text" class="h-3 w-3"></i>Source: shared Google Doc</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="calendar" class="h-3 w-3"></i>${esc(dayChip)}</span>
       <span class="inline-flex items-center gap-1"><i data-lucide="refresh-cw" class="h-3 w-3"></i>Auto-refreshes every 10 min${gen ? ` · last ${gen}` : ""}</span>
+      ${nsdlProvenanceHTML()}
     </div>`;
+}
+
+/** Footer note explaining the rating / confirmed-ISIN chips and their source. */
+function nsdlProvenanceHTML() {
+  const ref = state.data?.reference;
+  if (!ref) return "";
+  const asof = ref.as_of ? ` · as of ${esc(fmtDay(ref.as_of) || ref.as_of)}` : "";
+  return `<span class="inline-flex items-center gap-1" title="Each quote is matched to NSDL's depository master to confirm the exact security. A rating chip (e.g. AAA) shows the credit rating; a green ✓ISIN line marks a uniquely confirmed security."><i data-lucide="badge-check" class="h-3 w-3"></i>Ratings &amp; ISIN: NSDL master${asof}</span>`;
 }
 
 /* =========================================================================
@@ -703,17 +749,21 @@ function rowHTML(q) {
         .join("")}</span>`
     : "";
 
+  const rchip = ratingChip(q.rating, q.series);
+  const rating = rchip ? `<span class="ml-1.5 shrink-0">${rchip}</span>` : "";
+
   const rowTip = JSON.stringify({ kind: "row", raw: q.raw, dealer: q.dealer || "", firm: q.firm || "", time: q.timestamp || "", accent: sectionColor(q.section) });
   return `
     <tr class="qrow ${narrow ? "narrow-glow" : sec.acc} border-b border-slate-100 cursor-default"
         data-tip="${esc(rowTip)}">
       <td class="px-3 py-2.5">
         <div class="flex items-center font-semibold text-slate-800">
-          <span class="truncate">${esc(q.issuer || "—")}</span>${secTag}${repeats}
+          <span class="truncate">${esc(q.issuer || "—")}</span>${secTag}${repeats}${rating}
         </div>
         <div class="mt-0.5 flex items-center text-[11px] text-slate-400">
           <span>${sub || "&nbsp;"}</span>${flags}
         </div>
+        ${secConfirmLine(q.isin)}
       </td>
       <td class="px-3 py-2.5">
         <div class="nums font-medium text-slate-700">${mat}</div>
@@ -768,8 +818,10 @@ function groupedHTML(groups) {
           <div class="flex items-center font-semibold text-slate-800">
             <span class="truncate">${esc(g.issuer || "—")}</span>
             <span class="ml-1.5 rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>
+            ${(() => { const c = ratingChip(g.rating, g.series); return c ? `<span class="ml-1.5 shrink-0">${c}</span>` : ""; })()}
           </div>
           <div class="mt-0.5 text-[11px] text-slate-400">${esc(sub) || "&nbsp;"}</div>
+          ${secConfirmLine(g.isin)}
         </td>
         <td class="px-3 py-2.5 text-right"><span class="nums font-semibold text-emerald-600">${g.bestBid != null ? fmtNum(g.bestBid, yld ? 2 : null) : "—"}</span></td>
         <td class="px-3 py-2.5 text-right"><span class="nums font-semibold text-rose-600">${g.bestOffer != null ? fmtNum(g.bestOffer, yld ? 2 : null) : "—"}</span></td>
@@ -1012,7 +1064,12 @@ function computeUniverse() {
     const repr = b.items.reduce((a, c) => (tsSeconds(c.q.timestamp) >= tsSeconds(a.q.timestamp) ? c : a), b.items[0]);
     const size = isNum(repr.q.size_cr) ? repr.q.size_cr : (b.sizes.length ? Math.max(...b.sizes) : null);
     const coupon = b.items.map((e) => e.q.coupon).find((c) => isNum(c)) ?? null; // coupon identifies the exact paper
-    return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr };
+    // NSDL enrichment — all quotes for one security resolve alike, so take the
+    // first that carries each (confirmed ISIN, confident rating, series count).
+    const isin = b.items.map((e) => e.q.isin).find(Boolean) ?? null;
+    const rating = b.items.map((e) => e.q.rating).find(Boolean) ?? null;
+    const series = b.items.map((e) => e.q.series).find(isNum) ?? null;
+    return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series };
   });
 
   // Leave-one-out peer median — LIKE-FOR-LIKE: same issuer CATEGORY + tenor
@@ -1315,7 +1372,7 @@ function peersTableHTML(shown) {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
     return `<tr class="qrow ${sec.acc} border-b border-slate-100">
-      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div></td>
+      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${secConfirmLine(b.isin)}</td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums text-slate-500">${b.peerMedian.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums font-bold ${col}">${fmtBps(b.gap, true)}</td>
@@ -1554,6 +1611,7 @@ function computeOpportunities() {
       type, key: `${b.section}|${(b.issuer || "").toLowerCase()}|${b.maturity || ""}`,
       issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon: b.coupon, bucket: b.bucket, tenor: b.tenor,
       size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw,
+      isin: b.isin, rating: b.rating, series: b.series,
       _val: 0,
     };
   };
@@ -1605,6 +1663,7 @@ function computeOpportunities() {
       type: "tight", key: `${q.section}|${(q.issuer || "").toLowerCase()}|${q.maturity || ""}`,
       issuer: q.issuer || "—", maturity: q.maturity, section: q.section, category: tcat, coupon: q.coupon, bucket, tenor: q.tenor_years,
       size: q.size_cr, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw, _val: gap,
+      isin: q.isin, rating: q.rating, series: q.series,
       headline: `${gap} bps`, sub: "bid–offer",
       why: `Only ${gap} bps between bid (${fmtNum(q.bid, 2)}) and offer (${fmtNum(q.offer, 2)}) — a tight, liquid market; easy to deal now.`,
       rows: [["Bid yield", pct(q.bid)], ["Offer yield", pct(q.offer)], ["Bid-offer", gap + " bps"]],
@@ -1647,6 +1706,7 @@ function computeOpportunities() {
       type: "twosided", key: `${e.section}|${e.issuer.toLowerCase()}|${e.maturity}`,
       issuer: e.issuer, maturity: e.maturity, section: e.section, category: ecat, coupon: isNum(buy.coupon) ? buy.coupon : (isNum(sell.coupon) ? sell.coupon : null), bucket, tenor: e.tenor,
       size: size || null, dealer: null, firm: null, time, fresh: isFresh(buy) || isFresh(sell), raw: null,
+      isin: buy.isin || sell.isin, rating: buy.rating || sell.rating, series: buy.series || sell.series,
       _val: size + tsSeconds(time) / 100000, // interest + recency
       headline: "Both sides", sub: "active",
       buy: { level: levelStr(buy), dealer: buy.dealer || "—", raw: buy.raw },
@@ -1702,12 +1762,13 @@ function oppCard(o) {
       <div class="flex items-center gap-2">
         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.bg}"><i data-lucide="${c.icon}" class="h-4 w-4" style="color:${c.color}"></i></span>
         <span class="text-[10px] font-bold uppercase tracking-wide ${c.text}">${c.label}</span>
-        <span class="ml-auto flex items-center gap-1">${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
+        <span class="ml-auto flex items-center gap-1">${ratingChip(o.rating, o.series)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
       </div>
       <div class="mt-2 flex items-center">
         <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}
       </div>
       <div class="text-[11px] text-slate-400 nums">${isNum(o.coupon) ? fmtNum(o.coupon, 2) + "% · " : ""}${o.maturity ? fmtDate(o.maturity) : "—"}${o.bucket ? " · " + o.bucket : ""}</div>
+      ${secConfirmLine(o.isin)}
       ${primary}
       <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(c.plain || o.why)}</div>
       <div class="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">

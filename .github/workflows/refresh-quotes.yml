@@ -89,18 +89,21 @@ jobs:
           BEDROCK_MAX_TOKENS: "32768"
         run: node scripts/parse-quotes.mjs
 
-      # Commit ONLY if quotes.json actually changed, then push with a 4-attempt
-      # loop that rebases on the branch head before each try — so a refresh that
+      # Commit the refreshed data if it changed, then push with a 4-attempt loop
+      # that rebases on the branch head before each try — so a refresh that
       # overlaps another push (or a human commit) lands cleanly instead of
-      # failing on a non-fast-forward.
+      # failing on a non-fast-forward. Two artifacts can change: quotes.json every
+      # run, and data/nsdl-directory.json only when NSDL posts new master lists
+      # (~monthly) — stage both and commit whatever actually moved.
       - name: Commit & push if changed
         run: |
-          if git diff --quiet -- public/data/quotes.json; then
-            echo "No change in quotes.json — nothing to commit."
+          git add public/data/quotes.json
+          [ -f data/nsdl-directory.json ] && git add data/nsdl-directory.json
+          if git diff --cached --quiet; then
+            echo "No data changes — nothing to commit."
             exit 0
           fi
 
-          git add public/data/quotes.json
           git commit -m "data: refresh quotes.json"
 
           n=0
