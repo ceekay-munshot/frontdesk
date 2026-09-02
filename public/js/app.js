@@ -84,6 +84,125 @@ const FLAG_LABEL = {
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /* =========================================================================
+   Issuer category (NBFC / HFC / PSU / Bank / Manufacturing / …)
+   -------------------------------------------------------------------------
+   The client's spread comparisons must be like-for-like: a bank CD against
+   other bank CDs, an NBFC bond against other NBFC bonds — never apples to
+   oranges. We classify each issuer by matching its (messy, abbreviated) chat
+   name against the client's NSDL-derived directory in data/categories.json,
+   with an alias table for common short forms/PSUs and a few pattern rules.
+   Matching is fuzzy and imperfect by nature (the chat is the source of truth);
+   anything unmatched is surfaced as "Other" rather than silently mis-bucketed.
+   ========================================================================= */
+
+const CATEGORY_URL = "data/categories.json";
+let CAT_DIR = null;      // { normalizedIssuer: category }
+let CAT_ALIAS = null;    // { TOKEN: category }
+let CAT_BY_FIRST = null; // Map firstToken -> [[normName, category], …]
+let CAT_NAMES = null;    // sorted normalized directory names (for cross-prefix)
+const _catMemo = new Map();
+
+async function loadCategories() {
+  try {
+    const r = await fetch(CATEGORY_URL, { cache: "force-cache" });
+    if (!r.ok) return;
+    const j = await r.json();
+    CAT_DIR = j.directory || {};
+    CAT_ALIAS = j.aliases || {};
+    CAT_BY_FIRST = new Map();
+    for (const [nm, cat] of Object.entries(CAT_DIR)) {
+      const ft = nm.split(" ")[0];
+      if (!CAT_BY_FIRST.has(ft)) CAT_BY_FIRST.set(ft, []);
+      CAT_BY_FIRST.get(ft).push([nm, cat]);
+    }
+    CAT_NAMES = Object.keys(CAT_DIR).sort();
+    _catMemo.clear();
+  } catch { /* categories stay unavailable -> everything is "Other" */ }
+}
+
+const _CAT_SUFFIX = /\b(?:LIMITED|LTD|PVT|PRIVATE|COMPANY|CO|CORPORATION|CORP|THE|AND)\b/g;
+/** Normalize an issuer name exactly as data/categories.json was built. */
+function catNorm(s) {
+  s = String(s || "").toUpperCase().replace(/&/g, " AND ");
+  return s.replace(/[^A-Z0-9 ]/g, " ").replace(_CAT_SUFFIX, " ").replace(/\s+/g, " ").trim();
+}
+/** A few high-value pattern rules (kept in sync with the builder script). */
+function catPattern(c) {
+  const toks = c.split(" ");
+  if (c.includes("NABARD") || (c.includes("NATIONAL BANK") && c.includes("AGRI"))) return "PSU";
+  if (c.includes("SIDBI") || (c.includes("SMALL IND") && c.includes("DEV"))) return "PSU";
+  if (c.includes("HOUSING FIN") || c.includes("HOME FIN")) return "HFC";
+  if (toks.some((t) => t.endsWith("HFL"))) return "HFC";
+  if (toks.some((t) => t.endsWith("FSL"))) return "NBFC";
+  if (toks.includes("MF")) return "SKIP"; // a mutual-fund counterparty tag, not an issuer
+  return null;
+}
+/** Resolve an issuer to a category, or null when we can't place it confidently. */
+function categoryOf(issuer) {
+  if (!issuer) return null;
+  if (_catMemo.has(issuer)) return _catMemo.get(issuer);
+  const res = _resolveCategory(issuer);
+  _catMemo.set(issuer, res);
+  return res;
+}
+function _resolveCategory(issuer) {
+  if (!CAT_DIR) return null; // not loaded yet
+  const c = catNorm(issuer);
+  if (!c) return null;
+  const toks = c.split(" ");
+  for (const t of toks) if (CAT_ALIAS[t]) return CAT_ALIAS[t];
+  if (CAT_DIR[c]) return CAT_DIR[c];
+  const ft = toks[0];
+  for (const [nm, cat] of CAT_BY_FIRST.get(ft) || []) {
+    if (nm.startsWith(c) || c.startsWith(nm)) return cat;
+  }
+  const p = catPattern(c);
+  if (p) return p === "SKIP" ? null : p;
+  if (c.length >= 4) {
+    for (const nm of CAT_NAMES) if (nm.startsWith(c) || c.startsWith(nm + " ")) return CAT_DIR[nm];
+  }
+  const ctoks = new Set(toks);
+  for (const [nm, cat] of CAT_BY_FIRST.get(ft) || []) {
+    if ([...ctoks].every((t) => nm.split(" ").includes(t))) return cat;
+  }
+  return null;
+}
+/** The category to show/compare by: resolved, or "Other" when unmatched. */
+const catOrOther = (issuer) => categoryOf(issuer) || "Other";
+
+/** Display order for the category filter (most-watched desks first). */
+const CATEGORY_ORDER = ["PSU", "Bank", "NBFC", "HFC", "Manufacturing", "Insurance", "REIT", "Municipal", "FI", "PTC", "Other"];
+
+/** Distinct issuer categories present on the selected day's corporate quotes. */
+function categoriesForDay() {
+  const set = new Set();
+  for (const q of dayQuotes(state.data?.quotes || [])) {
+    if (q.section === "Gsec" || q.side === "comment" || !q.issuer) continue;
+    set.add(catOrOther(q.issuer));
+  }
+  return CATEGORY_ORDER.filter((c) => set.has(c)).concat([...set].filter((c) => !CATEGORY_ORDER.includes(c)));
+}
+
+/** A category dropdown (returns "" until the directory has loaded / no cats). */
+function categorySelect(dataAttr, current) {
+  const cats = categoriesForDay();
+  if (!cats.length) return "";
+  const opts = ["All", ...cats]
+    .map((c) => `<option value="${esc(c)}"${current === c ? " selected" : ""}>${c === "All" ? "All categories" : esc(c)}</option>`)
+    .join("");
+  return `<select ${dataAttr} title="Issuer category" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200">${opts}</select>`;
+}
+
+/** Small category chip; unmatched issuers show a flagged "?" so nothing is
+ *  silently mis-bucketed (the client asked for like-for-like, honestly labelled). */
+function catChip(cat) {
+  if (!cat || cat === "Other") {
+    return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide border border-amber-200 bg-amber-50 text-amber-600" title="Issuer not matched to a category — comparison may be limited">cat?</span>`;
+  }
+  return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide border border-slate-200 bg-slate-100 text-slate-600">${esc(cat)}</span>`;
+}
+
+/* =========================================================================
    State
    ========================================================================= */
 
@@ -105,10 +224,12 @@ const state = {
   spreadView: "govt", // "govt" | "peers"
   spreadSection: "All", // "All" | "Bonds" | "DCM"
   spreadTenor: "All", // "All" | one of TENOR_BUCKETS
+  spreadCategory: "All", // "All" | one issuer category (NBFC / HFC / PSU / …)
   // Opportunities
   oppCat: "all", // "all" | "cheap" | "tight" | "pickup" | "twosided" | "rich"
   oppSection: "All", // "All" | "Bonds" | "Gsec" | "DCM"
   oppTenor: "All", // "All" | one of TENOR_BUCKETS
+  oppCategory: "All", // "All" | one issuer category
 };
 
 const els = {
@@ -823,7 +944,7 @@ function computeUniverse() {
     if (uy != null) withUY++;
     if (uy != null && isNum(q.tenor_years)) {
       withUYT++;
-      enriched.push({ q, uy, tenor: q.tenor_years, bucket: tenorBucket(q.tenor_years), section: q.section, issuer: q.issuer || "—", maturity: q.maturity || "" });
+      enriched.push({ q, uy, tenor: q.tenor_years, bucket: tenorBucket(q.tenor_years), section: q.section, category: catOrOther(q.issuer), issuer: q.issuer || "—", maturity: q.maturity || "" });
     }
   }
 
@@ -835,7 +956,7 @@ function computeUniverse() {
   const bondMap = new Map();
   for (const e of corp) {
     const key = `${e.section}||${e.issuer.toLowerCase()}||${e.maturity}`;
-    if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [], who: new Set(), items: [] });
+    if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, category: e.category, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [], who: new Set(), items: [] });
     const b = bondMap.get(key);
     b.uys.push(e.uy);
     b.items.push(e);
@@ -844,20 +965,25 @@ function computeUniverse() {
     if (e.q.firm) b.who.add(e.q.firm);
   }
   const bonds = [...bondMap.values()].map((b) => {
+    // The representative quote is the LATEST by time — the client wants the most
+    // recent bid/offer, never an average of the day's quotes (a stale 6.47 must
+    // not blend with a fresh 6.50). Its yield/size/dealer drive the card + spread.
     const repr = b.items.reduce((a, c) => (tsSeconds(c.q.timestamp) >= tsSeconds(a.q.timestamp) ? c : a), b.items[0]);
-    return { issuer: b.issuer, maturity: b.maturity, section: b.section, tenor: b.tenor, bucket: b.bucket, uy: median(b.uys), n: b.uys.length, size: b.sizes.length ? Math.max(...b.sizes) : null, who: [...b.who].join(" ").toLowerCase(), repr };
+    const size = isNum(repr.q.size_cr) ? repr.q.size_cr : (b.sizes.length ? Math.max(...b.sizes) : null);
+    return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr };
   });
 
-  // Leave-one-out peer median (vs Peers) + spread over the govt curve (vs Govt),
-  // attached to every bond.
+  // Leave-one-out peer median — LIKE-FOR-LIKE: same issuer CATEGORY + tenor
+  // bucket (an NBFC bond vs other NBFC bonds, a bank CD vs other bank CDs), never
+  // across categories. "vs Govt" spread is attached alongside.
   const peerGroups = new Map();
   for (const b of bonds) {
-    const k = `${b.section}||${b.bucket}`;
+    const k = `${b.category}||${b.bucket}`;
     if (!peerGroups.has(k)) peerGroups.set(k, []);
     peerGroups.get(k).push(b);
   }
   for (const b of bonds) {
-    const others = peerGroups.get(`${b.section}||${b.bucket}`).filter((x) => x !== b);
+    const others = peerGroups.get(`${b.category}||${b.bucket}`).filter((x) => x !== b);
     const pm = others.length ? median(others.map((x) => x.uy)) : null;
     b.peerMedian = pm;
     b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
@@ -913,19 +1039,20 @@ function computeSpread() {
           cells[bk] = { median: Math.round(mean((o) => o.spread)), n, corpY: mean((o) => o.corpY), govtY: mean((o) => o.govtY) };
         }
       }
-      return { issuer: it.issuer, section: it.section, who: [...it.who].join(" ").toLowerCase(), cells };
+      return { issuer: it.issuer, section: it.section, category: catOrOther(it.issuer), who: [...it.who].join(" ").toLowerCase(), cells };
     });
   }
 
-  // ---- Display filters (section / search / tenor).
+  // ---- Display filters (section / category / search / tenor).
   const term = state.search.trim().toLowerCase();
   const secOk = (s) => (state.spreadSection === "All" ? true : s === state.spreadSection);
+  const catOk = (c) => (state.spreadCategory === "All" ? true : c === state.spreadCategory);
   // The header field promises "issuer or dealer", so match issuer AND the
   // dealers/firms that quoted it (carried through aggregation as `who`).
   const searchOk = (issuer, who) => !term || issuer.toLowerCase().includes(term) || (!!who && who.includes(term));
   const buckets = state.spreadTenor === "All" ? TENOR_BUCKETS : [state.spreadTenor];
 
-  let rows = issuerRows.filter((r) => secOk(r.section) && searchOk(r.issuer, r.who));
+  let rows = issuerRows.filter((r) => secOk(r.section) && catOk(r.category) && searchOk(r.issuer, r.who));
   if (state.spreadTenor !== "All") rows = rows.filter((r) => r.cells[state.spreadTenor]);
   // Average over the DISPLAYED buckets only, so selecting a tenor re-labels and
   // re-ranks rows by the cells actually on screen (not hidden ones).
@@ -942,7 +1069,7 @@ function computeSpread() {
     ? { min: sortedCells[0], med: median(sortedCells), max: sortedCells[sortedCells.length - 1] }
     : null;
 
-  let dispBonds = bonds.filter((b) => secOk(b.section) && searchOk(b.issuer, b.who) && isNum(b.gap));
+  let dispBonds = bonds.filter((b) => secOk(b.section) && catOk(b.category) && searchOk(b.issuer, b.who) && isNum(b.gap));
   if (state.spreadTenor !== "All") dispBonds = dispBonds.filter((b) => b.bucket === state.spreadTenor);
   dispBonds.sort((a, b) => b.gap - a.gap);
 
@@ -1130,8 +1257,8 @@ function spreadGridHTML(rows, buckets, gridStats) {
     }).join("");
     return `<tr class="heat-row hov border-b border-slate-100">
       <td class="heat-issuer sticky left-0 z-10 bg-white px-3 py-1.5">
-        <div class="flex items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:190px">${esc(r.issuer)}</span>
-        <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></div>
+        <div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:190px">${esc(r.issuer)}</span>
+        <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(r.category)}</div>
         <div class="text-[10px] text-slate-400 nums">avg ${fmtBps(r.avg)} bps</div>
       </td>${cells}</tr>`;
   }).join("");
@@ -1145,7 +1272,7 @@ function peersTableHTML(shown) {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
     return `<tr class="qrow ${sec.acc} border-b border-slate-100">
-      <td class="px-3 py-2"><div class="flex items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></div><div class="text-[11px] text-slate-400">${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div></td>
+      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}</div><div class="text-[11px] text-slate-400">${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div></td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums text-slate-500">${b.peerMedian.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums font-bold ${col}">${fmtBps(b.gap, true)}</td>
@@ -1197,6 +1324,7 @@ function spreadControlsHTML(c) {
     <div class="mx-1 hidden h-5 w-px bg-slate-200 sm:block"></div>
     ${spreadSectionSeg()}
     ${spreadTenorSelect()}
+    ${categorySelect("data-spread-category", state.spreadCategory)}
     <button class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" data-tip="${esc(JSON.stringify({ kind: "info" }))}" aria-label="How to read Spread Watch"><i data-lucide="info" class="h-4 w-4"></i></button>
     <div class="ml-auto flex flex-wrap items-center gap-2">${c ? spreadStatChips(c) : ""}</div>
   </div>`;
@@ -1363,6 +1491,7 @@ function computeOpportunities() {
   const term = state.search.trim().toLowerCase();
   const secOk = (s) => (state.oppSection === "All" ? true : s === state.oppSection);
   const tenOk = (bk) => (state.oppTenor === "All" ? true : bk === state.oppTenor);
+  const catOk = (c) => (state.oppCategory === "All" ? true : c === state.oppCategory);
   const hitsSearch = (issuer, who) => !term || (issuer || "").toLowerCase().includes(term) || (who || "").toLowerCase().includes(term);
 
   const pct = fmtPct; // shared formatter
@@ -1372,7 +1501,7 @@ function computeOpportunities() {
     const q = b.repr?.q || {};
     return {
       type, key: `${b.section}|${(b.issuer || "").toLowerCase()}|${b.maturity || ""}`,
-      issuer: b.issuer, maturity: b.maturity, section: b.section, bucket: b.bucket, tenor: b.tenor,
+      issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, bucket: b.bucket, tenor: b.tenor,
       size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw,
       _val: 0,
     };
@@ -1381,7 +1510,7 @@ function computeOpportunities() {
   // ---- Bond-level categories from the shared universe (peer gap + govt spread).
   const cheap = [], rich = [], pickup = [];
   for (const b of u.bonds) {
-    if (!plausibleY(b.uy) || !secOk(b.section) || !tenOk(b.bucket) || !hitsSearch(b.issuer, bondWho(b))) continue;
+    if (!plausibleY(b.uy) || !secOk(b.section) || !catOk(b.category) || !tenOk(b.bucket) || !hitsSearch(b.issuer, bondWho(b))) continue;
     if (isNum(b.gap) && Math.abs(b.gap) <= OPP_GAP_CAP) {
       if (b.gap >= 10) {
         const o = baseFromBond(b, "cheap"); o._val = b.gap;
@@ -1419,10 +1548,11 @@ function computeOpportunities() {
     const gap = Math.abs(Math.round((q.offer - q.bid) * 100));
     if (gap <= 0 || gap > 8) continue;
     const bucket = tenorBucket(q.tenor_years);
-    if (!secOk(q.section) || !tenOk(bucket) || !hitsSearch(q.issuer, `${q.dealer || ""} ${q.firm || ""}`)) continue;
+    const tcat = catOrOther(q.issuer);
+    if (!secOk(q.section) || !catOk(tcat) || !tenOk(bucket) || !hitsSearch(q.issuer, `${q.dealer || ""} ${q.firm || ""}`)) continue;
     tight.push({
       type: "tight", key: `${q.section}|${(q.issuer || "").toLowerCase()}|${q.maturity || ""}`,
-      issuer: q.issuer || "—", maturity: q.maturity, section: q.section, bucket, tenor: q.tenor_years,
+      issuer: q.issuer || "—", maturity: q.maturity, section: q.section, category: tcat, bucket, tenor: q.tenor_years,
       size: q.size_cr, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw, _val: gap,
       headline: `${gap} bps`, sub: "bid–offer",
       why: `Only ${gap} bps between bid (${fmtNum(q.bid, 2)}) and offer (${fmtNum(q.offer, 2)}) — a tight, liquid market; easy to deal now.`,
@@ -1446,8 +1576,9 @@ function computeOpportunities() {
     const dealers = new Set([...e.buys, ...e.sells].map((q) => q.dealer).filter(Boolean));
     if (dealers.size < 2) continue; // need at least two different desks
     const bucket = tenorBucket(e.tenor);
+    const ecat = catOrOther(e.issuer);
     const whoAll = [...e.buys, ...e.sells].map((q) => `${q.dealer || ""} ${q.firm || ""}`).join(" ");
-    if (!secOk(e.section) || !tenOk(bucket) || !hitsSearch(e.issuer, whoAll)) continue;
+    if (!secOk(e.section) || !catOk(ecat) || !tenOk(bucket) || !hitsSearch(e.issuer, whoAll)) continue;
     const recent = (arr) => arr.slice().sort((a, b) => tsSeconds(b.timestamp) - tsSeconds(a.timestamp));
     const buysR = recent(e.buys), sellsR = recent(e.sells);
     let buy = buysR[0];
@@ -1463,7 +1594,7 @@ function computeOpportunities() {
     const time = tsSeconds(buy.timestamp) >= tsSeconds(sell.timestamp) ? buy.timestamp : sell.timestamp;
     twosided.push({
       type: "twosided", key: `${e.section}|${e.issuer.toLowerCase()}|${e.maturity}`,
-      issuer: e.issuer, maturity: e.maturity, section: e.section, bucket, tenor: e.tenor,
+      issuer: e.issuer, maturity: e.maturity, section: e.section, category: ecat, bucket, tenor: e.tenor,
       size: size || null, dealer: null, firm: null, time, fresh: isFresh(buy) || isFresh(sell), raw: null,
       _val: size + tsSeconds(time) / 100000, // interest + recency
       headline: "Both sides", sub: "active",
@@ -1520,7 +1651,7 @@ function oppCard(o) {
       <div class="flex items-center gap-2">
         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.bg}"><i data-lucide="${c.icon}" class="h-4 w-4" style="color:${c.color}"></i></span>
         <span class="text-[10px] font-bold uppercase tracking-wide ${c.text}">${c.label}</span>
-        <span class="ml-auto rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>
+        <span class="ml-auto flex items-center gap-1">${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
       </div>
       <div class="mt-2 flex items-center">
         <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}
@@ -1569,7 +1700,7 @@ function oppControls(o) {
   return `<div class="mb-3 space-y-2">
     <div class="flex flex-wrap items-center gap-1.5">${chips}</div>
     <div class="flex flex-wrap items-center gap-2">
-      ${dayPickerHTML()}${oppSectionSeg()}${oppTenorSelect()}
+      ${dayPickerHTML()}${oppSectionSeg()}${oppTenorSelect()}${categorySelect("data-opp-category", state.oppCategory)}
       <button class="grid h-8 w-8 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" data-tip="${esc(JSON.stringify({ kind: "oppinfo" }))}" aria-label="How to read Opportunities"><i data-lucide="info" class="h-4 w-4"></i></button>
       <span class="ml-auto text-xs font-semibold text-slate-500">${o ? `${counts.actionable} opportunities right now` : ""}</span>
     </div>
@@ -2219,11 +2350,25 @@ els.view.addEventListener("change", (e) => {
   if (sel) {
     state.spreadTenor = sel.value;
     renderView();
+    return;
+  }
+  const spreadCatSel = e.target.closest("select[data-spread-category]");
+  if (spreadCatSel) {
+    state.spreadCategory = spreadCatSel.value;
+    renderView();
+    return;
   }
   const oppSel = e.target.closest("select[data-opp-tenor]");
   if (oppSel) {
     state.oppTenor = oppSel.value;
     renderView();
+    return;
+  }
+  const oppCatSel = e.target.closest("select[data-opp-category]");
+  if (oppCatSel) {
+    state.oppCategory = oppCatSel.value;
+    renderView();
+    return;
   }
 });
 
@@ -2250,6 +2395,11 @@ els.view.addEventListener("mouseout", (e) => {
    ========================================================================= */
 
 render(); // paint the loading skeleton immediately
+loadCategories().then(() => {
+  // Categories arrived after the first paint — refresh the current tab so the
+  // like-for-like comparisons and category chips reflect them.
+  if (state.data && !state.loading && !state.error) renderView();
+});
 loadData({ initial: true });
 setInterval(() => {
   // Poll quietly in the background; only re-renders if generated_at changed.
