@@ -529,11 +529,27 @@ export async function fetchNsdlDirectory(today = new Date().toISOString().slice(
     if (cdBuf) try { const s = buildCd(cdBuf, today); counts.cd = s.length; securities.push(...s); } catch (err) { console.warn(`[nsdl] cd parse skipped: ${err.message}`); }
   }
 
-  // Deterministic order keeps the committed cache's diffs minimal between refreshes.
-  securities.sort((a, b) => (a.isin < b.isin ? -1 : a.isin > b.isin ? 1 : 0));
+  // NSDL lists the same ISIN on several rows (≈1.36× for the debt file); collapse
+  // to one security per ISIN, else a single bond looks like several "series" and
+  // never resolves to a unique ISIN. Then sort for minimal committed-cache diffs.
+  const deduped = dedupByIsin(securities);
+  deduped.sort((a, b) => (a.isin < b.isin ? -1 : a.isin > b.isin ? 1 : 0));
   const as_of = today;
-  console.log(`[nsdl] directory: ${securities.length} live securities (${counts.bond || 0} bond, ${counts.cp || 0} cp, ${counts.cd || 0} cd)`);
-  return { as_of, sources, counts, securities };
+  console.log(`[nsdl] directory: ${deduped.length} securities from ${securities.length} rows (${counts.bond || 0} bond, ${counts.cp || 0} cp, ${counts.cd || 0} cd rows)`);
+  return { as_of, sources, counts, securities: deduped };
+}
+
+/** One security per ISIN (NSDL repeats an ISIN across rows). Keeps the first and
+ *  backfills a rating from a later duplicate if the first had none. */
+function dedupByIsin(securities) {
+  const m = new Map();
+  for (const s of securities || []) {
+    if (!s.isin) continue;
+    const prev = m.get(s.isin);
+    if (!prev) m.set(s.isin, s);
+    else if (!prev.rating && s.rating) prev.rating = s.rating;
+  }
+  return [...m.values()];
 }
 
 /* --------------------------------------------------------------------------
@@ -549,7 +565,7 @@ export function buildNsdlIndex(securities) {
   const byMat = new Map(); // cp/cd: "maturityISO"       -> [sec]  (issuer resolved by issuerAgrees)
   const byIsin = new Map();
   const push = (map, key, sec) => { if (!map.has(key)) map.set(key, []); map.get(key).push(sec); };
-  for (const s of securities || []) {
+  for (const s of dedupByIsin(securities)) { // never let a repeated ISIN look like several series
     if (s.isin) byIsin.set(s.isin, s);
     if (s.type === "bond") {
       const ck = couponKey(s.coupon);
