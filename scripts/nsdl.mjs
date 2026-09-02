@@ -322,6 +322,46 @@ async function fetchBuffer(url) {
   if (!res.ok) throw new Error(`NSDL ${res.status} ${url.slice(0, 80)}`);
   return Buffer.from(await res.arrayBuffer());
 }
+
+/**
+ * Download a big file resiliently via HTTP range requests — many small chunks,
+ * each with its own timeout and retries — so one slow or stalled transfer can't
+ * abort the whole thing (NSDL's ~28 MB debt list is too slow for a single
+ * request on a CI runner). Falls back to one plain request if the server won't
+ * range. Throws on failure (caller decides). Returns a Buffer.
+ */
+export async function fetchLargeBuffer(url, { chunk = 4 * 1024 * 1024 } = {}) {
+  let total = null, ranges = false;
+  try {
+    const probe = await fetch(url, { headers: { ...fileHeaders(), Range: "bytes=0-0" }, signal: AbortSignal.timeout(20000) });
+    await probe.arrayBuffer(); // drain the 1-byte body so the socket frees
+    const cr = probe.headers.get("content-range"); // "bytes 0-0/27978390"
+    ranges = probe.status === 206 && !!cr;
+    if (cr) total = parseInt(cr.split("/").pop(), 10);
+  } catch { /* fall through to a single request */ }
+  if (!ranges || !Number.isFinite(total) || total <= 0) return fetchBuffer(url);
+
+  const parts = [];
+  for (let start = 0; start < total; start += chunk) {
+    const end = Math.min(start + chunk - 1, total - 1);
+    let piece = null;
+    for (let a = 0; a < 3; a++) {
+      try {
+        const res = await fetch(url, { headers: { ...fileHeaders(), Range: `bytes=${start}-${end}` }, signal: AbortSignal.timeout(60000) });
+        if (res.status !== 206 && res.status !== 200) throw new Error(`status ${res.status}`);
+        piece = Buffer.from(await res.arrayBuffer());
+        break;
+      } catch (err) {
+        if (a === 2) throw new Error(`range ${start}-${end}: ${String(err.message || err).slice(0, 80)}`);
+        await sleep(1000 * (a + 1));
+      }
+    }
+    parts.push(piece);
+  }
+  const buf = Buffer.concat(parts);
+  if (buf.length < total * 0.98) throw new Error(`short read ${buf.length}/${total}`);
+  return buf;
+}
 async function withRetry(fn, label) {
   for (let a = 0; a < 4; a++) {
     try { return await fn(); }
@@ -472,13 +512,16 @@ export async function fetchNsdlDirectory(today = new Date().toISOString().slice(
   const securities = [];
   const counts = {};
 
-  const debtText = await withRetry(() => fetchText(sources.debt), "debt");
+  let debtText = null;
+  try { debtText = (await fetchLargeBuffer(sources.debt)).toString("utf8"); }
+  catch (err) { console.warn(`[nsdl] debt download failed: ${String(err.message || err).slice(0, 160)}`); return null; }
   if (!debtText) return null; // bonds are the core — no bonds, treat as unavailable
   try { const s = buildDebt(debtText, today); counts.bond = s.length; securities.push(...s); }
   catch (err) { console.warn(`[nsdl] debt parse failed: ${err.message}`); return null; }
 
   if (sources.cp) {
-    const cpText = await withRetry(() => fetchText(sources.cp), "cp");
+    let cpText = null;
+    try { cpText = (await fetchLargeBuffer(sources.cp)).toString("utf8"); } catch (err) { console.warn(`[nsdl] cp download skipped: ${String(err.message || err).slice(0, 120)}`); }
     if (cpText) try { const s = buildCp(cpText, today); counts.cp = s.length; securities.push(...s); } catch (err) { console.warn(`[nsdl] cp parse skipped: ${err.message}`); }
   }
   if (sources.cd) {
