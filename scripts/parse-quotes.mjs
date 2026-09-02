@@ -468,6 +468,30 @@ function keepOld(reason) {
   process.exit(0);
 }
 
+/**
+ * The "document unchanged" path. There's no LLM work — the desk chat hasn't
+ * moved — but the government benchmark moves on its OWN schedule, so refresh
+ * just that (a cheap CCIL fetch, no LLM) and rewrite quotes.json when it actually
+ * changed; otherwise leave the file untouched to avoid noise commits. Either way
+ * this exits the process. This also makes CCIL testable via a manual run even on
+ * a quiet day (a run would otherwise skip before ever reaching CCIL).
+ */
+async function refreshBenchmarkAndExit() {
+  let cur;
+  try { cur = JSON.parse(readFileSync(OUT_PATH, "utf8")); }
+  catch { keepOld("document unchanged since last run — skipping LLM"); }
+  const fresh = await fetchGovtBenchmark();
+  if (fresh && JSON.stringify(fresh) !== JSON.stringify(cur.govt_benchmark)) {
+    cur.govt_benchmark = fresh;
+    cur.generated_at = istIso();
+    mkdirSync(dirname(OUT_PATH), { recursive: true });
+    writeFileSync(OUT_PATH, JSON.stringify(cur, null, 2) + "\n");
+    console.log(`[frontdesk] document unchanged — refreshed CCIL benchmark only (${fresh.points.length} pts), wrote quotes.json, exiting 0`);
+    process.exit(0);
+  }
+  keepOld(fresh ? "document unchanged and benchmark unchanged" : "document unchanged, CCIL unavailable");
+}
+
 async function main() {
   console.log(llmBanner());
   console.log(`[frontdesk] source: ${DOC_URL}`);
@@ -509,7 +533,7 @@ async function main() {
   // Per-day reuse still skips the unchanged, already-settled days, so this retry
   // stays cheap — it only re-sends the incomplete day(s) and the live day.
   if (prevHash === docHash && prevIncompleteCount === 0) {
-    if (!DRY_RUN) keepOld("document unchanged since last run — skipping LLM");
+    if (!DRY_RUN) await refreshBenchmarkAndExit(); // no LLM; refresh the govt benchmark and exit
     console.log("[frontdesk] document unchanged since last run (dry run: continuing to show parse)");
   } else if (prevHash === docHash && prevIncompleteCount) {
     console.log(`[frontdesk] document unchanged, but ${prevIncompleteCount} day(s) flagged incomplete — reprocessing to retry them`);
