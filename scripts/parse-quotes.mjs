@@ -476,26 +476,47 @@ function keepOld(reason) {
 
 /**
  * The "document unchanged" path. There's no LLM work — the desk chat hasn't
- * moved — but the government benchmark moves on its OWN schedule, so refresh
- * just that (a cheap CCIL fetch, no LLM) and rewrite quotes.json when it actually
- * changed; otherwise leave the file untouched to avoid noise commits. Either way
- * this exits the process. This also makes CCIL testable via a manual run even on
- * a quiet day (a run would otherwise skip before ever reaching CCIL).
+ * moved — but two reference feeds move on their OWN schedules: the CCIL
+ * government benchmark (daily) and the NSDL security master (~monthly). Refresh
+ * both (no LLM) and rewrite quotes.json only when something actually changed;
+ * otherwise leave the file untouched to avoid noise commits. Either way this
+ * exits the process. It also makes both feeds testable via a manual run on a
+ * quiet day (a run would otherwise skip before ever reaching them).
  */
 async function refreshBenchmarkAndExit() {
   let cur;
   try { cur = JSON.parse(readFileSync(OUT_PATH, "utf8")); }
   catch { keepOld("document unchanged since last run — skipping LLM"); }
+  let changed = false;
+
   const fresh = await fetchGovtBenchmark();
   if (fresh && JSON.stringify(fresh) !== JSON.stringify(cur.govt_benchmark)) {
     cur.govt_benchmark = fresh;
+    changed = true;
+    console.log(`[frontdesk] document unchanged — CCIL benchmark moved (${fresh.points.length} pts)`);
+  }
+
+  // Re-enrich against NSDL (ratings/ISINs move independently of the desk doc).
+  // enrichWithNsdl mutates cur.quotes in place; reject-bad-keep-old — only apply
+  // when it succeeds, so an NSDL outage never blanks existing enrichment.
+  const enrichSig = () => JSON.stringify((cur.quotes || []).map((q) => [q.isin || 0, q.rating || 0, q.series || 0]));
+  const beforeSig = enrichSig();
+  const { securities, reference } = await enrichWithNsdl(cur.quotes);
+  if (securities && reference && (enrichSig() !== beforeSig || JSON.stringify(securities) !== JSON.stringify(cur.securities))) {
+    cur.securities = securities;
+    cur.reference = reference;
+    changed = true;
+    console.log("[frontdesk] document unchanged — NSDL enrichment refreshed");
+  }
+
+  if (changed) {
     cur.generated_at = istIso();
     mkdirSync(dirname(OUT_PATH), { recursive: true });
     writeFileSync(OUT_PATH, JSON.stringify(cur, null, 2) + "\n");
-    console.log(`[frontdesk] document unchanged — refreshed CCIL benchmark only (${fresh.points.length} pts), wrote quotes.json, exiting 0`);
+    console.log("[frontdesk] wrote quotes.json (reference feeds only, no LLM), exiting 0");
     process.exit(0);
   }
-  keepOld(fresh ? "document unchanged and benchmark unchanged" : "document unchanged, CCIL unavailable");
+  keepOld("document unchanged; benchmark and NSDL enrichment unchanged");
 }
 
 /**

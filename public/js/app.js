@@ -1117,7 +1117,7 @@ function computeSpread() {
       const iss = e.issuer.toLowerCase();
       const ck = `${e.section}|||${iss}|||${e.bucket}`;
       if (!cellMap.has(ck)) cellMap.set(ck, []);
-      cellMap.get(ck).push({ spread: (e.uy - gy) * 100, corpY: e.uy, govtY: gy });
+      cellMap.get(ck).push({ spread: (e.uy - gy) * 100, corpY: e.uy, govtY: gy, tenor: e.tenor });
       const ik = `${e.section}|||${iss}`;
       if (!issuerAgg.has(ik)) issuerAgg.set(ik, { issuer: e.issuer, section: e.section, who: new Set() });
       const ia = issuerAgg.get(ik);
@@ -1136,7 +1136,11 @@ function computeSpread() {
           const n = s.length, m = Math.floor(n / 2);
           const pick = n % 2 ? [s[m]] : [s[m - 1], s[m]];
           const mean = (f) => pick.reduce((x, o) => x + f(o), 0) / pick.length;
-          cells[bk] = { median: Math.round(mean((o) => o.spread)), n, corpY: mean((o) => o.corpY), govtY: mean((o) => o.govtY) };
+          // Which exact government security this cell is priced against (the CCIL
+          // benchmark nearest the cell's typical tenor) — for the "show your
+          // working" popup the client asked for.
+          const bench = nearestBenchmark(govtCurve, median(obs.map((o) => o.tenor)));
+          cells[bk] = { median: Math.round(mean((o) => o.spread)), n, corpY: mean((o) => o.corpY), govtY: mean((o) => o.govtY), bench };
         }
       }
       return { issuer: it.issuer, section: it.section, category: catOrOther(it.issuer), who: [...it.who].join(" ").toLowerCase(), cells };
@@ -1220,7 +1224,7 @@ function renderTip(o) {
       <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
-  if (o.kind === "cell") return `${L("Pickup over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}</div>${row("Tenor bucket", o.bucket)}${row("Median spread", fmtBps(o.spread) + " bps")}${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt yield", o.govtY.toFixed(2) + "%")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
+  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><span style="opacity:.85">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y</span></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
@@ -1352,7 +1356,7 @@ function spreadGridHTML(rows, buckets, gridStats) {
       const c = r.cells[bk];
       if (!c) return `<td class="px-2 py-2 text-right"><span class="text-slate-200">·</span></td>`;
       const bg = divergingColor(c.median, gridStats.min, gridStats.med, gridStats.max);
-      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, accent: bg });
+      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, bench: c.bench ? { name: c.bench.name, y: +c.bench.y.toFixed(2), t: c.bench.t, type: c.bench.type } : null, accent: bg });
       return `<td class="px-1.5 py-1.5 text-right"><span class="inline-block w-full rounded-md px-2 py-1 text-right text-xs font-bold nums" style="background:${bg};color:${textOn(bg)}" data-tip="${esc(tip)}">${fmtBps(c.median)}</span></td>`;
     }).join("");
     return `<tr class="heat-row hov border-b border-slate-100">
@@ -2440,7 +2444,13 @@ els.view.addEventListener("click", (e) => {
     } else if (a === "retry") {
       loadData({ initial: true });
     }
+    return;
   }
+  // Click a chart/table element to PIN its tooltip open (the client asked to
+  // click a spread and read which benchmark it used). Stops the document
+  // handler below from immediately dismissing it.
+  const tipEl = e.target.closest("[data-tip]");
+  if (tipEl && pinTooltip(tipEl)) e.stopPropagation();
 });
 
 /* Custom tooltip showing the original raw chat line (delegated on the view). */
@@ -2454,6 +2464,34 @@ function positionTooltip(e) {
   if (y + r.height + 8 > window.innerHeight) y = e.clientY - r.height - pad;
   t.style.left = `${Math.max(8, x)}px`;
   t.style.top = `${Math.max(8, y)}px`;
+}
+
+/* A pinned tooltip (click, not hover) stays open next to the clicked element so
+   the client can read the full calculation — "click the spread, see which
+   benchmark you used". Cleared by clicking anywhere else. */
+let tipPinned = false;
+function positionTooltipAtEl(el) {
+  const t = els.tooltip;
+  const pad = 12;
+  const b = el.getBoundingClientRect();
+  const r = t.getBoundingClientRect();
+  let x = b.right + pad;
+  if (x + r.width + 8 > window.innerWidth) x = b.left - r.width - pad;
+  if (x < 8) x = Math.min(Math.max(8, b.left), window.innerWidth - r.width - 8);
+  let y = b.top;
+  if (y + r.height + 8 > window.innerHeight) y = window.innerHeight - r.height - 8;
+  t.style.left = `${Math.max(8, x)}px`;
+  t.style.top = `${Math.max(8, y)}px`;
+}
+function pinTooltip(el) {
+  let obj;
+  try { obj = JSON.parse(el.dataset.tip); } catch { return false; }
+  els.tooltip.innerHTML = renderTip(obj) + `<div style="margin-top:7px;font-size:10px;color:${T.n400};opacity:.8">Click anywhere to close</div>`;
+  els.tooltip.style.setProperty("--tt-accent", obj.accent || T.grad2);
+  els.tooltip.classList.add("show");
+  tipPinned = true;
+  positionTooltipAtEl(el);
+  return true;
 }
 
 /* Tenor dropdowns + the ONE shared tooltip for every chart AND table (Live
@@ -2495,6 +2533,7 @@ els.view.addEventListener("change", (e) => {
 });
 
 els.view.addEventListener("mouseover", (e) => {
+  if (tipPinned) return; // a pinned (clicked) tooltip is not overridden by hover
   const el = e.target.closest("[data-tip]");
   if (!el) return;
   let obj;
@@ -2505,11 +2544,20 @@ els.view.addEventListener("mouseover", (e) => {
   positionTooltip(e);
 });
 els.view.addEventListener("mousemove", (e) => {
+  if (tipPinned) return;
   if (els.tooltip.classList.contains("show") && e.target.closest("[data-tip]")) positionTooltip(e);
 });
 els.view.addEventListener("mouseout", (e) => {
+  if (tipPinned) return;
   const el = e.target.closest("[data-tip]");
   if (el && !el.contains(e.relatedTarget)) els.tooltip.classList.remove("show");
+});
+// Click anywhere that isn't a tooltip trigger dismisses a pinned tooltip.
+document.addEventListener("click", (e) => {
+  if (tipPinned && !e.target.closest("[data-tip]")) {
+    tipPinned = false;
+    els.tooltip.classList.remove("show");
+  }
 });
 
 /* =========================================================================
