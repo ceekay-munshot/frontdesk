@@ -236,6 +236,20 @@ function secConfirmLine(isin) {
   return `<div class="mt-0.5 flex items-center gap-1 text-[10px] text-emerald-600" title="Confirmed against NSDL depository master: ${esc(s.name || s.issuer || "")}"><span class="font-semibold">✓ ${esc(isin)}</span><span class="truncate text-emerald-700/70" style="max-width:230px">${nm}</span></div>`;
 }
 
+/** The security-identity line for a quote/bond/card: the confirmed ✓ISIN when
+ *  unique, else a short "≈ N bonds: <maturities>" shortlist (ISINs on hover) when
+ *  the desk shorthand matches a few genuinely different same-issuer bonds — so
+ *  the dealer can pick the exact one. Empty when nothing matched. */
+function securityLine(isin, candidates) {
+  if (isin) return secConfirmLine(isin);
+  if (Array.isArray(candidates) && candidates.length) {
+    const dates = candidates.map((ic) => { const s = secOf(ic); return s && s.maturity ? esc(fmtDate(s.maturity)) : esc(ic); }).join(" · ");
+    const full = candidates.map((ic) => { const s = secOf(ic); return `${ic}${s && s.maturity ? " — " + s.maturity : ""}`; }).join("   |   ");
+    return `<div class="mt-0.5 flex items-center gap-1 text-[10px] text-slate-500" title="Matches ${candidates.length} NSDL bonds (same issuer, coupon, year) — pick by maturity:   ${esc(full)}"><span class="font-semibold text-slate-400">≈ ${candidates.length} bonds:</span><span class="truncate" style="max-width:210px">${dates}</span></div>`;
+  }
+  return "";
+}
+
 /* =========================================================================
    State
    ========================================================================= */
@@ -531,7 +545,8 @@ function groupBonds(rows) {
     const isin = g.items.map((q) => q.isin).find(Boolean) ?? null;
     const rating = g.items.map((q) => q.rating).find(Boolean) ?? null;
     const series = g.items.map((q) => q.series).find(isNum) ?? null;
-    groups.push({ ...g, bestBid, bestOffer, spread, meaning, count: g.items.length, isin, rating, series });
+    const candidates = g.items.map((q) => q.candidates).find(Boolean) ?? null;
+    groups.push({ ...g, bestBid, bestOffer, spread, meaning, count: g.items.length, isin, rating, series, candidates });
   }
   return groups;
 }
@@ -763,7 +778,7 @@ function rowHTML(q) {
         <div class="mt-0.5 flex items-center text-[11px] text-slate-400">
           <span>${sub || "&nbsp;"}</span>${flags}
         </div>
-        ${secConfirmLine(q.isin)}
+        ${securityLine(q.isin, q.candidates)}
       </td>
       <td class="px-3 py-2.5">
         <div class="nums font-medium text-slate-700">${mat}</div>
@@ -821,7 +836,7 @@ function groupedHTML(groups) {
             ${(() => { const c = ratingChip(g.rating, g.series); return c ? `<span class="ml-1.5 shrink-0">${c}</span>` : ""; })()}
           </div>
           <div class="mt-0.5 text-[11px] text-slate-400">${esc(sub) || "&nbsp;"}</div>
-          ${secConfirmLine(g.isin)}
+          ${securityLine(g.isin, g.candidates)}
         </td>
         <td class="px-3 py-2.5 text-right"><span class="nums font-semibold text-emerald-600">${g.bestBid != null ? fmtNum(g.bestBid, yld ? 2 : null) : "—"}</span></td>
         <td class="px-3 py-2.5 text-right"><span class="nums font-semibold text-rose-600">${g.bestOffer != null ? fmtNum(g.bestOffer, yld ? 2 : null) : "—"}</span></td>
@@ -1069,7 +1084,8 @@ function computeUniverse() {
     const isin = b.items.map((e) => e.q.isin).find(Boolean) ?? null;
     const rating = b.items.map((e) => e.q.rating).find(Boolean) ?? null;
     const series = b.items.map((e) => e.q.series).find(isNum) ?? null;
-    return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series };
+    const candidates = b.items.map((e) => e.q.candidates).find(Boolean) ?? null;
+    return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series, candidates };
   });
 
   // Leave-one-out peer median — LIKE-FOR-LIKE: same issuer CATEGORY + tenor
@@ -1376,7 +1392,7 @@ function peersTableHTML(shown) {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
     return `<tr class="qrow ${sec.acc} border-b border-slate-100">
-      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${secConfirmLine(b.isin)}</td>
+      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${securityLine(b.isin, b.candidates)}</td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums text-slate-500">${b.peerMedian.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums font-bold ${col}">${fmtBps(b.gap, true)}</td>
@@ -1615,7 +1631,7 @@ function computeOpportunities() {
       type, key: `${b.section}|${(b.issuer || "").toLowerCase()}|${b.maturity || ""}`,
       issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon: b.coupon, bucket: b.bucket, tenor: b.tenor,
       size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw,
-      isin: b.isin, rating: b.rating, series: b.series,
+      isin: b.isin, rating: b.rating, series: b.series, candidates: b.candidates,
       _val: 0,
     };
   };
@@ -1667,7 +1683,7 @@ function computeOpportunities() {
       type: "tight", key: `${q.section}|${(q.issuer || "").toLowerCase()}|${q.maturity || ""}`,
       issuer: q.issuer || "—", maturity: q.maturity, section: q.section, category: tcat, coupon: q.coupon, bucket, tenor: q.tenor_years,
       size: q.size_cr, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw, _val: gap,
-      isin: q.isin, rating: q.rating, series: q.series,
+      isin: q.isin, rating: q.rating, series: q.series, candidates: q.candidates,
       headline: `${gap} bps`, sub: "bid–offer",
       why: `Only ${gap} bps between bid (${fmtNum(q.bid, 2)}) and offer (${fmtNum(q.offer, 2)}) — a tight, liquid market; easy to deal now.`,
       rows: [["Bid yield", pct(q.bid)], ["Offer yield", pct(q.offer)], ["Bid-offer", gap + " bps"]],
@@ -1710,7 +1726,7 @@ function computeOpportunities() {
       type: "twosided", key: `${e.section}|${e.issuer.toLowerCase()}|${e.maturity}`,
       issuer: e.issuer, maturity: e.maturity, section: e.section, category: ecat, coupon: isNum(buy.coupon) ? buy.coupon : (isNum(sell.coupon) ? sell.coupon : null), bucket, tenor: e.tenor,
       size: size || null, dealer: null, firm: null, time, fresh: isFresh(buy) || isFresh(sell), raw: null,
-      isin: buy.isin || sell.isin, rating: buy.rating || sell.rating, series: buy.series || sell.series,
+      isin: buy.isin || sell.isin, rating: buy.rating || sell.rating, series: buy.series || sell.series, candidates: buy.candidates || sell.candidates,
       _val: size + tsSeconds(time) / 100000, // interest + recency
       headline: "Both sides", sub: "active",
       buy: { level: levelStr(buy), dealer: buy.dealer || "—", raw: buy.raw },
@@ -1772,7 +1788,7 @@ function oppCard(o) {
         <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}
       </div>
       <div class="text-[11px] text-slate-400 nums">${isNum(o.coupon) ? fmtNum(o.coupon, 2) + "% · " : ""}${o.maturity ? fmtDate(o.maturity) : "—"}${o.bucket ? " · " + o.bucket : ""}</div>
-      ${secConfirmLine(o.isin)}
+      ${securityLine(o.isin, o.candidates)}
       ${primary}
       <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(c.plain || o.why)}</div>
       <div class="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">

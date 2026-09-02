@@ -558,6 +558,33 @@ function dedupByIsin(securities) {
 const couponKey = (c) => (typeof c === "number" && Number.isFinite(c) ? c.toFixed(2) : null);
 const yearOf = (iso) => (typeof iso === "string" && iso.length >= 4 ? iso.slice(0, 4) : null);
 
+/** Collapse fungible bond variants: the same issuer + coupon + maturity is ONE
+ *  economic bond even when NSDL lists it under several ISINs (a standard INE…
+ *  alongside IN8…/IN9… re-issue or FPI-route tranches that are fungible with it).
+ *  Keep one, preferring the INE-prefixed ISIN, backfilling a missing rating/name
+ *  from a variant. Without this a single bond looks like 2-3 "series" and can't
+ *  resolve to a unique ISIN. Non-bonds pass through untouched. */
+function collapseBondVariants(securities) {
+  const passthrough = [];
+  const bonds = new Map(); // "issuerNorm|coupon|maturity" -> chosen sec
+  for (const s of securities || []) {
+    if (s.type !== "bond" || !s.issuer_norm || s.coupon == null || !s.maturity) { passthrough.push(s); continue; }
+    const key = `${s.issuer_norm}|${couponKey(s.coupon)}|${s.maturity}`;
+    const prev = bonds.get(key);
+    if (!prev) { bonds.set(key, { ...s }); continue; }
+    const preferNew = !/^INE/.test(prev.isin) && /^INE/.test(s.isin);
+    if (preferNew) {
+      const merged = { ...s };
+      if (!merged.rating) merged.rating = prev.rating;
+      if (!merged.name) merged.name = prev.name;
+      bonds.set(key, merged);
+    } else if (!prev.rating && s.rating) {
+      prev.rating = s.rating;
+    }
+  }
+  return passthrough.concat([...bonds.values()]);
+}
+
 /** Build fast lookup indexes over a securities array. */
 export function buildNsdlIndex(securities) {
   const byCM = new Map(); // bond:  "coupon|maturityISO" -> [sec]
@@ -565,7 +592,8 @@ export function buildNsdlIndex(securities) {
   const byMat = new Map(); // cp/cd: "maturityISO"       -> [sec]  (issuer resolved by issuerAgrees)
   const byIsin = new Map();
   const push = (map, key, sec) => { if (!map.has(key)) map.set(key, []); map.get(key).push(sec); };
-  for (const s of dedupByIsin(securities)) { // never let a repeated ISIN look like several series
+  // dedupe repeated ISIN rows, THEN collapse fungible INE/IN8 variants of one bond.
+  for (const s of collapseBondVariants(dedupByIsin(securities))) {
     if (s.isin) byIsin.set(s.isin, s);
     if (s.type === "bond") {
       const ck = couponKey(s.coupon);
@@ -631,28 +659,40 @@ function agreedRating(cands) {
 /**
  * Resolve a desk quote against the NSDL master. Returns null when nothing
  * plausible matches, else:
- *   { isin, name, issuer, coupon, maturity, type, rating, count }  when the ISIN
+ *   { isin, name, issuer, coupon, maturity, type, rating, count:1 }  when the ISIN
  *       is UNIQUELY determined (confirmed — safe to show as the exact security);
- *   { rating, count, issuer }                                       when several
- *       same-issuer series match (ambiguous ISIN) but they agree on a rating.
- * `count` is how many NSDL securities the quote could be. Conservative: it never
- * invents an ISIN it isn't sure of.
+ *   { candidates:[{isin,name,maturity,coupon,rating,type}], rating, count, issuer }
+ *       when the quote could be one of several genuinely different same-issuer
+ *       bonds (distinct maturities) — a short shortlist for the dealer to pick,
+ *       never a guess.
+ * Fungible INE/IN8 variants have already been collapsed in buildNsdlIndex, so a
+ * shortlist only ever holds truly different securities.
  */
 export function resolveSecurity(index, q) {
   const cands = candidatePool(index, q);
   if (!cands.length) return null;
-  if (cands.length === 1) {
-    const s = cands[0];
-    return { isin: s.isin, name: s.name, issuer: s.issuer, coupon: s.coupon, maturity: s.maturity, type: s.type, rating: s.rating || null, count: 1 };
+  const confirmed = (s) => ({ isin: s.isin, name: s.name, issuer: s.issuer, coupon: s.coupon, maturity: s.maturity, type: s.type, rating: s.rating || agreedRating(cands), count: 1 });
+  if (cands.length === 1) return confirmed(cands[0]);
+
+  // Several candidates. Trust them only if they're all the SAME issuer — a loose
+  // issuer match spanning different companies must never surface as a "candidate".
+  if (new Set(cands.map((s) => s.issuer_norm)).size > 1) {
+    const r = agreedRating(cands);
+    return r ? { rating: r, count: cands.length, issuer: mostCommon(cands.map((s) => s.issuer)) } : null;
   }
-  const rating = agreedRating(cands);
-  if (!rating) return null; // several series AND no agreed rating -> nothing safe to say
-  // pick the most common canonical issuer for display
-  const tally = new Map();
-  for (const s of cands) tally.set(s.issuer, (tally.get(s.issuer) || 0) + 1);
-  const issuer = [...tally.entries()].sort((a, b) => b[1] - a[1])[0][0];
-  return { rating, count: cands.length, issuer };
+  // Same issuer, several genuinely different securities. A bond shortlist is
+  // useful (distinct maturities to pick from); a money-market one is not (same
+  // issuer + same date tranches don't disambiguate) — show a rating there.
+  if (q.section === "Bonds") {
+    const sorted = cands.slice().sort((a, b) => (a.maturity < b.maturity ? -1 : a.maturity > b.maturity ? 1 : 0));
+    const candidates = sorted.slice(0, 6).map((s) => ({ isin: s.isin, name: s.name, maturity: s.maturity, coupon: s.coupon, rating: s.rating || null, type: s.type }));
+    return { candidates, rating: agreedRating(cands), count: cands.length, issuer: cands[0].issuer };
+  }
+  const r = agreedRating(cands);
+  return r ? { rating: r, count: cands.length, issuer: cands[0].issuer } : null;
 }
+
+const mostCommon = (arr) => { const t = new Map(); for (const x of arr) t.set(x, (t.get(x) || 0) + 1); return [...t.entries()].sort((a, b) => b[1] - a[1])[0][0]; };
 
 /** Back-compat: the uniquely-matched security, or null. */
 export function matchQuote(index, q) {

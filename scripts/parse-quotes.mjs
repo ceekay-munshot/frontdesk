@@ -563,20 +563,26 @@ export async function enrichWithNsdl(quotes) {
   if (!dir?.securities?.length) return { securities: null, reference: null };
   const index = buildNsdlIndex(dir.securities);
   const securities = {};
-  let confirmed = 0, rated = 0;
+  const addSec = (s) => { if (s?.isin && !securities[s.isin]) securities[s.isin] = { name: s.name, issuer: s.issuer || null, coupon: s.coupon, maturity: s.maturity, rating: s.rating || null, type: s.type }; };
+  let confirmed = 0, rated = 0, shortlisted = 0;
   for (const q of quotes) {
-    delete q.isin; delete q.rating; delete q.series; // idempotent — never carry a stale prior match
+    delete q.isin; delete q.rating; delete q.series; delete q.candidates; // idempotent — never carry a stale prior match
     if (q.side === "comment" || !q.issuer) continue;
     if (q.section !== "Bonds" && q.section !== "DCM") continue;
     const r = resolveSecurity(index, q);
     if (!r) continue;
     if (r.isin) {
       q.isin = r.isin;
-      if (!securities[r.isin]) securities[r.isin] = { name: r.name, issuer: r.issuer, coupon: r.coupon, maturity: r.maturity, rating: r.rating || null, type: r.type };
+      addSec(r);
       confirmed++;
+    } else if (r.candidates) {
+      // Several genuinely different same-issuer bonds — hand the dealer the shortlist.
+      q.candidates = r.candidates.map((c) => c.isin);
+      for (const c of r.candidates) addSec({ ...c, issuer: r.issuer });
+      shortlisted++;
     }
     if (r.rating) { q.rating = r.rating; rated++; }
-    if (r.count > 1) q.series = r.count; // exact ISIN ambiguous among N same-issuer series
+    if (r.count > 1) q.series = r.count; // one of N genuinely different same-issuer bonds
   }
   const reference = {
     source: "NSDL",
@@ -584,9 +590,9 @@ export async function enrichWithNsdl(quotes) {
     sources: dir.sources,
     counts: dir.counts,
     securities_count: Object.keys(securities).length,
-    matched: { confirmed, rated },
+    matched: { confirmed, shortlisted, rated },
   };
-  console.log(`[nsdl] enriched: ${confirmed} confirmed ISIN, ${rated} rated, ${Object.keys(securities).length} distinct securities`);
+  console.log(`[nsdl] enriched: ${confirmed} confirmed ISIN, ${shortlisted} shortlisted, ${rated} rated, ${Object.keys(securities).length} distinct securities`);
   return { securities, reference };
 }
 
