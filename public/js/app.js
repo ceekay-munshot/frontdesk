@@ -1193,7 +1193,7 @@ function renderTip(o) {
     return `${L(esc(o.name))}${row("Quotes", o.count)}${row("Buy interest", o.buy)}${row("Sell interest", o.sell)}${o.other ? row("Two-way / other", o.other) : ""}`;
   }
   if (o.kind === "rankdealer") {
-    return `${L(esc(o.name))}${o.firm ? `<div style="color:${T.n400};margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}`;
+    return `${L(esc(o.name))}${o.firm ? `<div style="color:${T.n400};margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}${isNum(o.buy) ? row("Buy interest", o.buy) : ""}${isNum(o.sell) ? row("Sell interest", o.sell) : ""}${o.other ? row("Two-way / other", o.other) : ""}`;
   }
   return "";
 }
@@ -1871,24 +1871,31 @@ function computePulse() {
   const topIssuers = [...issMap.values()]
     .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10);
 
-  // --- Most-active dealers (by quotes posted).
+  // --- Dealers: quotes posted, with each dealer's buy/sell/other split so you
+  //     can see their individual "scope of work" — and who is quiet today.
   const dlrMap = new Map();
   for (const q of quotes) {
     const name = (q.dealer || "").trim();
     if (!name) continue;
     const key = name.toLowerCase();
-    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, firms: new Set() });
+    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, buy: 0, sell: 0, other: 0, firms: new Set() });
     const it = dlrMap.get(key);
     it.count++;
+    if (BUY_SIDES.has(q.side)) it.buy++;
+    else if (SELL_SIDES.has(q.side)) it.sell++;
+    else it.other++;
     if (q.firm) it.firms.add(q.firm);
   }
-  const topDealers = [...dlrMap.values()]
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 10)
-    .map((d) => ({ name: d.name, count: d.count, firm: [...d.firms][0] || "" }));
+  const allDealers = [...dlrMap.values()].map((d) => ({ name: d.name, count: d.count, buy: d.buy, sell: d.sell, other: d.other, firm: [...d.firms][0] || "" }));
+  const byCount = allDealers.slice().sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  const topDealers = byCount.slice(0, 12);
+  // "Who is lacking" — the least-active desks today (fewest quotes), for the
+  // client's "individual scope of work" read. Ascending, a handful.
+  const quietDealers = byCount.slice().reverse().slice(0, 8);
 
   return {
     total, sections, secTotal, buy, sell, twoway, other,
-    timeline, withTime, peak, topIssuers, topDealers,
+    timeline, withTime, peak, topIssuers, topDealers, quietDealers,
     stats: { total, dealers: dlrMap.size, issuers: issMap.size },
   };
 }
@@ -1985,18 +1992,17 @@ function rankBarsSVG(items, mode) {
   const rows = items.map((it, i) => {
     const y = top + i * rowH, cy = y + rowH / 2, barY = y + 5, barH = rowH - 10;
     const end = fullTo(it.count), fullW = Math.max(2, end - labelW);
-    let seg, tip;
-    if (mode === "issuer") {
-      const unit = fullW / Math.max(1, it.count);
-      let cx = labelW;
-      const push = (val, col) => { if (val <= 0) return ""; const w = val * unit; const s = `<rect x="${cx.toFixed(1)}" y="${barY}" width="${Math.max(0.4, w).toFixed(1)}" height="${barH}" fill="${col}"></rect>`; cx += w; return s; };
-      seg = `<defs><clipPath id="pkRankClip${i}"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3"></rect></clipPath></defs>
-        <g clip-path="url(#pkRankClip${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="${T.heatMid}"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.other, PULSE_OTHER)}</g>`;
-      tip = esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other, accent: T.grad1 }));
-    } else {
-      seg = `<rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3" fill="url(#pkRankGrad)"></rect>`;
-      tip = esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, firm: it.firm || "", accent: T.grad2 }));
-    }
+    // Both issuers and dealers stack buy/sell/other, so a dealer's bar shows
+    // their individual scope of work (how much buying vs selling), not just a
+    // total.
+    const unit = fullW / Math.max(1, it.count);
+    let cx = labelW;
+    const push = (val, col) => { if (val <= 0) return ""; const w = val * unit; const s = `<rect x="${cx.toFixed(1)}" y="${barY}" width="${Math.max(0.4, w).toFixed(1)}" height="${barH}" fill="${col}"></rect>`; cx += w; return s; };
+    const seg = `<defs><clipPath id="pkRankClip${mode}${i}"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3"></rect></clipPath></defs>
+        <g clip-path="url(#pkRankClip${mode}${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="${T.heatMid}"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.other, PULSE_OTHER)}</g>`;
+    const tip = mode === "issuer"
+      ? esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other, accent: T.grad1 }))
+      : esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other, firm: it.firm || "", accent: T.grad2 }));
     return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"></rect>
       <text x="${labelW - 8}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(it.name, 16))}</text>
@@ -2067,11 +2073,15 @@ function pulseBody(p) {
     body: rankBarsSVG(p.topIssuers, "issuer"),
   });
 
-  // 5 — Most-active dealers.
+  // 5 — Dealers: activity + each one's buy/sell scope, plus who is quiet today.
+  const quiet = (p.quietDealers || []).filter((d) => d.count <= 3);
+  const quietLine = quiet.length
+    ? `<div class="mt-2 border-t border-slate-100 pt-2 text-[11px] text-slate-500"><span class="font-semibold text-slate-600">Quiet today:</span> ${quiet.map((d) => `${esc(trunc(d.name, 16))} (${d.count})`).join(" · ")}</div>`
+    : "";
   const dealers = pulseCard({
-    icon: "users", title: "Most-active dealers",
-    legend: `<span>by quotes posted</span>`,
-    body: rankBarsSVG(p.topDealers, "dealer"),
+    icon: "users", title: "Dealer activity & scope",
+    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}${pkDot(PULSE_OTHER, "2-way / other")}`,
+    body: rankBarsSVG(p.topDealers, "dealer") + quietLine,
   });
 
   return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${activity}${market}${buysell}${issuers}${dealers}</div>`;
