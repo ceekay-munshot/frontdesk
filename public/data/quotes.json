@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-03T18:17:27+05:30",
+  "generated_at": "2026-09-03T21:57:14+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "4dcc674b4fddcd1af8f86791635071002bffc79ffb2d4e64fe9710e2ec49531b",
   "trading_day": "2026-09-03",
@@ -33,7 +33,7 @@
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.5216
+        "yield": 6.511
       },
       {
         "type": "tbill",
@@ -57,22 +57,22 @@
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-09-02",
+    "as_of": "2026-09-03",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_01.09.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_01-09-2026.xls",
+      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_02.09.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_02-09-2026.xls",
       "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-28.08.2026.xlsx"
     },
     "counts": {
-      "bond": 27408,
-      "cp": 2003,
-      "cd": 458
+      "bond": 27419,
+      "cp": 2043,
+      "cd": 452
     },
-    "securities_count": 613,
+    "securities_count": 607,
     "matched": {
-      "confirmed": 4320,
+      "confirmed": 4308,
       "shortlisted": 123,
-      "rated": 4319
+      "rated": 4310
     }
   },
   "securities": {
@@ -99,22 +99,6 @@
       "maturity": "2027-01-28",
       "rating": null,
       "type": "cd"
-    },
-    "INE700G14TX9": {
-      "name": "HDFC SECURITIES LIMITED 91D CP 02SEP26",
-      "issuer": "HDFC SECURITIES LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-02",
-      "rating": "A1",
-      "type": "cp"
-    },
-    "INE824H14UL8": {
-      "name": "JULIUS BAER CAPITAL (INDIA) PRIVATE LIMITED 91D CP 02SEP26",
-      "issuer": "JULIUS BAER CAPITAL (INDIA) PRIVATE LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-02",
-      "rating": "A1",
-      "type": "cp"
     },
     "INE556F14MJ1": {
       "name": "SMALL INDUSTRIES DEVELOPMENT BANK OF INDIA 91D CP 08SEP26",
@@ -220,14 +204,6 @@
       "rating": "A1",
       "type": "cp"
     },
-    "INE238AD6CM8": {
-      "name": "AXIS BANK LIMITED CD 02SEP26",
-      "issuer": "AXIS BANK LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-02",
-      "rating": null,
-      "type": "cd"
-    },
     "INE238AD6BP3": {
       "name": "AXIS BANK LIMITED CD 27NOV26",
       "issuer": "AXIS BANK LIMITED",
@@ -316,14 +292,6 @@
       "rating": "A1",
       "type": "cd"
     },
-    "INE296A14H50": {
-      "name": "BAJAJ FINANCE LIMITED 91D CP 02SEP26",
-      "issuer": "BAJAJ FINANCE LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-02",
-      "rating": "A1",
-      "type": "cp"
-    },
     "INE476A16K14": {
       "name": "CANARA BANK CD 28JUN27",
       "issuer": "CANARA BANK",
@@ -331,14 +299,6 @@
       "maturity": "2027-06-28",
       "rating": "A1",
       "type": "cd"
-    },
-    "INE929O14FA5": {
-      "name": "RELIANCE RETAIL VENTURES LIMITED 91D CP 02SEP26",
-      "issuer": "RELIANCE RETAIL VENTURES LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-02",
-      "rating": "A1",
-      "type": "cp"
     },
     "INE824H14SY5": {
       "name": "JULIUS BAER CAPITAL (INDIA) PRIVATE LIMITED 362D CP 30NOV26",
@@ -513,14 +473,6 @@
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
       "coupon": null,
       "maturity": "2027-03-18",
-      "rating": "A1",
-      "type": "cd"
-    },
-    "INE503A16HZ5": {
-      "name": "DCB BANK LIMITED CD 02SEP26",
-      "issuer": "DCB BANK LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-02",
       "rating": "A1",
       "type": "cd"
     },
@@ -3140,14 +3092,6 @@
       "rating": null,
       "type": "cd"
     },
-    "INE028A16MN9": {
-      "name": "BANK OF BARODA CD 02SEP26",
-      "issuer": "BANK OF BARODA",
-      "coupon": null,
-      "maturity": "2026-09-02",
-      "rating": "A1",
-      "type": "cd"
-    },
     "INE660A07RQ0": {
       "name": "8.04% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURES SERIES X5 DATE OF MATURITY 26/10/2026",
       "issuer": "SUNDARAM FINANCE LIMITED",
@@ -4745,6 +4689,14 @@
       "issuer": "HDFC SECURITIES LIMITED",
       "coupon": null,
       "maturity": "2026-10-01",
+      "rating": "A1",
+      "type": "cp"
+    },
+    "INE028E14YC4": {
+      "name": "KOTAK SECURITIES LTD 91D CP 03DEC26",
+      "issuer": "KOTAK SECURITIES LTD",
+      "coupon": null,
+      "maturity": "2026-12-03",
       "rating": "A1",
       "type": "cp"
     },
@@ -34140,9 +34092,7 @@
         "cbc"
       ],
       "raw": "HDFC SECURITIES LTD. CP 02/09/2026  (L030626 ) offering@ 5.05 cbc for 200 crs 09:26:59",
-      "confidence": 0.85,
-      "isin": "INE700G14TX9",
-      "rating": "A1"
+      "confidence": 0.85
     },
     {
       "id": "q1235",
@@ -34240,9 +34190,7 @@
         "cbc"
       ],
       "raw": "JULIUS BAER CAPITAL (INDIA) PVT. LTD CP 02/09/2026 ( L030626) offering @ 5.05 cbc for 200 crs 09:28:09",
-      "confidence": 0.85,
-      "isin": "INE824H14UL8",
-      "rating": "A1"
+      "confidence": 0.85
     },
     {
       "id": "q1239",
@@ -37272,8 +37220,7 @@
         "cbc"
       ],
       "raw": "AXIS BANK LTD CD (02SEP2026) - can sell at 5% - 25crs cbc 10:14:58",
-      "confidence": 0.65,
-      "isin": "INE238AD6CM8"
+      "confidence": 0.65
     },
     {
       "id": "q1365",
@@ -37368,8 +37315,7 @@
         "cbc"
       ],
       "raw": "AXIS BANK LTD CD (02SEP2026) - can sell at 5% - 25crs cbc 10:14:58",
-      "confidence": 0.65,
-      "isin": "INE238AD6CM8"
+      "confidence": 0.65
     },
     {
       "id": "q1369",
@@ -39951,9 +39897,7 @@
       "quote_date": "2026-09-01",
       "flags": [],
       "raw": "1 day Bajaj Fin CP @ 00 offer 175crs 11:21:17",
-      "confidence": 0.5,
-      "isin": "INE296A14H50",
-      "rating": "A1"
+      "confidence": 0.5
     },
     {
       "id": "q1476",
@@ -41068,9 +41012,7 @@
       "quote_date": "2026-09-01",
       "flags": [],
       "raw": "1 Day Reliance Retail Ventures Ltd. 02SEP26 CP 5% offer 75 Crs 11:52:27",
-      "confidence": 0.6,
-      "isin": "INE929O14FA5",
-      "rating": "A1"
+      "confidence": 0.6
     },
     {
       "id": "q1523",
@@ -43297,9 +43239,7 @@
       "quote_date": "2026-09-01",
       "flags": [],
       "raw": "1 Day Reliance Retail Ventures Ltd. 02SEP26 CP 4.95% offer 75 Crs",
-      "confidence": 0.6,
-      "isin": "INE929O14FA5",
-      "rating": "A1"
+      "confidence": 0.6
     },
     {
       "id": "q1614",
@@ -44376,9 +44316,7 @@
       "quote_date": "2026-09-01",
       "flags": [],
       "raw": "DCB Bank Ltd. 02SEP26 CD  200/100cr 00/05 13:14:05",
-      "confidence": 0.4,
-      "isin": "INE503A16HZ5",
-      "rating": "A1"
+      "confidence": 0.4
     },
     {
       "id": "q1657",
@@ -61610,8 +61548,7 @@
       "quote_date": "2026-08-31",
       "flags": [],
       "raw": "02/09 AXIS CD 25cr bid 09:56:53",
-      "confidence": 0.5,
-      "isin": "INE238AD6CM8"
+      "confidence": 0.5
     },
     {
       "id": "q2379",
@@ -165261,9 +165198,7 @@
         "cbc"
       ],
       "raw": "02/09 Bajaj Finance CP - 100crs - 6.40 offer - have 55 bid cbc 11:31:33",
-      "confidence": 0.55,
-      "isin": "INE296A14H50",
-      "rating": "A1"
+      "confidence": 0.55
     },
     {
       "id": "q6650",
@@ -165660,9 +165595,7 @@
         "done"
       ],
       "raw": "02/09 Bajaj Finance sold 100crs @ 6.40 - nothing further 11:37:24",
-      "confidence": 0.75,
-      "isin": "INE296A14H50",
-      "rating": "A1"
+      "confidence": 0.75
     },
     {
       "id": "q6667",
@@ -165988,9 +165921,7 @@
         "done"
       ],
       "raw": "02/09 Bajaj Finance sold 100crs @ 6.40 - nothing further 11:37:24",
-      "confidence": 0.75,
-      "isin": "INE296A14H50",
-      "rating": "A1"
+      "confidence": 0.75
     },
     {
       "id": "q6681",
@@ -174085,9 +174016,7 @@
         "bid_pls"
       ],
       "raw": "BANK OF BARODA - CD - 02/09/2026- 50 crs can sell T+1 - show bid",
-      "confidence": 0.7,
-      "isin": "INE028A16MN9",
-      "rating": "A1"
+      "confidence": 0.7
     },
     {
       "id": "q7012",
@@ -315742,7 +315671,9 @@
       "quote_date": null,
       "flags": [],
       "raw": "kotak sec 3m @ 7.00 offer... hos 09:07:57",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028E14YC4",
+      "rating": "A1"
     },
     {
       "id": "q12746",
