@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-04T18:34:03+05:30",
+  "generated_at": "2026-09-04T21:52:36+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "6bf90ac12c4db9120c343764c8010bca9c40c37519f3709afaa45cec06bea4d5",
   "trading_day": "2026-09-04",
@@ -33,7 +33,7 @@
         "type": "gsec",
         "name": "07.71 GS 2066",
         "maturity": "2066-07-01",
-        "yield": 7.6522
+        "yield": 7.6602
       },
       {
         "type": "gsec",
