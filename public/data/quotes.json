@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-08T17:44:11+05:30",
+  "generated_at": "2026-09-09T09:50:43+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "5d3f30a001fb41f209943c9b56525aea0f600254d86c274e0e671cd326bcfa3b",
   "trading_day": "2026-09-04",
@@ -21,25 +21,31 @@
   "quote_count": 15593,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-08 16:59:59",
+    "as_of": "2026-09-09 09:48:32",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 6.9431
+        "yield": 6.9528
       },
       {
         "type": "gsec",
-        "name": "06.36 GS 2031",
+        "name": "06.53 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.49
+        "yield": 6.5512
       },
       {
         "type": "gsec",
-        "name": "05.74 GS 2026",
-        "maturity": "2026-07-01",
-        "yield": 5.0365
+        "name": "06.68 GS 2040",
+        "maturity": "2040-07-01",
+        "yield": 7.089
+      },
+      {
+        "type": "gsec",
+        "name": "07.02 GS 2031",
+        "maturity": "2031-07-01",
+        "yield": 6.5148
       }
     ]
   },
