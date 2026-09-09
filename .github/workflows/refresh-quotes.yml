@@ -25,6 +25,11 @@ on:
         description: "Override the Claude model for this run only, e.g. anthropic.claude-sonnet-5 (blank = the default chain)"
         required: false
         type: string
+      force:
+        description: "Force a full re-parse even if the desk doc is unchanged (use after a parser fix)"
+        required: false
+        type: boolean
+        default: false
 
 # The commit back to the repo uses the built-in Actions token.
 permissions:
@@ -87,6 +92,9 @@ jobs:
           # its process-global token budget mid-run, which is what keeps the
           # parser's bounded parallelism safe against that shared state.
           BEDROCK_MAX_TOKENS: "32768"
+          # Manual "force" input -> re-parse even when the doc hash is unchanged
+          # (so a parser fix applies without waiting for the desk to paste again).
+          FORCE_REPARSE: ${{ github.event.inputs.force == 'true' && '1' || '' }}
         run: node scripts/parse-quotes.mjs
 
       # Commit the refreshed data if it changed, then push with a 4-attempt loop

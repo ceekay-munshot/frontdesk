@@ -638,7 +638,12 @@ async function main() {
   // paste (potentially overnight or over a weekend, given the market-hours cron).
   // Per-day reuse still skips the unchanged, already-settled days, so this retry
   // stays cheap — it only re-sends the incomplete day(s) and the live day.
-  if (prevHash === docHash && prevIncompleteCount === 0) {
+  // FORCE_REPARSE (manual workflow input) bypasses the fast path so a parser fix
+  // re-processes the unchanged doc instead of waiting for the desk's next paste.
+  const FORCE_REPARSE = process.env.FORCE_REPARSE === "1";
+  if (FORCE_REPARSE && prevHash === docHash) {
+    console.log("[frontdesk] FORCE_REPARSE set — re-processing even though the doc is unchanged");
+  } else if (prevHash === docHash && prevIncompleteCount === 0) {
     if (!DRY_RUN) await refreshBenchmarkAndExit(); // no LLM; refresh the govt benchmark and exit
     console.log("[frontdesk] document unchanged since last run (dry run: continuing to show parse)");
   } else if (prevHash === docHash && prevIncompleteCount) {
@@ -662,6 +667,27 @@ async function main() {
 
   if (!records.length) keepOld("no quote lines after sectioning");
   if (!hasQuoteish(records)) keepOld("no quote-like lines in the doc");
+
+  // 2a. Collapse exact duplicate lines. The desk's doc now spans multiple tabs
+  //     that repeat the same day's lines, so one line (same day + section + raw,
+  //     timestamp included) can appear 2-3x. De-dupe at the source so the LLM
+  //     never re-processes a copy — cheaper runs and no double-counted quotes.
+  //     A genuine re-quote has a different timestamp in its raw, so it survives.
+  {
+    const seen = new Set();
+    const uniq = [];
+    for (const r of records) {
+      const key = `${r.date || ""}|${r.section}|${r.raw.trim()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      uniq.push(r);
+    }
+    if (uniq.length < records.length) {
+      console.log(`[frontdesk] de-duped ${records.length - uniq.length} repeated line(s) across doc tabs (${records.length} -> ${uniq.length})`);
+      records.length = 0;
+      records.push(...uniq);
+    }
+  }
 
   // 2b. Split the doc into its DATED days. The trader dates each day's block with
   //     a bare header line ("27-Aug-2026"); sectionize() has already stamped every
