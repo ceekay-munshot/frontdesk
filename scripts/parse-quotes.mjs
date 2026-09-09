@@ -247,11 +247,13 @@ function dayMarker(rawLine, runDay) {
   if (/^[ \t]/.test(rawLine)) return null; // indented -> a maturity date, not a day marker
   const t = rawLine.replace(/^﻿/, "").trim();
   let d, mo, y, m;
-  if ((m = t.match(/^(\d{1,2})[-/ ]([A-Za-z]{3,4})[-/ ](\d{4})$/))) { d = +m[1]; mo = MONTHS[m[2].toLowerCase()]; y = +m[3]; } // 25-Aug-2026
-  else if ((m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/))) { d = +m[1]; mo = +m[2]; y = +m[3]; } // 25-08-2026 / 25/08/2026
-  else if ((m = t.match(/^([A-Za-z]{3,4})\.?\s+(\d{1,2}),?\s+(\d{4})$/))) { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = +m[3]; } // Aug 25, 2026
+  // Year is 2 OR 4 digits — the desk writes both "7-Sep-2026" and "7-Sep-26".
+  if ((m = t.match(/^(\d{1,2})[-/ ]([A-Za-z]{3,4})[-/ ](\d{2,4})$/))) { d = +m[1]; mo = MONTHS[m[2].toLowerCase()]; y = +m[3]; } // 25-Aug-2026 / 7-Sep-26
+  else if ((m = t.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/))) { d = +m[1]; mo = +m[2]; y = +m[3]; } // 25-08-2026 / 25/08/26
+  else if ((m = t.match(/^([A-Za-z]{3,4})\.?\s+(\d{1,2}),?\s+(\d{2,4})$/))) { mo = MONTHS[m[1].toLowerCase()]; d = +m[2]; y = +m[3]; } // Aug 25, 2026
   else return null;
-  if (!mo || mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  if (y < 100) y += 2000; // "26" -> 2026
+  if (!mo || mo < 1 || mo > 12 || d < 1 || d > 31 || y < 2000 || y > 2100) return null;
   const iso = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   // Recent window only: desk chat is today or the recent past, never the future.
   const diff = Math.floor(Date.parse(runDay) / 864e5) - Math.floor(Date.parse(iso) / 864e5);
