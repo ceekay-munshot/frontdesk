@@ -36,7 +36,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
 import { fetchGovtBenchmark } from "./ccil.mjs";
 import { fetchNsdlSources, fetchNsdlDirectory, buildNsdlIndex, resolveSecurity } from "./nsdl.mjs";
@@ -598,6 +598,46 @@ export async function enrichWithNsdl(quotes) {
   return { securities, reference };
 }
 
+const RAW_ARCHIVE_DIR = fileURLToPath(new URL("../data/archive/raw", import.meta.url));
+
+/**
+ * Permanent per-day raw archive. Google Docs caps a document at ~1M characters,
+ * so the desk must delete old days to keep pasting. To make that safe, every run
+ * buckets the fetched doc's raw lines by their day-marker and appends any new
+ * line to that day's own file under data/archive/raw/YYYY-MM-DD.txt. A day, once
+ * captured, survives being trimmed out of the live doc — its file is only ever
+ * appended to, never rewritten smaller or deleted. Union-append means a settled
+ * past day stops changing, the live day grows, and duplicate multi-tab lines are
+ * ignored. Best-effort: a failure here never blocks the parse.
+ */
+function archiveRawByDay(text, runDay) {
+  try {
+    const byDay = new Map();
+    let cur = null;
+    for (const line of text.split(/\r?\n/)) {
+      const dm = dayMarker(line, runDay);
+      if (dm) { cur = dm; if (!byDay.has(cur)) byDay.set(cur, []); continue; }
+      if (cur) byDay.get(cur).push(line);
+    }
+    if (!byDay.size) return;
+    mkdirSync(RAW_ARCHIVE_DIR, { recursive: true });
+    let changed = 0;
+    for (const [day, arr] of byDay) {
+      const f = join(RAW_ARCHIVE_DIR, `${day}.txt`);
+      let prev = ""; try { prev = readFileSync(f, "utf8"); } catch { /* new day */ }
+      const seen = new Set(prev.split("\n").map((l) => l.trim()).filter(Boolean));
+      const add = [];
+      for (const l of arr) { const k = l.trim(); if (k && !seen.has(k)) { seen.add(k); add.push(l); } }
+      if (!add.length) continue;
+      writeFileSync(f, (prev ? prev.replace(/\n+$/, "") + "\n" : "") + add.join("\n") + "\n");
+      changed++;
+    }
+    if (changed) console.log(`[frontdesk] raw archive: updated ${changed} day-file(s) under data/archive/raw/`);
+  } catch (err) {
+    console.warn(`[frontdesk] raw archive skipped: ${String(err.message || err).slice(0, 120)}`);
+  }
+}
+
 async function main() {
   console.log(llmBanner());
   console.log(`[frontdesk] source: ${DOC_URL}`);
@@ -613,6 +653,11 @@ async function main() {
     keepOld(`doc fetch failed: ${err.message || err}`);
   }
   if (!text || !text.trim()) keepOld("doc came back empty");
+
+  // Permanent per-day raw archive — captured on EVERY run (even the unchanged
+  // fast-path below), so the desk can delete old days from the length-capped
+  // Google Doc without ever losing the raw chat. Runs before the fast-path exit.
+  if (!DRY_RUN) archiveRawByDay(text, runDay);
 
   // 1b. Document fingerprint — the cost/runtime bound. The refresh fires every
   //     10 min, but the shared doc only changes when the desk actually pastes. If
