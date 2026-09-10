@@ -107,6 +107,7 @@ jobs:
         run: |
           git add public/data/quotes.json
           [ -f data/nsdl-directory.json ] && git add data/nsdl-directory.json
+          [ -d data/archive/raw ] && git add data/archive/raw
           if git diff --cached --quiet; then
             echo "No data changes — nothing to commit."
             exit 0
