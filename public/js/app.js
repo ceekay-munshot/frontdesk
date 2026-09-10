@@ -1123,20 +1123,22 @@ function computeSpread() {
     // Keys are lowercased (like the peer aggregation) so casing variants of the
     // same issuer don't split into separate rows; the first spelling seen is kept
     // for display.
-    const cellMap = new Map(); // section|||issuerLC|||bucket -> exact observations
+    const cellMap = new Map(); // section|||issuerLC|||bucket -> one obs per distinct bond
     const issuerAgg = new Map(); // section|||issuerLC -> {issuer(display), section, who}
-    for (const e of corp) {
-      const gy = govtYieldAt(govtCurve, e.tenor);
+    // Build the heatmap from `bonds` — each already collapsed to its LATEST quote,
+    // never an average (the client's rule: a stale 6.47 must not blend with a
+    // fresh 6.50). So a bond quoted five times contributes ONE observation (its
+    // latest), and a cell is the median ACROSS DISTINCT bonds, not raw quotes.
+    for (const b of bonds) {
+      const gy = govtYieldAt(govtCurve, b.tenor);
       if (gy == null) continue;
-      const iss = e.issuer.toLowerCase();
-      const ck = `${e.section}|||${iss}|||${e.bucket}`;
+      const iss = b.issuer.toLowerCase();
+      const ck = `${b.section}|||${iss}|||${b.bucket}`;
       if (!cellMap.has(ck)) cellMap.set(ck, []);
-      cellMap.get(ck).push({ spread: (e.uy - gy) * 100, corpY: e.uy, govtY: gy, tenor: e.tenor });
-      const ik = `${e.section}|||${iss}`;
-      if (!issuerAgg.has(ik)) issuerAgg.set(ik, { issuer: e.issuer, section: e.section, who: new Set() });
-      const ia = issuerAgg.get(ik);
-      if (e.q.dealer) ia.who.add(e.q.dealer);
-      if (e.q.firm) ia.who.add(e.q.firm);
+      cellMap.get(ck).push({ spread: (b.uy - gy) * 100, corpY: b.uy, govtY: gy, tenor: b.tenor });
+      const ik = `${b.section}|||${iss}`;
+      if (!issuerAgg.has(ik)) issuerAgg.set(ik, { issuer: b.issuer, section: b.section, who: new Set() });
+      if (b.who) issuerAgg.get(ik).who.add(b.who);
     }
     issuerRows = [...issuerAgg.values()].map((it) => {
       const issLC = it.issuer.toLowerCase();
@@ -1238,7 +1240,7 @@ function renderTip(o) {
       <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
-  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><span style="opacity:.85">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y</span></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " quote" : " quotes"))}`;
+  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><span style="opacity:.85">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y</span></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
