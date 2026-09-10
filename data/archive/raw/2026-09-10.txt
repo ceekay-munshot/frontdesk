@@ -1333,3 +1333,304 @@ SIDBI CD Sep 27  any price? 12:53:52
 Bank of Baroda CD (MD 04/12/2026) 5.90% offer t+1 100 crs
 Mahindra & Mahindra Fin ServLtd CP (MD 25/02/2027) sold @ 6.88% 350 crs... last 50 crs can sell further
 Small Ind Dev Bk of India CD (MD 11/08/2027) sold 75 crs @ 7.33%... can sell 50 crs further 12:54:42
+70 BID T+0 13:01:17
+7.71 REC feb 27  65 /70 - 25 crs t0 cbc 13:01:22
+6.37% RECL Ltd (U) NCD Series 249A (MD 31/03/2027)   70/80 t0 13:01:50
+7.71 REC feb 27  65 /70 - 25 crs t0 cbc 13:03:34
+IRFC OCT 2026 further what offer? 13:05:16
+7.68 irfc 24 nov 2026 oct ip 6.10bid 13:05:38
+7.71% REC FEB 27 70 bid t+0 cbc holding 66 offer 13:05:53
+7.71% REC FEB 27 65/70 t+0 cbc holding 66 offer 13:06:12
+Switch done sold 6.80% NHB 02/04/2032 @58 & bot NHB Jul 27 @04 - 25 crs can do further 13:06:24
+7.71 REC feb 27
+sold @ 68 13:09:37
+7.71 REC feb 27 sold @ 68 25crs t-0 13:09:49
+mirae to tata mf 13:09:54
+7.71 REC feb 27 sold @ 68 25crs t-0 13:10:46
+7.71 REC feb 27 sold @ 68 25crs t-0 can buy more 25crs t0 13:11:39
+7.71% REC FEB 27 got at 6.68% t+0 can buy more cbc 13:12:01
+7.71% REC FEB 27 got at 6.68% t+0 can buy more cbc 13:12:08
+2028-2030 maturity NBFC bond 5cr any offer 13:13:07
+7.71 REC feb 27 sold @ 68 25crs t-0 can buy more 25crs t0 13:13:16
+7.71% REC FEB 27 got at 6.68% t+0 can buy more cbc 13:14:19
+7.71% REC FEB 27 got at 6.68% t+0 next 65/68 25crs t1 vs t0 13:15:53
+812 bafin sep 2027 50/55 25crs holding 52offer 13:17:06
+Switch:
+Sell 7.34% SIDBI 26/02/2029 @63 & buy SIDBI Aug 27 @36 - 25 crs 13:17:25
+sidbi aug 27 75 cr otright 36 offer t+0 13:19:24
+768 sidbi aug 27 75 cr otright 36 offer t+0
+march ip 13:19:35
+768 sidbi aug 27 75crs 36 offer t+0
+march ip 13:19:52
+7.68 SIDBI AUG 2027 36 offer t+0 75 crs 13:20:17
+7.35 bharti tele oct 2027 .. sold @ 80 .. last 25 cr left there 13:20:23
+7.80% NABARD MARCH 27 80/83 cbc 13:20:30
+7.68 irfc 24 nov 2026 87 offer 115 crs bid pls 15 oct ip 13:20:43
+7.80% NABARD MARCH 27 80/83 cbc 13:21:33
+7.68 irfc 24 nov 2026  ip oct  6.95 offer 13:23:33
+INE660A07RQ0
+	8.04% Sundaram Finance Ltd - 26-Oct-2026
+	40.00 Cr offer at 6.10
+	13:24:01
+7.68 irfc 24 nov 2026  ip oct  6.95 offer  last dlt @6.00 13:24:04
+	13:24:36
+NE660A07RQ0
+	13:24:52
+8.04% Sundaram Finance Ltd - 26-Oct-2026 6.20/6.70 40 crs 13:25:16
+Bafin sept 27 took at 52  25 crs 13:25:22
+from? 13:25:29
+13:26:39
+7.68 irfc 24 nov 2026  ip oct  5.95 offer 25crs 13:26:51
+8.65% MUTHOOT FINANCE JAN 28 40/45 cbc 13:28:32
+7.68 irfc 24 nov 2026  ip oct  5.95 offer  last dlt @6.00 13:28:44
+7.68 irfc 24 nov 2026  ip oct  5.95 offer  last dlt @6.00 13:28:50
+TATA Capital Ltd. 8.3% 16MAR27 NCD 20 CHOICE t+1 // t+0 15crs /// 25crs 13:29:06
+8.65% MUTHOOT FINANCE JAN 28 45 bid cbc cbc holding 42 offer 13:30:16
+sidbi aug 27 75 cr otright 36 offer t+0 13:32:02
+sidbi aug 27 75 cr otright 36 offer t+0 13:32:09
+7.68 irfc 24 nov 2026  ip oct  5.95/6.10  25crs 13:33:02
+	13:33:55
+6.83 offer t+0 25cr 13:34:02
+7.14 BAJAJ HSG FEB 2027 83/90 25 CRS T+0 13:34:41
+7.14% BAJAJ HSG FEB 27   90/95  t0 13:38:15
+7.80% NABARD MARCH 27 80 offer t+1 holding 80 bid t+0 13:39:31
+7.95 REC 12-03-2027
+6.68-6.75
+10 v/s 25cr
+T0 13:40:08
+7.95 REC 12-03-2027 6.68 / 6.75 10cr vs 25cr t0 13:41:41
+8.65% MUTHOOT FINANCE JAN 28 45 bid cbc cbc holding 43 offer 13:42:06
+tcl march 27 can sell and buy nabard march 27 13:42:14
+7.95 REC 12-03-2027 6.68 / 6.75 10cr vs 25cr t0 13:42:51
+tcl march 27 can sell and buy pfc / rec / nabard / bajaj housing jfm 27-28 13:42:54
+Summit 2031 00 bid valid 13:43:10
+TATA Capital Ltd. 8.3% 16MAR27 NCD 20 CHOICE t+1 // t+0 15crs /// 25crs 13:43:45
+Summit 2031 00dlt 180cr 13:45:01
+Summit 2031 00dlt 180cr 13:46:09
+8.65% MUTHOOT FINANCE JAN 28 45 bid cbc cbc holding 44 offer 13:57:03
+768 irfc nov 26  92/95   25crs  offer t1 13:57:39
+8.65% MUTHOOT FINANCE JAN 28 42/45 , holding 44 offer 13:59:08
+7.70 HDFC MAY 2028 - 5 Cr 7.47% OFFER 14:06:12
+7.90 Bajaj HFC 28-04-28 65 offer 14:06:42
+7304509599 14:08:53
+8.33% Aditya Birla Finance 19-May-27 15 crs 7.40% offer 14:12:11
+6.80 nhb apr 32  7.58 offer-50crs  cbc 14:12:21
+8.04% Sundaram Finance Ltd - 26-Oct-2026 6.20/6.70 40 crs 14:12:22
+8.04% Sundaram Finance Ltd - 26-Oct-2026 6.20/6.70 40 crs 14:12:51
+bajaj housing may 2028 .. sold @ 70 .. can sell further 14:13:54
+What offers in Bajaj Finance, KMPL, Chola 5 years? 14:14:13
+Ranjana Gupta SBI FUNDS MANAGEMENT LIMITED
+MINDSPACE BUSINESS PARKS REIT
+	10-12-2026
+	14:13:00
+2 way bolo 14:13:05 14:14:31
+bajaj housing may 2028 .. sold @ 70 .. can sell further 14:14:38
+MUTHOOT FINANCE 2028 5cr multiple any offer 14:14:41
+IRFC 2035, 50 cr can buy @ 70 .... cbc 14:19:26
+7.123% Tata Cap Hous Fin NCD SrB (MD 21/07/27)...sold@7.385..can sell..50 crs more here 14:22:28
+7.59% REC Ltd NCD Ser 232A (MD 31/05/2027) 50crs bids pls 14:23:18
+7.90 Bajaj HFC 28-04-28 66 offer seller holding 70 bid cbc pls
+ZURICH 14:28:13
+REC MAY/JUN/AUG 2027  need offers? 14:28:58
+6.37% REC LIMITED SR 249A (MD 31/03/27)...can offer..75 crs..any bids 14:30:56
+Nabard 2030 offer? 14:31:27
+. 14:32:37
+6.37% REC LIMITED SR 249A (MD 31/03/27). 85 bid t+0 passing 75 offer 14:37:24
+6.73% Power Fin Corp NCD BS 253 (MD 15/10/2027)
+	sep ip
+bid spls 14:40:45
+673 pfc oct 2027 sep ip bid spls 14:40:53
+8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer 14:54:32
+7.68 irfc 24 nov 2026 95 choice 75/25 t1/t0  15 oct ip 14:55:37
+7.68 irfc 24 nov 2026 95 choice 75/25 t1/t0  15 oct ip last 00 dlt 14:56:13
+7% Mindspace Busines Park REIT NCD(MD14/09/2027) 50 offer 100cr 14:57:09
+7.3388% ICICI Home Fin Co Opt 2 (MD 24/07/2028)   65 offer 14:58:15
+8.20% Can Fin Homes Ltd NCD Sr. 03 (18/05/2027) - 25crs - 7.25 offer
+	14:58:42
+irfc oct 2026--offer pls 14:59:10
+7.1652% Mindspace Busns Park REIT NCD(MD05/03/29) 80 offer 15:00:24
+8.37% NHAI 18-19 Sr 4 NCD (MD 21/01/2029)  40 bid 15:04:38
+nabard Jan 2029 what price now 15:05:25
+Nabard Jan 2029 70 bid 15:06:41
+7.1652% Mindspace Busns Park REIT NCD(MD05/03/29)--85 offer 100cr 15:07:00
+sbi mf? 15:07:12
+8.30%REC Ltd GOI Fully Serv NCD SrVIII(MD25/03/29)   52 offer 15:08:24
+yes 15:08:36
+nabard jan 2029 59/65 my price 15:08:37
+62126586 osnakshi 15:09:30
+away 15:10:04
+8.37% NHAI 18-19 Sr 4 NCD (MD 21/01/2029)   25/35 10cr/15cr 15:11:31
+7.89% REC Ltd NCD Ser 188B (MD 31/03/2030) 55 offer 15:19:19
+July 2029 nabard 70 bid
+Jan/march 2029 nabard 65 bid 15:20:36
+nabard jan 2029 59/65 my price 15:20:49
+7.83% CHOLAMANDALAM INVESTMENT AND FINANCE (28/06/2028)...25cr offer...Bid plz 15:23:00
+Looking to sell Exim May 27 at 6.85 levels, INR 25 crs.. show best bids.. 15:24:21
+749 irfc may 2027 7% offer 15:24:42
+50crs 15:24:54
+7.75% LIC Housing Fin Ltd NCD Tr444 (MD23/08/29) 80 offer 15:26:41
+8.10 Bajaj Fin Jan 2027 - 50 cr bid pls 15:29:15
+truhome 2027 any offers for 25 cr ?
+mahmf 15:30:21
+7.64% REC LIMITED B & D 30-04-2027 - 7.05 offer 15:30:31
+Radha Krishna Trust need price 15:31:51
+6.90%REC-LTD-31-03-2031 what live quotes now
+7.59%LIC-HSG-FIN-12-06-2031 25 crs any bids 15:35:43
+7.80% NABARD MARCH 27 80 offer cbc cbc 15:38:26
+7.80% NABARD MARCH 27 80 offer cbc cbc holding 90 bid 15:40:33
+6.9601% Mindspace Busi Park NCD 08/12/2028  - 10crs  - 7.65 offer 15:41:16
+8.35% IRFC NCD  Ser 133 (MD 13/03/2029) - 25crs - 7.40 offer 15:41:35
+8.35% IRFC NCD  Ser 133 (MD 13/03/2029) - 25crs - 7.40 offer 15:41:36
+8.85 PGC 19-Oct-2026 5.65 offer 25crs cbc 15:44:25
+7.18% PFC B & D 20-01-2027 -6.60 offer 15:44:38
+8.85 PGC 19-Oct-2026 5.70 offer 25crs cbc 15:47:17
+TORRENT PHARMACEUTICALS LIMITED CP 22-12-2026 - 6.20 offer 15:56:23
+8.85 PGC 19-Oct-2026 5.75 offer 25crs cbc 16:01:07
+rec may 29 75 cr bid pls 16:18:28
+rec may 29 75 cr bid pls--52 offer 16:19:11
+58nid last with me 16:25:59
+3 month RRVL  5.90 offer ,16 VD , 1000-2000 Crs - Primary 13:04:56
+Pallavi Kumari Lkp Securities Ltd.
+Please ask from Quant MF for SG Finserv CP, he had done once through us 13:07:00
+SIDBI 25MAR27 CD 6.67% offer 25 Crs 13:07:04
+Bank of Baroda CD (MD 04/12/2026) 5.90% offer t+1 100 crs 13:07:08
+ok 13:07:16
+Bank of Baroda CD (MD 25/01/2027) 6.40% offer t+1 75 crs
+	13:11:17
+27-Jan BOB CD sold 50crs at 6.45. Can sell more 13:12:04
+27-Jan BOB CD sold 50crs at 6.45. Can sell more 13:12:07
+T+0 what offer OCT/nov assets? 13:13:52
+	13:15:07
+4 dec bob 90 offer t1 13:15:15
+SBICAP SECURITIES LTD CP 11/09/2026 (L 120626 ) - 100
+crs
+	BAJAJ FINANCIAL SECURITIES LIMITED CP 11/09/2026 (L120626) - 200 crs offering @ 60
+	13:15:17
+27-Jan BOB CD sold 50crs at 6.45. Can sell more 13:15:22
+01 Day Bajaj securities 60/80 200 cr cbc 13:17:58
+01 Day SBI cap 60 offer cbc 13:18:10
+1 day SIDBI Cp - 65 offer - 50 cr 13:18:33
+union 12march 45-48  cbc 13:19:32
+4 Dec Aseem Infra 95 choice 250crs 13:20:20
+*4 Dec Aseem Infra 95 choice 250crs T+1/T+0 13:22:56
+LIC Housing Finance Ltd. 23FEB27 CP  offer @ 60 13:24:29
+can switch 15/12 pnb or bob cd.. 50crs, ny int ? 13:24:59
+23/02 lic 80 bid t+0 passing 65 offer 13:25:38
+01 Day Bajaj securities 65/80 200 cr cbc
+01 Day SBI cap 65 offer cbc 100 cr cbc 13:26:12
+23 Sep NTPC CP 5% offer cbc 13:30:15
+BAJAJ FINANCIAL SECURITIES LIMITED CP 11/09/2026 (L120626) & SBICAP SECURITIES LTD CP 11/09/2026 (L 120626 ) put together 300  -  70 offer 13:30:23
+12 feb axis cd - 48 offer - 50 to 100 crs 13:30:52
+23 Sep NTPC CP 5.20 bid t+0 13:31:15
+23 09 ntpc cp   5.00/5.10   50 cr bid 13:33:15
+30 Oct Muthoot Fincorp 50crs 7.50 offer T+1 cbc 13:33:23
+BANK OF BARODA
+	07-12-26
+	CANARA BANK
+	08-12-26
+	13:34:11
+PUNJAB AND SIND BANK CD 11/09/2026 (L120626) offring @ 65 cbc for 200 crs 13:36:43 13:36:52
+only
+	13:37:43
+1 day SIDBI Cp - 65 offer - 50 cr   cbc 13:37:49
+	25.00        92/94  package
+	13:37:49
+01 day PSB 65/75 cbc 13:37:53
+PUNJAB AND SIND BANK CD 11/09/2026 (L120626) offering @ 70 cbc for 200 crs 13:38:30
+1day HDFC cd 100cr 65 offer 13:41:32
+4 Dec Aseem Infra 7% choice 25crs 13:41:53
+Canara Bank CD 28062027 - 7.00% choice 25 crs T+1 13:41:56
+Canara Bank CD (MD 18/12/2026) 5.95% offer t+1
+	13:41:58
+4 Dec Aseem Infra 7% choice 25crs 13:43:45
+1day HDFC cd 100cr 65 offer 13:44:34
+PNB CD 10/2 can sell @ 46.. 50crs.. T+1, cbc 13:44:44
+1401 nabard can sell and buy end jan   cbc  200 crs 13:51:13
+Switch..can sell 14/1 Nabard cd and buy end Jan Nabard cd ...200cr 13:51:41
+12-March Union CD 100crs can sell at 6.48 have 54 bid 13:53:22
+BOB CD 25/1 can sell @ 45.. 50crs, cbc 13:53:26
+Axis Bank CD 28/12 can sell @ 6.00.. 50crs 13:53:51
+upto 23 sept cd can buy 75cr any offer 13:55:49
+Bank of Baroda CD (MD 25/01/2027) 6.43% offer t+1 75 crs
+Indian Bank CD (MD 05/02/2027) 6.43% offer 50 crs
+13:58:31
+10/12 BFSL 150crs 6.78 offer t+1 13:59:52
+Kotak Bank CD 9/3 sold @ 47.. 50crs.. can sell 25crs more, cbc 14:00:01
+Axis Bank CD 28/12  6.06 offer .. 50crs 14:01:20
+Axis Bank CD 28/12.. 10 choice.. 50/25crs, cbc 14:03:59
+SIDBI CD 16/12.. 10 choice.. 25crs, cbc 14:07:29
+SIDBI CD 16/12..chk dlt @ 10.. 25crs 14:09:45
+Axis Bank CD 28/12 chk dlt @ 10 14:10:45
+chk 18/12 **KOTAK CD Bought @00 50cr t0 14:20:14
+HDFC CD 14/12 got @ 07.. can buy more 14:21:24
+PNB CD 15/12 or BOB CD 15/12 can buy @ 6.00 14:21:39
+1 day bob cd  65/70  cbcbcbcbc sbi mf 14:23:05
+500 14:23:28
+PNB CD 15/12 can buy @ 97.. 25crs, cbc.. T+0 14:26:28
+30 Oct Muthoot Fincorp 7.80 choice T+1 cbc
+4 Dec Aseem Infra 7% choice 25crs cbc 14:49:00
+28 Jan Motilal Oswal Finvest 35/45 cbc 14:52:24
+JFM 2027 CD - wat prices now ? 15:00:08
+GODREJ FINANCE LIMITED
+	0.00
+	11-09-2026
+	250
+	ICICI SECURITIES LIMITED
+	500
+	KOTAK SECURITIES LTD
+	15:03:35
+1 day offers - Tata comm 400crs, ISEC 175crs Muthoot Fin 30crs - 70 offer 15:05:33
+1 day offers - Tata comm 400crs, ISEC 175crs Muthoot Fin 30crs - 70 offer 15:06:15
+IndusInd Bank Limited CD (MD 07/12/2026)  6.10 offfer  200cr have  6.15 bids there 15:09:07
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 50 offer - cbc 15:09:27
+4/03 CANARA CD 57 bid t+1 15:09:45
+im gng foe lunch 15 min plz 15:17:50
+1 day tata steel 300 crs can sell 15:19:30
+Sundaram Finance Limited CP (MD 28/01/2027) 85 offer 15:20:49
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 52 offer - have 55 bid - cbc 15:21:21
+8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer 15:21:44
+mmy 15:21:49
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 52 offer 15:21:51
+PIRAMAL FINANCE LTD CP (30OCT2026) pls show bid for 25crs 15:22:25
+Sundaram Finance Limited CP (MD 28/01/2027) sold @ 88 100cr, can sell 75cr more cbc 15:26:00
+Jan-Feb CDs 60 bid sub to limit 15:27:59
+22/1 HDFC 70 bid 15:29:53
+22-Jan HDFC CD 100crs can sell at 6.55 T+1 15:30:00
+12-March HDFC CD 100crs can sell at 6.57 T+1 15:30:06
+28 Jan Motilal Oswal Finvest 40/45 cbc 15:30:11
+MOTILAL OSWAL FINANCIAL SERVICES LTD. CP (27/01/2027) 7.40 choice 15:31:15
+SIDBI 25MAR27 CD 6.67% offer 25 Crs T+1 15:31:31
+March Nabard 70 dlt mkt further 75 bid 15:31:45
+05/03 Kotak , 60 bid 15:33:41
+22-Jan HDFC CD sold 100crs at 6.55. Can sell more 15:38:40
+BOB CD 25/1 can buy @ 55.. 25crs.. T+1, cbc 15:39:14
+18 Jan Infina Fin 7.50 offer 25crs cbc 15:40:43
+18 01  infina cp 7.50 offer 25 crs 15:40:50
+18 Jan Infina Fin 7.50 offer 25crs cbc 15:40:52
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 55 offer - have 58 bid cbc t+1 15:41:18
+switch : will sell 15/9 Cds and buy 03M Cds..t+1...counter pls 15:43:25
+HDFC 22-Jan - 100cr sold @55..can sell more T1 15:43:29
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 55 offer - have 57 bid cbc t+1 15:45:18
+switch : will sell 15/9 Cds and buy 03M Cds..t+1...counter pls 15:47:12
+HDFC CD 14/12 got @ 07.. can buy more, cbc 15:47:36
+SWITCH 250CRS
+14/12 HDFC CD 6.05% can sell
+22/01 HDFC CD 6.65% can buy 15:48:20
+PNB 5TH FEB 60 OFFER   5CRS 15:48:28
+22/01 HDFC CD 6.65% can buy 15:48:41
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 55 offer - have 56 bid cbc t+1 15:48:42
+02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - sold 75crs @ 55 T+1 - nothing further 15:49:59
+12-March HDFC CD 100crs can sell at 6.57 T+1 15:55:45
+02 02  bob cd  52/55  cbcbc sp 15:55:57
+12-March HDFC CD 100crs can sell at 6.57 have 65 bidT+1 15:58:27
+12-March HDFC CD 100crs can sell at 6.58 have 60 bidT+1 16:00:38
+may indostar capital 8.85% offer
+august maturity 9.00% offer  primary avg 100 crs each maturity can do 16:01:49
+04 12 exim  
+04 12 hdfc cd
+26 11 axis cd bid plz 16:04:21
+15/09 EXIM CD - 175crs - 4.85 offer - cbc 16:09:16
+15/09 EXIM CD - 175crs - 4.85 offer 16:15:03
+chola cp 25/11 got @ 90.. can buy more 16:23:52
+HDFC CD 22/1 can buy @ 60.. T+1.. call only to hit 16:35:07
+22-Jan HDFC CD sold 100crs at 6.55. Can sell more 16:35:27
