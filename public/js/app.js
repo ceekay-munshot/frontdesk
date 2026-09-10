@@ -615,9 +615,7 @@ function controlsHTML() {
 
     <div class="mx-1 hidden h-5 w-px bg-slate-200 sm:block"></div>
 
-    ${toggleButton({ on: state.grouped, id: "grouped", icon: "layers", label: "Group by bond" })}
     ${toggleButton({ on: state.narrowOnly, id: "narrow", icon: "diff", label: "Narrow only", tone: "amber" })}
-    ${state.grouped ? "" : toggleButton({ on: state.showChatter, id: "chatter", icon: "messages-square", label: "Show desk chatter" })}
 
     <div class="ml-auto flex items-center gap-2 text-xs text-slate-400">
       <span>Sort</span>
@@ -2291,30 +2289,18 @@ function renderView() {
   }
 
   const dayAll = dayQuotes(state.data.quotes); // the selected day only
-  const base = filterSectionSearch(dayAll);
-  const baseQuotes = base.filter((q) => q.side !== "comment"); // exclude desk chatter
-  const totalQuotes = dayAll.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0);
-  let count;
-  let chatterShown = 0;
-  let bodyHTML;
-  if (state.grouped) {
-    // Grouping pools bid/offer per bond into a best bid/offer/spread — meaningful
-    // only within one day, which is exactly what the board already shows.
-    let groups = groupBonds(baseQuotes);
-    if (state.narrowOnly) groups = groups.filter((g) => narrowGap(g.bestBid, g.bestOffer, g.meaning));
-    groups = sortGroups(groups);
-    count = groups.length;
-    bodyHTML = groups.length ? groupedHTML(groups) : emptyHTML();
-  } else {
-    let rows = state.showChatter ? base : baseQuotes;
-    if (state.narrowOnly) rows = rows.filter(isNarrowRow);
-    rows = sortRows(rows);
-    count = rows.reduce((n, q) => n + (q.side !== "comment" ? 1 : 0), 0); // count real quotes, not chatter
-    chatterShown = rows.length - count;
-    bodyHTML = rows.length ? tableHTML(rows) : emptyHTML();
-  }
+  // Real board quotes only: drop "comment" chatter AND no-security replies — a
+  // bid/offer whose bond was named in an EARLIER chat line (e.g. "6 bid, holding
+  // 80 offer") carries no issuer or maturity, so it only clutters the board.
+  const isBoardQuote = (q) => q.side !== "comment" && (q.issuer || q.maturity);
+  const base = filterSectionSearch(dayAll).filter(isBoardQuote);
+  const totalQuotes = dayAll.filter(isBoardQuote).length;
+  let rows = state.narrowOnly ? base.filter(isNarrowRow) : base;
+  rows = sortRows(rows);
+  const count = rows.length;
+  const bodyHTML = rows.length ? tableHTML(rows) : emptyHTML();
 
-  view.innerHTML = boardChrome(bodyHTML, count, totalQuotes, chatterShown);
+  view.innerHTML = boardChrome(bodyHTML, count, totalQuotes);
   afterRender();
 }
 
@@ -2431,9 +2417,7 @@ els.view.addEventListener("click", (e) => {
   }
   const toggle = e.target.closest("button[data-toggle]");
   if (toggle) {
-    if (toggle.dataset.toggle === "grouped") state.grouped = !state.grouped;
     if (toggle.dataset.toggle === "narrow") state.narrowOnly = !state.narrowOnly;
-    if (toggle.dataset.toggle === "chatter") state.showChatter = !state.showChatter;
     renderView();
     return;
   }
