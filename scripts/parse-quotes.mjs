@@ -749,39 +749,10 @@ async function main() {
   const latestDay = datedDays.at(-1) || null;
   const tradingDay = latestDay || runDay; // fallback: no headers -> the run day
 
-  // Bound the output: keep only the most recent KEEP_DAYS dated days, so the file
-  // (and each run's LLM work) can't grow without limit as history piles up.
-  const KEEP_DAYS = 5;
-  const keptDates = datedDays.slice(-KEEP_DAYS); // newest KEEP_DAYS, ascending
-  const droppedDates = datedDays.slice(0, -KEEP_DAYS);
-  if (droppedDates.length) {
-    console.log(`[frontdesk] bounding to the latest ${KEEP_DAYS} day(s); dropping older: ${droppedDates.join(", ")}`);
-  }
-  // Process newest kept day first, then any undated (pre-header) lines last —
-  // those attach to the live day in the view but keep quote_date null.
-  const processKeys = [...keptDates].reverse();
-  if (byDate.has(null)) processKeys.push(null);
-  console.log(
-    `[frontdesk] dated days: ${datedDays.join(", ") || "none"} — trading day ${tradingDay}` +
-      (byDate.has(null) ? ` (+ ${byDate.get(null).length} undated line(s))` : "")
-  );
-
-  // Annotate each kept day and fingerprint its content, so unchanged days can be
-  // reused instead of re-sent to the LLM every run.
-  const dayLines = new Map(); // key -> annotated line[]
-  const dayHash = new Map();  // dated key -> sha256 of its content
-  for (const key of processKeys) {
-    const ann = byDate.get(key).map(annotate);
-    dayLines.set(key, ann);
-    if (key !== null) dayHash.set(key, createHash("sha256").update(ann.join("\n")).digest("hex"));
-  }
-
-  // 2c. Per-day reuse. An older dated day whose content is byte-identical to the
-  //     last output (and was completely structured then) is reused verbatim — no
-  //     LLM. Only the live day, the undated group, and any day whose content
-  //     changed / was left incomplete / is new get re-structured. This keeps each
-  //     run's LLM work to roughly the live day, so a big doc can't make every
-  //     refresh overrun the cron and stall the schedule.
+  // Previous output — read once, up front, because the board now ACCUMULATES:
+  // it keeps recent days from the last run too, not only what is in the doc. That
+  // lets a day stay on the board after the desk deletes it from the length-capped
+  // Google Doc (its raw chat is preserved forever in data/archive/raw/).
   const prevByDay = new Map(); // quote_date | null -> quotes[]
   let prevDayHashes = {};
   let prevIncomplete = new Set();
@@ -796,8 +767,47 @@ async function main() {
     }
   } catch { /* no prior output -> structure everything this run */ }
 
+  // Bound the board to the most recent KEEP_DAYS trading days — across the doc AND
+  // the last output. Days still in the doc are (re)structured or reused; days only
+  // in the last output are carried over verbatim (no LLM), so trimming/clearing
+  // the doc never shrinks the board. The file and each run's LLM work stay bounded.
+  const KEEP_DAYS = 15;
+  const prevDatedDays = [...prevByDay.keys()].filter(Boolean);
+  const allDatedDays = [...new Set([...datedDays, ...prevDatedDays])].sort(); // ascending
+  const keptDates = allDatedDays.slice(-KEEP_DAYS); // newest KEEP_DAYS, ascending
+  const keptSet = new Set(keptDates);
+  const docKept = keptDates.filter((d) => byDate.has(d));      // in the doc -> parse/reuse
+  const carriedDays = keptDates.filter((d) => !byDate.has(d)); // only in last output -> carry
+  const droppedDates = allDatedDays.filter((d) => !keptSet.has(d));
+  if (droppedDates.length) console.log(`[frontdesk] board keeps latest ${KEEP_DAYS} day(s); dropping older: ${droppedDates.join(", ")}`);
+  if (carriedDays.length) console.log(`[frontdesk] carrying ${carriedDays.length} day(s) no longer in the doc: ${carriedDays.join(", ")}`);
+
+  // Only days present in the doc get annotated / hashed / (re)structured — newest
+  // first, then any undated (pre-header) lines last. Carried days need none of it.
+  const processKeys = [...docKept].reverse();
+  if (byDate.has(null)) processKeys.push(null);
+  console.log(
+    `[frontdesk] doc days: ${datedDays.join(", ") || "none"} — trading day ${tradingDay}` +
+      (byDate.has(null) ? ` (+ ${byDate.get(null).length} undated line(s))` : "")
+  );
+
+  // Annotate each kept day and fingerprint its content, so unchanged days can be
+  // reused instead of re-sent to the LLM every run.
+  const dayLines = new Map(); // key -> annotated line[]
+  const dayHash = new Map();  // dated key -> sha256 of its content
+  for (const key of processKeys) {
+    const ann = byDate.get(key).map(annotate);
+    dayLines.set(key, ann);
+    if (key !== null) dayHash.set(key, createHash("sha256").update(ann.join("\n")).digest("hex"));
+  }
+
+  // 2c. Per-day reuse. A dated day still in the doc whose content is byte-identical
+  //     to the last output (and was completely structured then) is reused verbatim
+  //     — no LLM. Only the live day, the undated group, and any doc day whose
+  //     content changed / was left incomplete / is new get re-structured. Days no
+  //     longer in the doc are carried separately in the assembly step below.
   const reuse = new Set(); // dated keys reused verbatim from the last output
-  for (const key of keptDates) {
+  for (const key of docKept) {
     if (key === tradingDay) continue; // the live day is still filling in
     if (prevByDay.has(key) && prevDayHashes[key] === dayHash.get(key) && !prevIncomplete.has(key)) {
       reuse.add(key);
@@ -888,15 +898,28 @@ async function main() {
     for (const q of results[i]) freshByDay.get(k).push({ ...q, _day: k });
   }
 
-  // Assemble every kept day newest-first: reused days come straight from the last
-  // output; reprocessed days prefer a COMPLETE fresh result, else keep the last
-  // good copy (never overwritten by a partial), else write a partial. Days that
-  // are not fully settled are flagged for retry, and their fingerprint is NOT
-  // stored, so the next run re-structures them.
+  // Assemble every kept day newest-first. Carried days (no longer in the doc) come
+  // straight from the last output verbatim. Doc days: reused days come from the
+  // last output; reprocessed days prefer a COMPLETE fresh result, else keep the
+  // last good copy (never overwritten by a partial), else write a partial. Days
+  // not fully settled are flagged for retry and their fingerprint is NOT stored,
+  // so the next run re-structures them.
   const merged = [];
   const newDayHashes = {};
   const newIncomplete = new Set();
-  for (const key of processKeys) {
+  const assembleKeys = [...keptDates].reverse(); // newest dated day first
+  if (byDate.has(null)) assembleKeys.push(null);  // undated pre-header lines last
+  for (const key of assembleKeys) {
+    if (key !== null && !byDate.has(key)) {
+      // Carried day — no longer in the doc; keep it verbatim from the last output
+      // and preserve its settled/incomplete status for a possible later return.
+      if (prevByDay.has(key)) {
+        for (const q of prevByDay.get(key)) merged.push({ ...q, _day: key });
+        if (prevDayHashes[key]) newDayHashes[key] = prevDayHashes[key];
+        if (prevIncomplete.has(key)) newIncomplete.add(key);
+      }
+      continue;
+    }
     if (reuse.has(key)) {
       for (const q of prevByDay.get(key)) merged.push({ ...q, _day: key });
       if (key !== null) newDayHashes[key] = dayHash.get(key); // unchanged -> settled
