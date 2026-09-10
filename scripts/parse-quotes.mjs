@@ -771,7 +771,7 @@ async function main() {
   // the last output. Days still in the doc are (re)structured or reused; days only
   // in the last output are carried over verbatim (no LLM), so trimming/clearing
   // the doc never shrinks the board. The file and each run's LLM work stay bounded.
-  const KEEP_DAYS = 15;
+  const KEEP_DAYS = 5;
   const prevDatedDays = [...prevByDay.keys()].filter(Boolean);
   const allDatedDays = [...new Set([...datedDays, ...prevDatedDays])].sort(); // ascending
   const keptDates = allDatedDays.slice(-KEEP_DAYS); // newest KEEP_DAYS, ascending
