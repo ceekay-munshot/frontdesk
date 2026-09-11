@@ -1086,19 +1086,34 @@ function computeUniverse() {
     return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series, candidates };
   });
 
-  // Leave-one-out peer median — LIKE-FOR-LIKE: same issuer CATEGORY + tenor
-  // bucket (an NBFC bond vs other NBFC bonds, a bank CD vs other bank CDs), never
-  // across categories. "vs Govt" spread is attached alongside.
-  const peerGroups = new Map();
+  // Leave-one-out peer median — LIKE-FOR-LIKE. The client wants same CATEGORY +
+  // tenor bucket + credit RATING (an AA NBFC vs other AA NBFCs). Ratings are only
+  // ~a third populated, so we PREFER a same-rating peer group and gracefully fall
+  // back to category+tenor (still like-for-like on sector & maturity) when a bond
+  // is unrated or has too few same-rating peers. `peerBasis` records which was
+  // used so the card can say "vs AA peers" or just "vs similar".
+  const stKey = (b) => `${b.category}||${b.bucket}`;
+  const ratingBand = (r) => String(r || "").toUpperCase().trim();
+  const srKey = (b) => `${stKey(b)}||${ratingBand(b.rating)}`;
+  const peersST = new Map();  // category + tenor
+  const peersSTR = new Map(); // category + tenor + rating
   for (const b of bonds) {
-    const k = `${b.category}||${b.bucket}`;
-    if (!peerGroups.has(k)) peerGroups.set(k, []);
-    peerGroups.get(k).push(b);
+    if (!peersST.has(stKey(b))) peersST.set(stKey(b), []);
+    peersST.get(stKey(b)).push(b);
+    if (b.rating) {
+      if (!peersSTR.has(srKey(b))) peersSTR.set(srKey(b), []);
+      peersSTR.get(srKey(b)).push(b);
+    }
   }
   for (const b of bonds) {
-    const others = peerGroups.get(`${b.category}||${b.bucket}`).filter((x) => x !== b);
+    // Same-rating peers first; need at least one OTHER bond (group size ≥ 2).
+    let group = b.rating ? (peersSTR.get(srKey(b)) || []) : [];
+    let basis = "rating";
+    if (group.length < 2) { group = peersST.get(stKey(b)) || []; basis = "sector"; }
+    const others = group.filter((x) => x !== b);
     const pm = others.length ? median(others.map((x) => x.uy)) : null;
     b.peerMedian = pm;
+    b.peerBasis = pm != null ? basis : null; // "rating" = same-rating peers, "sector" = category+tenor
     b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
     b.govtSpread = govtCurve ? Math.round((b.uy - govtYieldAt(govtCurve, b.tenor)) * 100) : null;
     b.bench = nearestBenchmark(govtCurve, b.tenor); // which govt security this maps to (CCIL)
@@ -1641,17 +1656,22 @@ function computeOpportunities() {
   for (const b of u.bonds) {
     if (!plausibleY(b.uy) || !secOk(b.section) || !catOk(b.category) || !tenOk(b.bucket) || !hitsSearch(b.issuer, bondWho(b))) continue;
     if (isNum(b.gap) && Math.abs(b.gap) <= OPP_GAP_CAP) {
+      // Show exactly what "similar" means for this card — rating-matched when we
+      // had same-rating peers, else sector+tenor (see peerBasis in computeUniverse).
+      const rateMatched = b.peerBasis === "rating" && b.rating;
+      const scope = (rateMatched ? `${b.rating} · ` : "") + `${b.category} · ${b.bucket}`;
+      const simTxt = rateMatched ? `similar ${b.rating}-rated ${b.bucket} bonds` : `similar ${b.bucket} bonds`;
       if (b.gap >= 10) {
         const o = baseFromBond(b, "cheap"); o._val = b.gap;
-        o.headline = `+${b.gap} bps`; o.sub = "vs similar";
-        o.why = `Pays ${b.gap} bps more yield than similar ${b.bucket} bonds — attractive to buy.`;
-        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
+        o.headline = `+${b.gap} bps`; o.sub = rateMatched ? `vs ${b.rating} peers` : "vs similar";
+        o.why = `Pays ${b.gap} bps more yield than ${simTxt} — attractive to buy.`;
+        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Compared with", scope], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
         cheap.push(o);
       } else if (b.gap <= -10) {
         const o = baseFromBond(b, "rich"); o._val = -b.gap;
-        o.headline = `${b.gap} bps`; o.sub = "vs similar";
-        o.why = `Yields ${-b.gap} bps LESS than similar bonds — expensive; don't overpay.`;
-        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
+        o.headline = `${b.gap} bps`; o.sub = rateMatched ? `vs ${b.rating} peers` : "vs similar";
+        o.why = `Yields ${-b.gap} bps LESS than ${simTxt} — expensive; don't overpay.`;
+        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Compared with", scope], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
         rich.push(o);
       }
     }
@@ -1959,13 +1979,20 @@ function computePulse() {
     const name = (q.dealer || "").trim();
     if (!name) continue;
     const key = name.toLowerCase();
-    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, buy: 0, sell: 0, other: 0, firms: new Set() });
+    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, buy: 0, sell: 0, other: 0, firms: new Set(), sectors: new Map(), tenors: new Map() });
     const it = dlrMap.get(key);
     it.count++;
     if (BUY_SIDES.has(q.side)) it.buy++;
     else if (SELL_SIDES.has(q.side)) it.sell++;
     else it.other++;
     if (q.firm) it.firms.add(q.firm);
+    // Specialisation: which SECTOR (issuer category) and TENOR bucket this dealer
+    // trades most. Skip unresolved categories and undated tenors so a dealer's
+    // "focus" reflects real, classifiable flow.
+    const cat = catOrOther(q.issuer);
+    if (cat && cat !== "Other") it.sectors.set(cat, (it.sectors.get(cat) || 0) + 1);
+    const tb = isNum(q.tenor_years) ? tenorBucket(q.tenor_years) : null;
+    if (tb) it.tenors.set(tb, (it.tenors.get(tb) || 0) + 1);
   }
   const allDealers = [...dlrMap.values()].map((d) => ({ name: d.name, count: d.count, buy: d.buy, sell: d.sell, other: d.other, firm: [...d.firms][0] || "" }));
   const byCount = allDealers.slice().sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
@@ -1974,9 +2001,18 @@ function computePulse() {
   // client's "individual scope of work" read. Ascending, a handful.
   const quietDealers = byCount.slice().reverse().slice(0, 8);
 
+  // Specialisation map — each active dealer's #1 sector (share of their flow) and
+  // #1 tenor bucket: "who trades what" (e.g. a PSU ≤1y specialist).
+  const topOf = (m) => [...m.entries()].sort((a, b) => b[1] - a[1])[0] || null;
+  const dealerSpecialties = byCount.slice(0, 8).map((d) => {
+    const rec = dlrMap.get(d.name.toLowerCase());
+    const s = topOf(rec.sectors), t = topOf(rec.tenors);
+    return { name: d.name, count: d.count, sector: s ? s[0] : null, sectorPct: s ? Math.round((s[1] / d.count) * 100) : 0, tenor: t ? t[0] : null };
+  }).filter((d) => d.sector);
+
   return {
     total, sections, secTotal, buy, sell, twoway, other,
-    timeline, withTime, peak, topIssuers, topDealers, quietDealers,
+    timeline, withTime, peak, topIssuers, topDealers, quietDealers, dealerSpecialties,
     stats: { total, dealers: dlrMap.size, issuers: issMap.size },
   };
 }
@@ -2165,7 +2201,22 @@ function pulseBody(p) {
     body: rankBarsSVG(p.topDealers, "dealer") + quietLine,
   });
 
-  return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${activity}${market}${buysell}${issuers}${dealers}</div>`;
+  // 6 — Specialisation map: "who trades what" — each dealer's main sector + tenor.
+  const specRows = (p.dealerSpecialties || []).map((d) => `
+    <div class="flex items-center justify-between gap-2 border-b border-slate-50 py-1.5 last:border-0">
+      <span class="truncate text-[12px] font-medium text-slate-700">${esc(trunc(d.name, 22))}</span>
+      <span class="flex shrink-0 items-center gap-1.5">
+        ${catChip(d.sector)}
+        <span class="nums text-[10px] text-slate-400">${d.sectorPct}% of ${d.count}${d.tenor ? ` · ${esc(d.tenor)}` : ""}</span>
+      </span>
+    </div>`).join("");
+  const spec = pulseCard({
+    icon: "target", title: "Who trades what", span: true,
+    legend: `<span class="text-[10px] text-slate-400">each dealer's main sector &amp; tenor focus</span>`,
+    body: specRows || `<div class="grid h-16 place-items-center text-xs text-slate-400">Not enough classified flow yet</div>`,
+  });
+
+  return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${activity}${market}${buysell}${issuers}${dealers}${spec}</div>`;
 }
 
 function pulseStatChips(p) {
