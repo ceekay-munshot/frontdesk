@@ -73,12 +73,13 @@ export function normIssuer(s) {
  * ------------------------------------------------------------------------ */
 const TOKEN_EXPAND = {
   FIN: "FINANCE", FINL: "FINANCIAL", FINCORP: "FINANCE", FINSERV: "FINSERVE",
-  HSG: "HOUSING", HOUS: "HOUSING", HOUSG: "HOUSING", HFL: "HOUSING",
+  HSG: "HOUSING", HOUS: "HOUSING", HOUSG: "HOUSING", HFL: "HOUSING", HFC: "HOUSING",
   TELE: "TELECOM", CORPN: "CORPORATION", INDL: "INDUSTRIES", INTL: "INTERNATIONAL",
   DEVP: "DEVELOPMENT", DEVELOP: "DEVELOPMENT", MAH: "MAHINDRA", INV: "INVESTMENT",
   INVT: "INVESTMENT", SECS: "SECURITIES", CAP: "CAPITAL", ENT: "ENTERPRISES",
   INFRA: "INFRASTRUCTURE", PWR: "POWER", NATL: "NATIONAL", MTR: "MOTORS",
   MOT: "MOTORS", SVCS: "SERVICES", SER: "SERVICES",
+  PHARMA: "PHARMACEUTICALS", BUSI: "BUSINESS", BUSINES: "BUSINESS", BUSNS: "BUSINESS",
 };
 // Whole desk issuer (its normIssuer form) -> the NSDL canonical token string.
 const ISSUER_ALIAS = {
@@ -122,8 +123,17 @@ const ISSUER_ALIAS = {
   CIFC: "CHOLAMANDALAM INVESTMENT",
   MFL: "MUTHOOT FINANCE",
   MMFSL: "MAHINDRA AND MAHINDRA FINANCIAL",
+  MNM: "MAHINDRA AND MAHINDRA FINANCIAL",
   LNT: "LARSEN TOUBRO",
   LT: "LARSEN TOUBRO",
+  CHOLA: "CHOLAMANDALAM INVESTMENT",
+  CHOLI: "CHOLAMANDALAM INVESTMENT",
+  CIFCIN: "CHOLAMANDALAM INVESTMENT",
+  BOB: "BANK BARODA",
+  // NOTE: deliberately NOT aliasing SBI/PNB/IOB/CBI here — their expansions
+  // ("STATE BANK INDIA", "PUNJAB NATIONAL BANK"...) share BANK+INDIA / NATIONAL
+  // +BANK with other issuers (SIDBI, EXIM, NABARD), which issuerAgrees's
+  // near-complete rule would false-match. BOB is safe (BARODA is unique).
 };
 
 /** All plausible token-sets for a desk (or NSDL) issuer name: the expanded raw
