@@ -176,14 +176,21 @@ function parseCoupon(s) {
   return Math.round(v * 100) / 100;
 }
 
-/** Pull the first standard credit-rating symbol out of a messy rating cell.
- *  "ICRA-26 AAA,CRISIL AA+" -> "AAA". Falls back to a trimmed raw string. */
-const RATING_RE = /\b(AAA|AA[+-]?|A1\+?|A2\+?|A3\+?|A4\+?|A[+-]?|BBB[+-]?|BB[+-]?|B[+-]?|CCC[+-]?|CC|C|D)\b/;
+/** Pull the first standard credit-rating symbol out of a messy rating cell,
+ *  KEEPING the +/- notch. "CRISIL AA+" -> "AA+", "ICRA AAA" -> "AAA".
+ *
+ *  The base grade and the notch are captured separately, ended by a negative
+ *  lookahead (not a trailing \b): a "+"/"-" before a space is not a word
+ *  boundary, so the old `...[+-]?\b` silently dropped every notch (AA+ -> AA).
+ *  The leading \b + "not followed by another letter/digit" lookahead still stop
+ *  a stray grade letter inside an agency name (the "C" in "CRISIL") from matching.
+ *  Longest bases first so AAA/AA/A and BBB/BB/B resolve correctly. */
+const RATING_RE = /\b(AAA|AA|A1|A2|A3|A4|A|BBB|BB|B|CCC|CC|C|D)([+-])?(?![A-Za-z0-9])/;
 function parseRating(s) {
   const raw = String(s || "").trim();
   if (!raw) return null;
   const m = raw.toUpperCase().match(RATING_RE);
-  if (m) return m[1];
+  if (m) return m[1] + (m[2] || "");
   return raw.slice(0, 24) || null;
 }
 
