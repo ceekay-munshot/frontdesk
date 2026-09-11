@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T09:21:14+05:30",
+  "generated_at": "2026-09-11T09:40:08+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "bde0abd73f95c3f3449e81b68ae8824cee13bc454cbf7926297f5d94e222f999",
   "trading_day": "2026-09-10",
@@ -21,25 +21,13 @@
   "quote_count": 8730,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-11 09:18:52",
+    "as_of": "2026-09-11 09:37:54",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.0172
-      },
-      {
-        "type": "gsec",
-        "name": "06.53 GS 2031",
-        "maturity": "2031-07-01",
-        "yield": 6.6227
-      },
-      {
-        "type": "gsec",
-        "name": "06.68 GS 2040",
-        "maturity": "2040-07-01",
-        "yield": 7.1576
+        "yield": 7.0175
       },
       {
         "type": "gsec",
@@ -51,7 +39,19 @@
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.5723
+        "yield": 6.583
+      },
+      {
+        "type": "gsec",
+        "name": "06.53 GS 2031",
+        "maturity": "2031-07-01",
+        "yield": 6.6371
+      },
+      {
+        "type": "gsec",
+        "name": "07.06 GS 2041",
+        "maturity": "2041-07-01",
+        "yield": 7.148
       }
     ]
   },
@@ -68,11 +68,11 @@
       "cp": 1922,
       "cd": 434
     },
-    "securities_count": 552,
+    "securities_count": 569,
     "matched": {
-      "confirmed": 3243,
-      "shortlisted": 76,
-      "rated": 3195
+      "confirmed": 3403,
+      "shortlisted": 85,
+      "rated": 3282
     }
   },
   "securities": {
@@ -122,6 +122,14 @@
       "coupon": 7.69,
       "maturity": "2033-03-31",
       "rating": "AAA",
+      "type": "bond"
+    },
+    "INE121A07RO8": {
+      "name": "8.50% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURES SERIES 3 TRANCHE III DATE OF MATURITY 07/12/2",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": 8.5,
+      "maturity": "2026-12-07",
+      "rating": "AA+",
       "type": "bond"
     },
     "INE556F08KT6": {
@@ -290,6 +298,14 @@
       "coupon": 7.71,
       "maturity": "2033-05-09",
       "rating": "AAA",
+      "type": "bond"
+    },
+    "INE121A07SL2": {
+      "name": "8.20% SECURED RATED LISTED REDEEMABLE NON-CONVERTIBLE DEBENTURE SERIES 651 DATE OF MATURITY 17/02/2028",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": 8.2,
+      "maturity": "2028-02-17",
+      "rating": "AA+",
       "type": "bond"
     },
     "INE282H07026": {
@@ -804,6 +820,14 @@
       "rating": "AAA",
       "type": "bond"
     },
+    "INE774D08MJ7": {
+      "name": "7.90% UNSECURED (CATEGORY I & II) REDEEMABLE NON CONVERTIBLE SUBORDINATED DEBENTURES. SERIES II. LETTER OF ALL",
+      "issuer": "MAHINDRA AND MAHINDRA FINANCIAL SERVICES LIMITED",
+      "coupon": 7.9,
+      "maturity": "2027-07-24",
+      "rating": "AAA",
+      "type": "bond"
+    },
     "INE414G07JR4": {
       "name": "8.05% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURES. OPTION II  DATE OF MATURITY 16/10/2030",
       "issuer": "MUTHOOT FINANCE LIMITED",
@@ -929,6 +953,14 @@
       "issuer": "INDIAN RAILWAY FINANCE CORPORATION LIMITED",
       "coupon": 7.83,
       "maturity": "2027-03-21",
+      "rating": "AAA",
+      "type": "bond"
+    },
+    "INE377Y07656": {
+      "name": "8.25% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE DATE OF MATURITY 27/05/2031",
+      "issuer": "BAJAJ HOUSING FINANCE LIMITED",
+      "coupon": 8.25,
+      "maturity": "2031-05-27",
       "rating": "AAA",
       "type": "bond"
     },
@@ -1060,6 +1092,14 @@
       "rating": "AA+",
       "type": "bond"
     },
+    "INE121A07RT7": {
+      "name": "8.50% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES III TRANCHE IV DATE OF MATURITY 31/01/2",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": 8.5,
+      "maturity": "2027-01-31",
+      "rating": "AA+",
+      "type": "bond"
+    },
     "INE883F07330": {
       "name": "8.65% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE DATE OF MATURITY 21/08/2027",
       "issuer": "AADHAR HOUSING FINANCE LIMITED",
@@ -1097,6 +1137,14 @@
       "issuer": "RURAL ELECTRIFICATION CORPORATION LIMITED",
       "coupon": 7.95,
       "maturity": "2027-03-12",
+      "rating": "AAA",
+      "type": "bond"
+    },
+    "INE377Y07417": {
+      "name": "7.90% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURES DATE OF MATURITY 28/04/2028",
+      "issuer": "BAJAJ HOUSING FINANCE LIMITED",
+      "coupon": 7.9,
+      "maturity": "2028-04-28",
       "rating": "AAA",
       "type": "bond"
     },
@@ -1185,6 +1233,14 @@
       "issuer": "REC LIMITED",
       "coupon": 7.64,
       "maturity": "2027-04-30",
+      "rating": "AAA",
+      "type": "bond"
+    },
+    "INE0CCU07181": {
+      "name": "6.9601% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES NCD16 DATE OF MATURITY 08/12/2028",
+      "issuer": "MINDSPACE BUSINESS PARKS REIT",
+      "coupon": 6.96,
+      "maturity": "2028-12-08",
       "rating": "AAA",
       "type": "bond"
     },
@@ -1282,6 +1338,14 @@
       "coupon": null,
       "maturity": "2027-06-11",
       "rating": "A1+",
+      "type": "cd"
+    },
+    "INE028A16KO1": {
+      "name": "BANK OF BARODA CD 04DEC26",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2026-12-04",
+      "rating": null,
       "type": "cd"
     },
     "INE514E14TT7": {
@@ -1500,6 +1564,14 @@
       "rating": "A1+",
       "type": "cp"
     },
+    "INE028A16LD2": {
+      "name": "BANK OF BARODA CD 25JAN27",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2027-01-25",
+      "rating": null,
+      "type": "cd"
+    },
     "INE476A16K22": {
       "name": "CANARA BANK CD 29JUN27",
       "issuer": "CANARA BANK",
@@ -1716,6 +1788,14 @@
       "rating": "A1+",
       "type": "cd"
     },
+    "INE028A16LC4": {
+      "name": "BANK OF BARODA CD 27JAN27",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2027-01-27",
+      "rating": null,
+      "type": "cd"
+    },
     "INE261F16AJ8": {
       "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT CD 04FEB27",
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
@@ -1740,11 +1820,11 @@
       "rating": "A1+",
       "type": "cd"
     },
-    "INE028A16LD2": {
-      "name": "BANK OF BARODA CD 25JAN27",
+    "INE028A16KW4": {
+      "name": "BANK OF BARODA CD 15DEC26",
       "issuer": "BANK OF BARODA",
       "coupon": null,
-      "maturity": "2027-01-25",
+      "maturity": "2026-12-15",
       "rating": null,
       "type": "cd"
     },
@@ -1834,6 +1914,22 @@
       "coupon": null,
       "maturity": "2026-12-16",
       "rating": "A1+",
+      "type": "cd"
+    },
+    "INE028A16MR0": {
+      "name": "BANK OF BARODA CD 11SEP26",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2026-09-11",
+      "rating": "A1+",
+      "type": "cd"
+    },
+    "INE028A16LG5": {
+      "name": "BANK OF BARODA CD 02FEB27",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2027-02-02",
+      "rating": null,
       "type": "cd"
     },
     "INE476A16H43": {
@@ -2076,6 +2172,14 @@
       "rating": "AAA",
       "type": "bond"
     },
+    "INE0CCU07066": {
+      "name": "7.95%SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE. DATE OF MATURITY 27/07/2027.",
+      "issuer": "MINDSPACE BUSINESS PARKS REIT",
+      "coupon": 7.95,
+      "maturity": "2027-07-27",
+      "rating": "AAA",
+      "type": "bond"
+    },
     "INE261F08CC6": {
       "name": "7.40% UNSECURED LISTED RATED REDEEMABLE TAXABLE GOI FULLY SERVICED NON CONVERTIBLE BONDS. LETTER OF ALLOTMENT.",
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
@@ -2124,19 +2228,19 @@
       "rating": "AAA",
       "type": "bond"
     },
-    "INE685A07132": {
-      "name": "7.45% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES 1 DATE OF MATURITY 19/01/2028",
-      "issuer": "TORRENT PHARMACEUTICALS LTD",
-      "coupon": 7.45,
-      "maturity": "2028-01-19",
-      "rating": "AA+",
-      "type": "bond"
-    },
     "INE685A07165": {
       "name": "7.70% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES 3 DATE OF MATURITY 18/01/2030",
       "issuer": "TORRENT PHARMACEUTICALS LTD",
       "coupon": 7.7,
       "maturity": "2030-01-18",
+      "rating": "AA+",
+      "type": "bond"
+    },
+    "INE685A07132": {
+      "name": "7.45% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES 1 DATE OF MATURITY 19/01/2028",
+      "issuer": "TORRENT PHARMACEUTICALS LTD",
+      "coupon": 7.45,
+      "maturity": "2028-01-19",
       "rating": "AA+",
       "type": "bond"
     },
@@ -2186,6 +2290,14 @@
       "coupon": 7.35,
       "maturity": "2032-01-02",
       "rating": "AAA",
+      "type": "bond"
+    },
+    "INE121A07SN8": {
+      "name": "7.38% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES 653 DATE OF MATURITY 28/05/2027",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": 7.38,
+      "maturity": "2027-05-28",
+      "rating": "AA+",
       "type": "bond"
     },
     "INE020B08FZ9": {
@@ -2428,6 +2540,14 @@
       "rating": "A1+",
       "type": "cp"
     },
+    "INE028A16KH5": {
+      "name": "BANK OF BARODA CD 05NOV26",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2026-11-05",
+      "rating": null,
+      "type": "cd"
+    },
     "INE040A16II2": {
       "name": "HDFC BANK LIMITED CD 21DEC26",
       "issuer": "HDFC BANK LIMITED",
@@ -2659,6 +2779,22 @@
       "maturity": "2027-01-29",
       "rating": "A1+",
       "type": "cp"
+    },
+    "INE121A14YN2": {
+      "name": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED 316D CP 10MAR27",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": null,
+      "maturity": "2027-03-10",
+      "rating": "A1+",
+      "type": "cp"
+    },
+    "INE028A16KK9": {
+      "name": "BANK OF BARODA CD 25NOV26",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2026-11-25",
+      "rating": null,
+      "type": "cd"
     },
     "INE667F14GV3": {
       "name": "SUNDARAM HOME FINANCE LIMITED 181D CP 03MAR27",
@@ -3058,14 +3194,6 @@
       "coupon": 8.13,
       "maturity": "2027-08-18",
       "rating": "AAA",
-      "type": "bond"
-    },
-    "INE121A07SN8": {
-      "name": "7.38% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES 653 DATE OF MATURITY 28/05/2027",
-      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
-      "coupon": 7.38,
-      "maturity": "2027-05-28",
-      "rating": "AA+",
       "type": "bond"
     },
     "INE261F08691": {
@@ -3580,6 +3708,22 @@
       "rating": "AAA",
       "type": "bond"
     },
+    "INE121A08PZ6": {
+      "name": "8.88% UNSECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURES SERIES SD80 DATE OF MATURITY 25/06/2033",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": 8.88,
+      "maturity": "2033-06-25",
+      "rating": "AA+",
+      "type": "bond"
+    },
+    "INE121A08PR3": {
+      "name": "8.92% UNSECURED RATED LISTED REDEEMABLE NON-CONVERTIBLE DEBENTURE SERIES SD73 DATE OF MATURITY 02/12/2034.",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": 8.92,
+      "maturity": "2034-12-02",
+      "rating": "AA+",
+      "type": "bond"
+    },
     "INE0AD507093": {
       "name": "8.25% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE. SERIES PP2 FY 2022-23. DATE OF MATURITY 03/09",
       "issuer": "ASEEM INFRASTRUCTURE FINANCE LIMITED",
@@ -3610,14 +3754,6 @@
       "coupon": 8.45,
       "maturity": "2029-02-12",
       "rating": "AA-",
-      "type": "bond"
-    },
-    "INE0CCU07066": {
-      "name": "7.95%SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE. DATE OF MATURITY 27/07/2027.",
-      "issuer": "MINDSPACE BUSINESS PARKS REIT",
-      "coupon": 7.95,
-      "maturity": "2027-07-27",
-      "rating": "AAA",
       "type": "bond"
     },
     "INE414G07JY0": {
@@ -3756,6 +3892,14 @@
       "rating": "A1+",
       "type": "cd"
     },
+    "INE121A14YB7": {
+      "name": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED 364D CP 27NOV26",
+      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
+      "coupon": null,
+      "maturity": "2026-11-27",
+      "rating": "A1+",
+      "type": "cp"
+    },
     "INE414G14VB9": {
       "name": "MUTHOOT FINANCE LIMITED 365D CP 03DEC26",
       "issuer": "MUTHOOT FINANCE LIMITED",
@@ -3828,6 +3972,14 @@
       "rating": null,
       "type": "cd"
     },
+    "INE028A16LW2": {
+      "name": "BANK OF BARODA CD 11MAR27",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2027-03-11",
+      "rating": null,
+      "type": "cd"
+    },
     "INE763G14F35": {
       "name": "ICICI SECURITIES LIMITED 365D CP 12FEB27",
       "issuer": "ICICI SECURITIES LIMITED (EARLIER ICICI BROKERAGE SERVICES LIMITED)",
@@ -3859,6 +4011,14 @@
       "maturity": "2027-01-01",
       "rating": "A1+",
       "type": "cp"
+    },
+    "INE028A16KY0": {
+      "name": "BANK OF BARODA CD 08JAN27",
+      "issuer": "BANK OF BARODA",
+      "coupon": null,
+      "maturity": "2027-01-08",
+      "rating": null,
+      "type": "cd"
     },
     "INE090AD6279": {
       "name": "ICICI BANK LIMITED CD 27JAN27",
@@ -4156,14 +4316,6 @@
       "rating": "AAA",
       "type": "bond"
     },
-    "INE121A07SL2": {
-      "name": "8.20% SECURED RATED LISTED REDEEMABLE NON-CONVERTIBLE DEBENTURE SERIES 651 DATE OF MATURITY 17/02/2028",
-      "issuer": "CHOLAMANDALAM INVESTMENT AND FINANCE COMPANY LIMITED",
-      "coupon": 8.2,
-      "maturity": "2028-02-17",
-      "rating": "AA+",
-      "type": "bond"
-    },
     "INE660A07RY4": {
       "name": "6.99% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES Z3 DATE OF MATURITY 28/05/2027",
       "issuer": "SUNDARAM FINANCE LIMITED",
@@ -4291,14 +4443,6 @@
       "maturity": "2026-12-03",
       "rating": "A1+",
       "type": "cp"
-    },
-    "INE028A16KO1": {
-      "name": "BANK OF BARODA CD 04DEC26",
-      "issuer": "BANK OF BARODA",
-      "coupon": null,
-      "maturity": "2026-12-04",
-      "rating": null,
-      "type": "cd"
     },
     "INE608A16SW6": {
       "name": "PUNJAB & SIND BANK CD 24FEB27",
@@ -4434,14 +4578,6 @@
       "coupon": null,
       "maturity": "2027-03-11",
       "rating": "A1+",
-      "type": "cd"
-    },
-    "INE028A16LC4": {
-      "name": "BANK OF BARODA CD 27JAN27",
-      "issuer": "BANK OF BARODA",
-      "coupon": null,
-      "maturity": "2027-01-27",
-      "rating": null,
       "type": "cd"
     },
     "INE237AD6042": {
@@ -5237,7 +5373,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer 09:18:21",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q32",
@@ -7758,7 +7896,9 @@
         "bid_pls"
       ],
       "raw": "8.20 chola feb 2028---bid pls 7.90 offer",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q135",
@@ -13468,7 +13608,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q368",
@@ -16685,7 +16827,13 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "7.90 mnm fin aug 2027 7.40offer 25crs 11:01:40",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "candidates": [
+        "INE774D08MJ7",
+        "INE774D07UM6"
+      ],
+      "rating": "AAA",
+      "series": 2
     },
     {
       "id": "q497",
@@ -16708,7 +16856,13 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "7.90 mnm fin aug 2027 7.40offer 25crs 11:01:47",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "candidates": [
+        "INE774D08MJ7",
+        "INE774D07UM6"
+      ],
+      "rating": "AAA",
+      "series": 2
     },
     {
       "id": "q498",
@@ -18726,7 +18880,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q580",
@@ -18774,7 +18930,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q582",
@@ -19191,7 +19349,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "Can give 8.25 Bajaj HFC 27-05-2031",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE377Y07656",
+      "rating": "AAA"
     },
     {
       "id": "q599",
@@ -20510,7 +20670,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer 11:51:39",
-      "confidence": 0.85
+      "confidence": 0.85,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q652",
@@ -22482,7 +22644,13 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50 CHOLA JUL 2027 7.70 offer 230 crs 12:20:08",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q732",
@@ -22722,7 +22890,13 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50 CHOLA JUL 2027 7.70 offer 230 crs 12:23:36",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q742",
@@ -26236,7 +26410,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "7.90 Bajaj HFC 28-04-28 65 offer",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE377Y07417",
+      "rating": "AAA"
     },
     {
       "id": "q882",
@@ -26658,7 +26834,9 @@
         "cbc"
       ],
       "raw": "7.90 Bajaj HFC 28-04-28 66 offer seller holding 70 bid cbc pls",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE377Y07417",
+      "rating": "AAA"
     },
     {
       "id": "q899",
@@ -26903,7 +27081,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "8.50% CHOLA 07-12-2026 - 20crs - 6.90 offer 14:54:32",
-      "confidence": 0.85
+      "confidence": 0.85,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q909",
@@ -27827,7 +28007,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "6.9601% Mindspace Busi Park NCD 08/12/2028  - 10crs  - 7.65 offer 15:41:16",
-      "confidence": 0.9
+      "confidence": 0.9,
+      "isin": "INE0CCU07181",
+      "rating": "AAA"
     },
     {
       "id": "q947",
@@ -29142,7 +29324,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "PRIMARY  30 11 //  04 12    BOB CARDS CP     6.70  offer  500 crs",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q1000",
@@ -29234,7 +29417,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "PRIMARY  30 11 //  04 12    BOB CARDS CP     6.70  offer  500 crs",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q1004",
@@ -30553,7 +30737,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "PRIMARY  30 11 //  04 12    BOB CARDS CP     6.70  offer  500 crs 09:48:58",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q1057",
@@ -32201,7 +32386,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "30 11 //  04 12    BOB CARDS CP     6.70  offer  500 cr",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q1125",
@@ -33085,7 +33271,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "25 01  bob cd 45 offer 10:32:37",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16LD2"
     },
     {
       "id": "q1161",
@@ -33131,7 +33318,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "25 01 bob cd  45/50   t1/t0 10:34:35",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16LD2"
     },
     {
       "id": "q1163",
@@ -33254,7 +33442,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "25 01 bob cd  45/50   t1/t0",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16LD2"
     },
     {
       "id": "q1168",
@@ -35480,7 +35669,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "08 03 bob cd 45 offer 100 crs t+1 11:18:40",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16LS0"
     },
     {
       "id": "q1258",
@@ -37314,7 +37504,8 @@
         "can_sell"
       ],
       "raw": "27-Jan BOB CD sold 50crs at 6.45. Can sell more",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16LC4"
     },
     {
       "id": "q1333",
@@ -37689,7 +37880,8 @@
         "can_buy_more"
       ],
       "raw": "BOB CD 15/12 or PNB CD 15/12 can buy @ 6.00.. 25crs",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q1348",
@@ -38056,7 +38248,8 @@
         "done"
       ],
       "raw": "27-Jan BOB CD sold 50crs at 6.45. Can sell more",
-      "confidence": 0.8
+      "confidence": 0.8,
+      "isin": "INE028A16LC4"
     },
     {
       "id": "q1363",
@@ -38082,7 +38275,8 @@
         "done"
       ],
       "raw": "27-Jan BOB CD sold 50crs at 6.45. Can sell more",
-      "confidence": 0.8
+      "confidence": 0.8,
+      "isin": "INE028A16LC4"
     },
     {
       "id": "q1364",
@@ -38130,7 +38324,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "4 dec bob 90 offer t1",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q1366",
@@ -38227,7 +38422,8 @@
         "done"
       ],
       "raw": "27-Jan BOB CD sold 50crs at 6.45. Can sell more",
-      "confidence": 0.8
+      "confidence": 0.8,
+      "isin": "INE028A16LC4"
     },
     {
       "id": "q1370",
@@ -39185,7 +39381,8 @@
         "cbc"
       ],
       "raw": "BOB CD 25/1 can sell @ 45.. 50crs, cbc 13:53:26",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LD2"
     },
     {
       "id": "q1408",
@@ -39560,7 +39757,9 @@
         "cbc"
       ],
       "raw": "1 day bob cd  65/70  cbcbcbcbc sbi mf 14:23:05",
-      "confidence": 0.45
+      "confidence": 0.45,
+      "isin": "INE028A16MR0",
+      "rating": "A1+"
     },
     {
       "id": "q1423",
@@ -39834,7 +40033,8 @@
         "cbc"
       ],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 50 offer - cbc",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1434",
@@ -39957,7 +40157,8 @@
         "cbc"
       ],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 52 offer - have 55 bid - cbc",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1439",
@@ -40026,7 +40227,8 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 52 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1442",
@@ -40353,7 +40555,8 @@
         "cbc"
       ],
       "raw": "BOB CD 25/1 can buy @ 55.. 25crs.. T+1, cbc",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LD2"
     },
     {
       "id": "q1455",
@@ -40457,7 +40660,8 @@
         "cbc"
       ],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 55 offer - have 58 bid cbc t+1",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1459",
@@ -40533,7 +40737,8 @@
         "cbc"
       ],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 55 offer - have 57 bid cbc t+1",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1462",
@@ -40733,7 +40938,8 @@
         "cbc"
       ],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - total 75crs - 55 offer - have 56 bid cbc t+1",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1470",
@@ -40758,7 +40964,8 @@
         "done"
       ],
       "raw": "02/02 BOB CD - 50crs and 03/02 BOB CD - 25crs - sold 75crs @ 55 T+1 - nothing further 15:49:59",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1471",
@@ -40810,7 +41017,8 @@
         "cbc"
       ],
       "raw": "02 02  bob cd  52/55  cbcbc sp 15:55:57",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q1473",
@@ -46653,7 +46861,9 @@
         "cbc"
       ],
       "raw": "CIFCIN 8 1/2 07/25/27 - 230  crs offer @ 7.70...cbc 10:27:13",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE121A07SG2",
+      "rating": "AA+"
     },
     {
       "id": "q1709",
@@ -46678,7 +46888,9 @@
         "cbc"
       ],
       "raw": "CIFCIN 8 1/2 07/25/27 - 230 offer @ 7.70...cbc 10:27:25",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE121A07SG2",
+      "rating": "AA+"
     },
     {
       "id": "q1710",
@@ -46701,7 +46913,13 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50 CHOLA JUL 2027 7.70 offer 2330 crs 10:27:27",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q1711",
@@ -46847,7 +47065,13 @@
         "cbc"
       ],
       "raw": "8.50 chola jul 2027 7.70offer 230crs CBCB 10:27:44",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q1717",
@@ -47089,7 +47313,13 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50 CHOLA JUL 2027 7.70 offer 230 crs 10:29:03",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q1727",
@@ -47291,7 +47521,13 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50 CHOLA JUL 2027 7.70 offer 230 crs 10:30:09",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q1735",
@@ -47950,7 +48186,13 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50 CHOLA JUL 2027 7.70 offer 230 crs 10:34:31",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "candidates": [
+        "INE121A07RT7",
+        "INE121A07SG2"
+      ],
+      "rating": "AA+",
+      "series": 2
     },
     {
       "id": "q1762",
@@ -49176,7 +49418,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "7.95% Mindspace Busines Park NCD 27/07/27 - 10crs - 7.50 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE0CCU07066",
+      "rating": "AAA"
     },
     {
       "id": "q1812",
@@ -49199,7 +49443,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "6.9601% Mindspace Busi Park NCD 08/12/2028  - 10crs  - 7.65 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE0CCU07181",
+      "rating": "AAA"
     },
     {
       "id": "q1813",
@@ -50079,7 +50325,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola ncd 07-12-2026 - 20crs - 6.90 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q1848",
@@ -50127,7 +50375,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20crs - 6.90 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q1850",
@@ -50371,7 +50621,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "7.70 Torrent Pharma Jan 2030 72 offer 50-100 crs",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE685A07165",
+      "rating": "AA+"
     },
     {
       "id": "q1860",
@@ -53171,7 +53423,9 @@
         "can_sell"
       ],
       "raw": "7.38 chola may27 sold at 65...275 crs..can sell further 11:38:30",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q1972",
@@ -53370,7 +53624,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola ncd 07-12-2026 - 20crs - 6.90 offer 11:41:09",
-      "confidence": 0.8
+      "confidence": 0.8,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q1980",
@@ -60129,7 +60385,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola ncd 07-12-2026 - 20crs - 6.90 offer 14:36:51",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2250",
@@ -60444,7 +60702,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20 crs - 6.90 offer passing 7.20 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2263",
@@ -60761,7 +61021,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20 crs - 6.90 offer passing 7.20 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2276",
@@ -60784,7 +61046,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20 crs - 6.90 offer passing 7.20 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2277",
@@ -60880,7 +61144,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20 crs - 6.90 offer passing 7.20 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2281",
@@ -60903,7 +61169,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20 crs - 6.90 offer passing 7.20 bid (91 day paper MMY)",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2282",
@@ -62303,7 +62571,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "8.50% Chola 07-12-2026 - 20 crs - 6.90 offer passing 7.20 bid (91 day paper MMY) 15:44:11",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE121A07RO8",
+      "rating": "AA+"
     },
     {
       "id": "q2339",
@@ -74875,7 +75145,8 @@
         "cbc"
       ],
       "raw": "BOB CD 15/12.. 92/97..25crs/50crs, cbc 10:17:15",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q2868",
@@ -74994,7 +75265,8 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "5/11 BOB CD 100crs 90 bid t+0",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KH5"
     },
     {
       "id": "q2873",
@@ -76591,7 +76863,8 @@
         "cbc"
       ],
       "raw": "BOB CD 15/12.. 93/95..25crs/50crs, cbc 11:03:49",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q2938",
@@ -76616,7 +76889,8 @@
         "cbc"
       ],
       "raw": "BOB CD 15/12.. 93/95..25crs/50crs, cbc 11:04:45",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q2939",
@@ -76809,7 +77083,8 @@
         "cbc"
       ],
       "raw": "BOB CD 15/12.. 93/95..25crs/50crs, cbc",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q2947",
@@ -76932,7 +77207,8 @@
         "cbc"
       ],
       "raw": "BOB CD 15/12.. 93/95..25crs/50crs, cbc",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q2952",
@@ -77676,7 +77952,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "11/09 BOB CD, 4.90 offer 50cr",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16MR0",
+      "rating": "A1+"
     },
     {
       "id": "q2982",
@@ -77699,7 +77977,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "11/09 BOB CD, 4.90 offer 50cr",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16MR0",
+      "rating": "A1+"
     },
     {
       "id": "q2983",
@@ -79533,7 +79813,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "11/09 BOB CD 4.80/90, 75cr",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MR0",
+      "rating": "A1+"
     },
     {
       "id": "q3057",
@@ -79707,7 +79989,8 @@
         "done"
       ],
       "raw": "BOB CD 15/12.. 100crs dlt @ 94.. can sell 25crs @ 94, cbc.. 12:43:48",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q3064",
@@ -79779,7 +80062,8 @@
         "done"
       ],
       "raw": "BOB CD 15/12.. 100crs dlt @ 94.. can sell 25crs @ 94, cbc.. 12:43:58",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q3067",
@@ -80572,7 +80856,8 @@
         "can_sell"
       ],
       "raw": "02-Feb BOBCD 25crs can sell at 6.40",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q3100",
@@ -80641,7 +80926,8 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "02-Feb BOBCD 45 bid t+0 passing 40 offe",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q3103",
@@ -80737,7 +81023,8 @@
         "can_sell"
       ],
       "raw": "02-Feb BOB CD 25crs can sell at 6.40 have 43 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q3107",
@@ -81734,7 +82021,8 @@
         "cbc"
       ],
       "raw": "2nd feb bob cd 42/45 cbc 13:15:43",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q3148",
@@ -82035,7 +82323,8 @@
         "cbc"
       ],
       "raw": "2nd feb bob cd 42/45 cbc 13:25:49",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q3160",
@@ -82304,7 +82593,8 @@
         "cbc"
       ],
       "raw": "2nd feb bob cd 42/45 cbc 13:36:08",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LG5"
     },
     {
       "id": "q3171",
@@ -84913,7 +85203,9 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "10/3 Chola CP: 6.90 offer for 50 crs 15:11:27",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE121A14YN2",
+      "rating": "A1+"
     },
     {
       "id": "q3277",
@@ -84959,7 +85251,8 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "4/12 BOB CD 100cr 90 offer last t1 15:12:58",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q3279",
@@ -85010,7 +85303,8 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "4/12 BOB CD 100cr 90 offer last t1 15:15:51",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q3281",
@@ -85060,7 +85354,8 @@
         "cbc"
       ],
       "raw": "4/12 BOB CD 100cr 90 offer last t1 cbc 15:16:22",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q3283",
@@ -85254,7 +85549,8 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "25-30 november  BOB CARDS CP  70  offer  500 crs 15:28:22",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KK9"
     },
     {
       "id": "q3291",
@@ -85277,7 +85573,8 @@
       "quote_date": "2026-09-09",
       "flags": [],
       "raw": "Primary  25-30 november  BOB CARDS CP  70  offer  500 crs 15:28:51",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KK9"
     },
     {
       "id": "q3292",
@@ -86357,7 +86654,9 @@
         "offer_pls"
       ],
       "raw": "8.20 Chola Fin Feb'28 - 10-20cr offer pls",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q3337",
@@ -90140,7 +90439,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "8.20 chola feb 2028--7.95 offer 09:37:14",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q3492",
@@ -90407,7 +90708,9 @@
         "bid_pls"
       ],
       "raw": "7.83 CHOLA JUN 2028 95 offer 25 crs, bid pls 09:39:26",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE121A07SR9",
+      "rating": "AA+"
     },
     {
       "id": "q3503",
@@ -122005,7 +122308,8 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "6m bob cards cp   50 crs 6.90 offer",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16LS0"
     },
     {
       "id": "q4804",
@@ -124674,7 +124978,8 @@
         "cbc"
       ],
       "raw": "BOB CD 4/12 can sell @ 85.. 25crs, cbc",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q4915",
@@ -125025,7 +125330,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "7th dec bob cd 25crs package 90 offer",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q4930",
@@ -125117,7 +125424,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "package 90 offer AON",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q4934",
@@ -125600,7 +125909,8 @@
         "cbc"
       ],
       "raw": "BOB CD 4/12 can sell @ 88.. 25crs, cbc 10:10:55",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q4954",
@@ -125626,7 +125936,8 @@
         "cbc"
       ],
       "raw": "BOB CD 4/12 can sell @ 88.. 25crs, cbc (passing 90 bid), cbc 10:11:10",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q4955",
@@ -126050,7 +126361,8 @@
         "cbc"
       ],
       "raw": "BOB CD 4/12.. 88/90.. 25crs, cbc 10:29:00",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q4972",
@@ -128653,7 +128965,9 @@
         "can_sell"
       ],
       "raw": "BOB CD 7/12 can sell @ 85.. 50crs (passing 90 bid), cbc 11:53:01",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q5080",
@@ -128822,7 +129136,8 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "BOB CD 05-11-2026- 5.80 offer - 100 crs 11:58:16",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KH5"
     },
     {
       "id": "q5087",
@@ -128845,7 +129160,8 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "05/11 BOB CD  80/95  100cr 11:58:54",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KH5"
     },
     {
       "id": "q5088",
@@ -128943,7 +129259,8 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "6 nov bob cd 90 bid t+0 12:04:45",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KI3"
     },
     {
       "id": "q5092",
@@ -132157,7 +132474,8 @@
         "can_sell"
       ],
       "raw": "BOB CD 15/12 can sell @ 94.. 25crs.. T+1 only",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q5223",
@@ -132321,7 +132639,9 @@
         "cbc"
       ],
       "raw": "BOB CD  07/12 can sell @ 85.. 50crs, cbc ..T+0/T+1 ny thg ok",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q5230",
@@ -133380,7 +133700,8 @@
         "cbc"
       ],
       "raw": "BOB CD 15/12.. 94 choice.. T+1/T+0, cbc",
-      "confidence": 0.45
+      "confidence": 0.45,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q5274",
@@ -133692,7 +134013,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "BOB CD 7/12.. 90/95.. 50crs.. T+1",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q5287",
@@ -135498,7 +135821,9 @@
         "cbc"
       ],
       "raw": "7.38 chola may27...50 offer cbc 09:32:31",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5360",
@@ -135546,7 +135871,9 @@
         "cbc"
       ],
       "raw": "7.38 chola may27...50 offer cbc 09:32:54",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5362",
@@ -135571,7 +135898,9 @@
         "cbc"
       ],
       "raw": "7.38 chola may27...50 offer cbc 09:32:59",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5363",
@@ -135594,7 +135923,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7.38% Chola May 2027 50offer-i bank 09:33:04",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5364",
@@ -135740,7 +136071,9 @@
         "cbc"
       ],
       "raw": "7.38 chola may27...50 offer cbc..holding 65 bid 09:34:38",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5370",
@@ -135790,7 +136123,9 @@
         "cbc"
       ],
       "raw": "7.38 chola may27...50 offer cbc..holding 65 bid 09:34:48",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5372",
@@ -140297,7 +140632,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "8.20 chola march 2028--95 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q5555",
@@ -140602,7 +140939,9 @@
         "cbc"
       ],
       "raw": "7.38 chola may27...50 offer cbc..holding 65 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q5567",
@@ -140675,7 +141014,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "8.20 chola march 2028--95 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q5570",
@@ -145817,7 +146158,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "8.88 Chola Fin Subdebt Jun’33 @ 8.88/98 - 20cr",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A08PZ6",
+      "rating": "AA+"
     },
     {
       "id": "q5778",
@@ -145840,7 +146183,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "8.92 Chola Fin Subdebt Dec'34 @ 8.88/98 - 25cr",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A08PR3",
+      "rating": "AA+"
     },
     {
       "id": "q5779",
@@ -145940,7 +146285,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "8.92 Chola Fin Subdebt Dec'34 @ 8.88/98 - 25cr",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A08PR3",
+      "rating": "AA+"
     },
     {
       "id": "q5783",
@@ -160962,7 +161309,8 @@
         "cbc"
       ],
       "raw": "15/12 BOB CD  125crs package 350crs 5.80 offer cbc  MKT 09:35:31",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q6394",
@@ -161617,7 +161965,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7/12  bob  5.80  /5.85   25 cr   /100 cr mrkt",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6421",
@@ -163325,7 +163675,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7/12 BOB CD  78/85   100cr",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6491",
@@ -163646,7 +163998,9 @@
         "cbc"
       ],
       "raw": "Chola finance 27/11 can sell @ 75.. 25crs, cbc",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A14YB7",
+      "rating": "A1+"
     },
     {
       "id": "q6504",
@@ -163797,7 +164151,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "Chola finance 27/11.. 75/80  sp",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE121A14YB7",
+      "rating": "A1+"
     },
     {
       "id": "q6510",
@@ -164572,7 +164928,9 @@
         "cbc"
       ],
       "raw": "Chola finance 27/11.. 75/80  cbc 11:00:23",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE121A14YB7",
+      "rating": "A1+"
     },
     {
       "id": "q6541",
@@ -165412,7 +165770,8 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "04/12 BOB CD &  07/12 AXIS CD  50cr each  80/85",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q6575",
@@ -165991,7 +166350,8 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "11 mar bob cd 38/40 50crs t0",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16LW2"
     },
     {
       "id": "q6599",
@@ -167123,7 +167483,9 @@
         "cbc"
       ],
       "raw": "Chola finance 27/11.. 75/80  CBC",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A14YB7",
+      "rating": "A1+"
     },
     {
       "id": "q6645",
@@ -167910,7 +168272,8 @@
         "cbc"
       ],
       "raw": "15/12 BOB CD  125crs package 350crs 5.80 offer cbc",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q6678",
@@ -168164,7 +168527,9 @@
         "cbc"
       ],
       "raw": "Chola finance 27/11.. 75/80.. 50/25crs, cbc",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE121A14YB7",
+      "rating": "A1+"
     },
     {
       "id": "q6688",
@@ -168381,7 +168746,8 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "8/1 BOB CD 25 crs 38 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q6697",
@@ -169076,7 +169442,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7th Dec BoB CD, 75 crs, 80 offer, t+1",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6726",
@@ -169150,7 +169518,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7th Dec BoB CD, 95 bid t+0 12:43:17",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6729",
@@ -169993,7 +170363,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "07-12-2026 BOB CD  5.80 offer  25ccrs 12:55:46",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6763",
@@ -171807,7 +172179,8 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "BOB 25/11 CD - 25crs - 5.80 offer",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KK9"
     },
     {
       "id": "q6837",
@@ -171830,7 +172203,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "BOB 7/12 CD - 25crs - 5.80 offer, package in t+1",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6838",
@@ -172054,7 +172429,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "BOB 7/12 CD - 25crs - 5.80 offer, package in t+0 , have 5.85 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6847",
@@ -172547,7 +172924,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "BOB 7/12 CD - 25crs - 5.80 offer, package in t+0 , have 5.85 bi 14:08:13",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6867",
@@ -173147,7 +173526,9 @@
         "can_sell"
       ],
       "raw": "BOB 25/11 CD sold at 5.82, can sell BOB 7/12 CD 25crs at 5.82 in t+1 14:27:40",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16MQ2",
+      "rating": "A1+"
     },
     {
       "id": "q6891",
@@ -175384,7 +175765,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "7.1652% Mindspace Busns Park REIT NCD(MD05/03/29) 70 offer",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE0CCU07199",
+      "rating": "AAA"
     },
     {
       "id": "q6981",
@@ -181905,7 +182288,9 @@
         "bid_pls"
       ],
       "raw": "7.83 CHOLA JUN 2028 25 crs bid pls 09:48:32",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SR9",
+      "rating": "AA+"
     },
     {
       "id": "q7245",
@@ -186028,7 +186413,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "7.38 Chola may27....60 offer...holding 70 bid 10:30:40",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q7410",
@@ -186097,7 +186484,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "7.38 Chola may27....60 offer...holding 70 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q7413",
@@ -186168,7 +186557,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "7.38 Chola may27....60 offer...holding 70 bid 10:31:45",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q7416",
@@ -186291,7 +186682,9 @@
         "bid_pls"
       ],
       "raw": "8.20 chola feb 2028 bid pls",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q7421",
@@ -186339,7 +186732,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "7.38 Chola may27....60 offer...holding 70 bid",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A07SN8",
+      "rating": "AA+"
     },
     {
       "id": "q7423",
@@ -186789,7 +187184,9 @@
         "bid_pls"
       ],
       "raw": "7.83 CHOLA JUN 2028 95 offer 25 crs, bid pls",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A07SR9",
+      "rating": "AA+"
     },
     {
       "id": "q7441",
@@ -187580,7 +187977,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "8.20 chola feb 2028 10bid 10crs 10:44:30",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q7474",
@@ -187932,7 +188331,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "8.20 chola feb 2028 8.03/8.10--10crs 10:49:12",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE121A07SL2",
+      "rating": "AA+"
     },
     {
       "id": "q7488",
@@ -195427,7 +195828,9 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "7.83 CHOLA JUN 2028 8.03 offer 25 crs",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE121A07SR9",
+      "rating": "AA+"
     },
     {
       "id": "q7788",
@@ -209567,7 +209970,8 @@
         "cbc"
       ],
       "raw": "4/12 BOB CD 60 offer 50crs  T+1 cbc",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8377",
@@ -209592,7 +209996,8 @@
         "cbc"
       ],
       "raw": "4/12 BOB CD 60 offer 50crs  T+1 cbc",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8378",
@@ -210352,7 +210757,8 @@
         "cbc"
       ],
       "raw": "4th dec BOB CD 75 crs - can sell at 5.75 - have 80 bid cbc",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8409",
@@ -210448,7 +210854,8 @@
         "cbc"
       ],
       "raw": "4th dec BOB/indian CD 80 bid match 25 cr t+0 cbc 09:48:29",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8413",
@@ -210494,7 +210901,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "4th dec bob cd 75/80 75/25crs 09:48:58",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8415",
@@ -210664,7 +211072,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "4/12 BOB CD  @ 77/80   75 crs t+1/t0 09:55:15",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8422",
@@ -211402,7 +211811,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "Can buy 4/12 BOB - 5.80 25cr t0 10:09:06",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8452",
@@ -212081,7 +212491,8 @@
         "can_sell"
       ],
       "raw": "08-Jan BOB CD 100crs can sell at 6.45",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8480",
@@ -212127,7 +212538,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "8/1 BOB CD - 100crs - 6.40 offer, have 6.48 bid",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8482",
@@ -212177,7 +212589,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "8/1 BOB CD - 100crs - 6.40 offer**",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8484",
@@ -213393,7 +213806,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "BOB CD...15-Dec....75 crs....85 offer...",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q8534",
@@ -213443,7 +213857,9 @@
         "can_sell"
       ],
       "raw": "Chola finance 27/11 can sell @ 70.. 25crs (passing 80 bid)",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE121A14YB7",
+      "rating": "A1+"
     },
     {
       "id": "q8536",
@@ -213666,7 +214082,8 @@
         "cbc"
       ],
       "raw": "BOB - 06/11 - Rs. 20 crores - 5.60% offer - cbc cbc",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KI3"
     },
     {
       "id": "q8545",
@@ -213916,7 +214333,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "bob 4 dec 75 -80 , 100crs t1/t0",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8555",
@@ -213993,7 +214411,8 @@
         "can_sell"
       ],
       "raw": "08-Jan BOB CD 100crs can sell at 6.42 have 47 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8558",
@@ -214066,7 +214485,8 @@
         "can_sell"
       ],
       "raw": "08-Jan BOB CD 100crs can sell at 6.42 have 45 bid",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8561",
@@ -214164,7 +214584,8 @@
         "cbc"
       ],
       "raw": "04 Dec BOB t+1/t0 80 choice cbc",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8565",
@@ -214189,7 +214610,8 @@
         "cbc"
       ],
       "raw": "04 Dec BOB t+1/t0 80 choice cbc  DP 100 cr cbc",
-      "confidence": 0.5
+      "confidence": 0.5,
+      "isin": "INE028A16KO1"
     },
     {
       "id": "q8566",
@@ -214461,7 +214883,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "15/12 BOB cd 85 offer 75cr",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KW4"
     },
     {
       "id": "q8577",
@@ -217292,7 +217715,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "BOB CD 8th jan 50bid t+1 100crs",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8692",
@@ -217338,7 +217762,8 @@
       "quote_date": "2026-09-04",
       "flags": [],
       "raw": "BOB 25Nov 100cr offer @ 76 T+1",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KK9"
     },
     {
       "id": "q8694",
@@ -217439,7 +217864,8 @@
         "done"
       ],
       "raw": "08-Jan BOB CD sold 150crs at 6.40. Can sell more T+1",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8698",
@@ -217716,7 +218142,8 @@
         "cbc"
       ],
       "raw": "08/01 BOB CD 100crs - 40 offer - can sell t+0 also - cbc",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8709",
@@ -217742,7 +218169,8 @@
         "cbc"
       ],
       "raw": "08/01 BOB CD 100crs - 40 offer - can sell t+0 also - have 41 bid  cbc",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE028A16KY0"
     },
     {
       "id": "q8710",
