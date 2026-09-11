@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T17:59:22+05:30",
+  "generated_at": "2026-09-11T22:04:40+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "ec88740eab912959ebc645b79ac4c5bc4916421eebfc3873217dd4b8b31e0400",
   "trading_day": "2026-09-11",
@@ -33,13 +33,13 @@
         "type": "gsec",
         "name": "07.63 GS 2056",
         "maturity": "2056-07-01",
-        "yield": 7.611
+        "yield": 7.63
       },
       {
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.6202
+        "yield": 6.5986
       },
       {
         "type": "gsec",
@@ -59,20 +59,20 @@
     "source": "NSDL",
     "as_of": "2026-09-11",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_04.09.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_04-09-2026.xls",
+      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_10.09.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_10-09-2026.xls",
       "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-04.09.2026.xlsx"
     },
     "counts": {
-      "bond": 27400,
-      "cp": 1922,
+      "bond": 27486,
+      "cp": 2073,
       "cd": 434
     },
-    "securities_count": 569,
+    "securities_count": 573,
     "matched": {
-      "confirmed": 3333,
+      "confirmed": 3342,
       "shortlisted": 71,
-      "rated": 3202
+      "rated": 3215
     }
   },
   "securities": {
@@ -996,6 +996,14 @@
       "rating": null,
       "type": "cd"
     },
+    "INE047A14BH9": {
+      "name": "GRASIM INDUSTRIES LTD 91D CP 11DEC26",
+      "issuer": "GRASIM INDUSTRIES LTD",
+      "coupon": null,
+      "maturity": "2026-12-11",
+      "rating": "A1+",
+      "type": "cp"
+    },
     "INE422H14487": {
       "name": "DSP FINANCE PRIVATE LIMITED 91D CP 21SEP26",
       "issuer": "DSP FINANCE PRIVATE LIMITED",
@@ -1356,6 +1364,14 @@
       "rating": null,
       "type": "cd"
     },
+    "INE755K14FV8": {
+      "name": "DALMIA CEMENT (BHARAT) LIMITED 91D CP 11DEC26",
+      "issuer": "DALMIA CEMENT (BHARAT) LIMITED",
+      "coupon": null,
+      "maturity": "2026-12-11",
+      "rating": "A1+",
+      "type": "cp"
+    },
     "INE692A16MP7": {
       "name": "UNION BANK OF INDIA CD 24SEP26",
       "issuer": "UNION BANK OF INDIA",
@@ -1564,6 +1580,14 @@
       "rating": "A1+",
       "type": "cd"
     },
+    "INE002A14LS0": {
+      "name": "RELIANCE INDUSTRIES LIMITED 91D CP 09DEC26",
+      "issuer": "RELIANCE INDUSTRIES LIMITED",
+      "coupon": null,
+      "maturity": "2026-12-09",
+      "rating": "A1+",
+      "type": "cp"
+    },
     "INE261F14QF7": {
       "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT 91D CP 02DEC26",
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
@@ -1585,6 +1609,14 @@
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
       "coupon": null,
       "maturity": "2026-10-01",
+      "rating": "A1+",
+      "type": "cp"
+    },
+    "INE134E14BA2": {
+      "name": "POWER FINANCE CORPORATION LIMITED 90D CP 09DEC26",
+      "issuer": "POWER FINANCE CORPORATION LIMITED",
+      "coupon": null,
+      "maturity": "2026-12-09",
       "rating": "A1+",
       "type": "cp"
     },
@@ -2001,7 +2033,7 @@
       "issuer": "BHARTI TELECOM LIMITED",
       "coupon": 8.9,
       "maturity": "2031-11-05",
-      "rating": "AA+",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE414G07JL7": {
@@ -3196,14 +3228,6 @@
       "rating": "A1+",
       "type": "cd"
     },
-    "INE489L14934": {
-      "name": "IIFL CAPITAL SERVICES LIMITED 182D CP 08DEC26",
-      "issuer": "IIFL CAPITAL SERVICES LIMITED",
-      "coupon": null,
-      "maturity": "2026-12-08",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE572E14KQ0": {
       "name": "PNB HOUSING FINANCE LIMITED 91D CP 27OCT26",
       "issuer": "PNB HOUSING FINANCE LIMITED",
@@ -3235,14 +3259,6 @@
       "maturity": "2027-01-28",
       "rating": null,
       "type": "cd"
-    },
-    "INE289B14KI4": {
-      "name": "GIC HOUSING FINANCE LIMITED 91D CP 09DEC26",
-      "issuer": "GIC HOUSING FINANCE LIMITED",
-      "coupon": null,
-      "maturity": "2026-12-09",
-      "rating": "A1+",
-      "type": "cp"
     },
     "INE498L14GA5": {
       "name": "L&T FINANCE LIMITED 343D CP 10JUN27",
@@ -3753,7 +3769,7 @@
       "issuer": "INDIAN RAILWAY FINANCE CORPORATION LIMITED",
       "coupon": 7.95,
       "maturity": "2029-06-12",
-      "rating": "AA",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE053F08353": {
@@ -3881,6 +3897,14 @@
       "issuer": "JIO CREDIT LIMITED",
       "coupon": null,
       "maturity": "2026-09-18",
+      "rating": "A1+",
+      "type": "cp"
+    },
+    "INE498L14GP3": {
+      "name": "L&T FINANCE LIMITED 364D CP 08SEP27",
+      "issuer": "L&T FINANCE LIMITED",
+      "coupon": null,
+      "maturity": "2027-09-08",
       "rating": "A1+",
       "type": "cp"
     },
@@ -4569,6 +4593,14 @@
       "issuer": "SMALL INDUSTRIES DEVELOPMENT BANK OF INDIA",
       "coupon": null,
       "maturity": "2026-12-02",
+      "rating": "A1+",
+      "type": "cp"
+    },
+    "INE02FN14986": {
+      "name": "IGH HOLDINGS PRIVATE LIMITED 91D CP 09DEC26",
+      "issuer": "IGH HOLDINGS PRIVATE LIMITED",
+      "coupon": null,
+      "maturity": "2026-12-09",
       "rating": "A1+",
       "type": "cp"
     },
@@ -25932,7 +25964,9 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "3 month Grasim 5.95 offer ,500 crs , 17 VD 09:21:01",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE047A14BH9",
+      "rating": "A1+"
     },
     {
       "id": "q861",
@@ -26357,7 +26391,9 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "3 month Grasim 5.95 offer ,500 crs , 17 VD",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE047A14BH9",
+      "rating": "A1+"
     },
     {
       "id": "q878",
@@ -33344,7 +33380,9 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "Dalmia cement 3months 6.20 offer for 100cr. subject to approval",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE755K14FV8",
+      "rating": "A1+"
     },
     {
       "id": "q1165",
@@ -33367,7 +33405,9 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "Dalmia cement 3months 6.20 offer for 100cr. STA",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE755K14FV8",
+      "rating": "A1+"
     },
     {
       "id": "q1166",
@@ -33716,7 +33756,9 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "Dalmia cement 3months 6.20 offer for 100cr., STA.",
-      "confidence": 0.55
+      "confidence": 0.55,
+      "isin": "INE755K14FV8",
+      "rating": "A1+"
     },
     {
       "id": "q1180",
@@ -37815,7 +37857,9 @@
         "cbc"
       ],
       "raw": "9 dec RIL CP 6.05 offer cbc 15:20:30",
-      "confidence": 0.8
+      "confidence": 0.8,
+      "isin": "INE002A14LS0",
+      "rating": "A1+"
     },
     {
       "id": "q1347",
@@ -38728,7 +38772,9 @@
         "cbc"
       ],
       "raw": "PFC CP 9/12.. 05/10.. 50crs, cbc.. T+1 16:10:55",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE134E14BA2",
+      "rating": "A1+"
     },
     {
       "id": "q1384",
@@ -48676,7 +48722,7 @@
       "raw": "8.90% BHARTI TELECOM LIMITED 05-11-2031",
       "confidence": 0.6,
       "isin": "INE403D08249",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q1790",
@@ -48703,7 +48749,7 @@
       "raw": "15",
       "confidence": 0.4,
       "isin": "INE403D08249",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q1791",
@@ -66907,7 +66953,9 @@
       "quote_date": "2026-09-10",
       "flags": [],
       "raw": "3 month Toyota financial Services 100 Cr 6.70 offer",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q2526",
@@ -107079,8 +107127,8 @@
       ],
       "raw": "IIFL Capital Services Ltd CP Mat 081226, offering at 7.50%, bid pls, Rs.100 crs mrkt",
       "confidence": 0.7,
-      "isin": "INE489L14934",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 3
     },
     {
       "id": "q4163",
@@ -109004,8 +109052,8 @@
       ],
       "raw": "LIC Housing Finance Limited CP (MD 09/12/2026) can sell 25cr@95 10:00:59",
       "confidence": 0.7,
-      "isin": "INE289B14KI4",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q4242",
@@ -109102,8 +109150,8 @@
       "flags": [],
       "raw": "9/12 LIC hsg fin 95/05  25cr t+0 10:04:36",
       "confidence": 0.5,
-      "isin": "INE289B14KI4",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q4246",
@@ -137335,7 +137383,7 @@
       "raw": "7.95 irfc june 2029---33/38--25cr 12:01:15",
       "confidence": 0.7,
       "isin": "INE053F07BR9",
-      "rating": "AA"
+      "rating": "AAA"
     },
     {
       "id": "q5395",
@@ -156406,7 +156454,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "1 year l&t finance primary 7.40 offer 09:30:13",
-      "confidence": 0.7
+      "confidence": 0.7,
+      "isin": "INE498L14GP3",
+      "rating": "A1+"
     },
     {
       "id": "q6187",
@@ -156452,7 +156502,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "1 year l&t finance primary 7.40 /50 09:30:30",
-      "confidence": 0.4
+      "confidence": 0.4,
+      "isin": "INE498L14GP3",
+      "rating": "A1+"
     },
     {
       "id": "q6189",
@@ -156758,7 +156810,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "1 year l&t finance primary 7.40.50 09:30:53",
-      "confidence": 0.4
+      "confidence": 0.4,
+      "isin": "INE498L14GP3",
+      "rating": "A1+"
     },
     {
       "id": "q6202",
@@ -156933,7 +156987,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "1 year l&t finance primary 7.40.50 09:33:29",
-      "confidence": 0.4
+      "confidence": 0.4,
+      "isin": "INE498L14GP3",
+      "rating": "A1+"
     },
     {
       "id": "q6209",
@@ -206099,7 +206155,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "IGH vd:9th 3m 7.05/20",
-      "confidence": 0.35
+      "confidence": 0.35,
+      "isin": "INE02FN14986",
+      "rating": "A1+"
     },
     {
       "id": "q8213",
