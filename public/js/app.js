@@ -1320,13 +1320,16 @@ function renderTip(o) {
     return `${L(esc(o.label))}${row("Quotes", o.count)}${row("Share", o.pct + "%")}${o.sub ? `<div style="color:${T.n400};margin-top:3px">${esc(o.sub)}</div>` : ""}`;
   }
   if (o.kind === "timeline") {
-    return `${L("Activity")}${row("Time", esc(o.label))}${row("Quotes", o.count)}`;
+    const who = Array.isArray(o.dealers) && o.dealers.length
+      ? `<div style="margin-top:4px;color:${T.n400}">Most active this slot</div>` + o.dealers.map((d) => row(esc(d.name), d.count)).join("")
+      : "";
+    return `${L("Activity")}${row("Time", esc(o.label))}${row("Quotes", o.count)}${who}`;
   }
   if (o.kind === "rankissuer") {
-    return `${L(esc(o.name))}${row("Quotes", o.count)}${row("Buy interest", o.buy)}${row("Sell interest", o.sell)}${o.other ? row("Two-way / other", o.other) : ""}`;
+    return `${L(esc(o.name))}${row("Quotes", o.count)}${row("Buy interest", o.buy)}${row("Sell interest", o.sell)}${o.twoway ? row("Two-way", o.twoway) : ""}${o.other ? row("Other", o.other) : ""}`;
   }
   if (o.kind === "rankdealer") {
-    return `${L(esc(o.name))}${o.firm ? `<div style="color:${T.n400};margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}${isNum(o.buy) ? row("Buy interest", o.buy) : ""}${isNum(o.sell) ? row("Sell interest", o.sell) : ""}${o.other ? row("Two-way / other", o.other) : ""}`;
+    return `${L(esc(o.name))}${o.firm ? `<div style="color:${T.n400};margin-bottom:3px">${esc(o.firm)}</div>` : ""}${row("Quotes posted", o.count)}${isNum(o.buy) ? row("Buy interest", o.buy) : ""}${isNum(o.sell) ? row("Sell interest", o.sell) : ""}${o.twoway ? row("Two-way", o.twoway) : ""}${o.other ? row("Other", o.other) : ""}`;
   }
   return "";
 }
@@ -1954,10 +1957,25 @@ function hhmm(sec) {
 }
 
 const PULSE_BUCKET = 1800;        // 30-minute activity buckets
-const PULSE_OTHER = T.n300;       // two-way / note quotes in the issuer split
+const PULSE_OTHER = T.n300;       // "other" (notes/confirmations) in the split
+const TWOWAY_COL = "#8b5cf6";     // two-way quotes (brand violet)
+
+/** Desk Pulse counts LKP's own desk only. A quote pasted from another broker's
+ *  chat carries that broker's firm (e.g. "ICICI Securities…", "Axis Securities",
+ *  "IDBI Capital…", "Nuvama…") — those are excluded so the read reflects LKP.
+ *  LKP quotes whose firm mis-parsed to a bare "Ltd."/"Limited" fragment are kept. */
+function isLkpQuote(q) {
+  const firm = (q.firm || "").trim();
+  if (!firm) return true;
+  if (/lkp/i.test(firm) || /lkp/i.test(q.dealer || "")) return true;
+  if (/^(ltd\.?|limited|pvt\.?\s*ltd\.?)$/i.test(firm)) return true; // parse-noise fragment
+  return false; // a named non-LKP institution -> outside-desk paste
+}
 
 function computePulse() {
-  const quotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
+  const rawQuotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
+  const quotes = rawQuotes.filter(isLkpQuote);           // Desk Pulse = LKP's own desk
+  const hiddenOutside = rawQuotes.length - quotes.length; // outside-broker pastes removed
   const total = quotes.length;
 
   // --- Section mix (donut).
@@ -1980,10 +1998,18 @@ function computePulse() {
 
   // --- Activity through the day (30-min buckets across the active range).
   const counts = new Map();
+  const bucketDealers = new Map(); // bucket -> Map(dealer -> count): "who was active when"
   for (const q of quotes) {
     const s = tsSeconds(q.timestamp);
     if (s < 0) continue;
-    counts.set(Math.floor(s / PULSE_BUCKET), (counts.get(Math.floor(s / PULSE_BUCKET)) || 0) + 1);
+    const b = Math.floor(s / PULSE_BUCKET);
+    counts.set(b, (counts.get(b) || 0) + 1);
+    const dn = (q.dealer || "").trim();
+    if (dn) {
+      if (!bucketDealers.has(b)) bucketDealers.set(b, new Map());
+      const dm = bucketDealers.get(b);
+      dm.set(dn, (dm.get(dn) || 0) + 1);
+    }
   }
   let timeline = [], withTime = 0, peak = null;
   if (counts.size) {
@@ -1991,7 +2017,9 @@ function computePulse() {
     for (let b = bmin; b <= bmax; b++) {
       const startSec = b * PULSE_BUCKET, count = counts.get(b) || 0;
       withTime += count;
-      const t = { b, startSec, label: hhmm(startSec), endLabel: hhmm(startSec + PULSE_BUCKET), count };
+      const dm = bucketDealers.get(b);
+      const dealers = dm ? [...dm.entries()].sort((x, y) => y[1] - x[1]).slice(0, 4).map(([name, c]) => ({ name, count: c })) : [];
+      const t = { b, startSec, label: hhmm(startSec), endLabel: hhmm(startSec + PULSE_BUCKET), count, dealers };
       timeline.push(t);
       if (!peak || count > peak.count) peak = t;
     }
@@ -2003,11 +2031,12 @@ function computePulse() {
     const name = (q.issuer || "").trim();
     if (!name) continue;
     const key = name.toLowerCase();
-    if (!issMap.has(key)) issMap.set(key, { name, count: 0, buy: 0, sell: 0, other: 0 });
+    if (!issMap.has(key)) issMap.set(key, { name, count: 0, buy: 0, sell: 0, twoway: 0, other: 0 });
     const it = issMap.get(key);
     it.count++;
     if (BUY_SIDES.has(q.side)) it.buy++;
     else if (SELL_SIDES.has(q.side)) it.sell++;
+    else if (q.side === "two_way") it.twoway++;
     else it.other++;
   }
   const topIssuers = [...issMap.values()]
@@ -2020,11 +2049,12 @@ function computePulse() {
     const name = (q.dealer || "").trim();
     if (!name) continue;
     const key = name.toLowerCase();
-    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, buy: 0, sell: 0, other: 0, firms: new Set(), sectors: new Map(), tenors: new Map() });
+    if (!dlrMap.has(key)) dlrMap.set(key, { name, count: 0, buy: 0, sell: 0, twoway: 0, other: 0, firms: new Set(), sectors: new Map(), tenors: new Map() });
     const it = dlrMap.get(key);
     it.count++;
     if (BUY_SIDES.has(q.side)) it.buy++;
     else if (SELL_SIDES.has(q.side)) it.sell++;
+    else if (q.side === "two_way") it.twoway++;
     else it.other++;
     if (q.firm) it.firms.add(q.firm);
     // Specialisation: which SECTOR (issuer category) and TENOR bucket this dealer
@@ -2035,7 +2065,7 @@ function computePulse() {
     const tb = isNum(q.tenor_years) ? tenorBucket(q.tenor_years) : null;
     if (tb) it.tenors.set(tb, (it.tenors.get(tb) || 0) + 1);
   }
-  const allDealers = [...dlrMap.values()].map((d) => ({ name: d.name, count: d.count, buy: d.buy, sell: d.sell, other: d.other, firm: [...d.firms][0] || "" }));
+  const allDealers = [...dlrMap.values()].map((d) => ({ name: d.name, count: d.count, buy: d.buy, sell: d.sell, twoway: d.twoway, other: d.other, firm: [...d.firms][0] || "" }));
   const byCount = allDealers.slice().sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   const topDealers = byCount.slice(0, 12);
   // "Who is lacking" — the least-active desks today (fewest quotes), for the
@@ -2052,7 +2082,7 @@ function computePulse() {
   }).filter((d) => d.sector);
 
   return {
-    total, sections, secTotal, buy, sell, twoway, other,
+    total, hiddenOutside, sections, secTotal, buy, sell, twoway, other,
     timeline, withTime, peak, topIssuers, topDealers, quietDealers, dealerSpecialties,
     stats: { total, dealers: dlrMap.size, issuers: issMap.size },
   };
@@ -2117,7 +2147,7 @@ function timelineSVG(timeline, opts = {}) {
   const sy = (c) => pt + plotH - (c / maxC) * plotH;
   const bars = timeline.map((t, i) => {
     const x0 = pl + i * bw, y = sy(t.count), h = pt + plotH - y, pad = Math.min(3, bw * 0.16);
-    const tip = esc(JSON.stringify({ kind: "timeline", label: `${t.label}–${t.endLabel}`, count: t.count, accent: T.grad1 }));
+    const tip = esc(JSON.stringify({ kind: "timeline", label: `${t.label}–${t.endLabel}`, count: t.count, dealers: t.dealers || [], accent: T.grad1 }));
     return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
       <rect x="${x0.toFixed(1)}" y="${pt}" width="${bw.toFixed(1)}" height="${plotH}" fill="transparent"></rect>
       <rect x="${(x0 + pad / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(1, bw - pad).toFixed(1)}" height="${Math.max(0, h).toFixed(1)}" rx="2" fill="url(#pkTimeGrad)"></rect>
@@ -2157,10 +2187,10 @@ function rankBarsSVG(items, mode) {
     let cx = labelW;
     const push = (val, col) => { if (val <= 0) return ""; const w = val * unit; const s = `<rect x="${cx.toFixed(1)}" y="${barY}" width="${Math.max(0.4, w).toFixed(1)}" height="${barH}" fill="${col}"></rect>`; cx += w; return s; };
     const seg = `<defs><clipPath id="pkRankClip${mode}${i}"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" rx="3"></rect></clipPath></defs>
-        <g clip-path="url(#pkRankClip${mode}${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="${T.heatMid}"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.other, PULSE_OTHER)}</g>`;
+        <g clip-path="url(#pkRankClip${mode}${i})"><rect x="${labelW}" y="${barY}" width="${fullW.toFixed(1)}" height="${barH}" fill="${T.heatMid}"></rect>${push(it.buy, CHEAP)}${push(it.sell, RICH)}${push(it.twoway || 0, TWOWAY_COL)}${push(it.other, PULSE_OTHER)}</g>`;
     const tip = mode === "issuer"
-      ? esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other, accent: T.grad1 }))
-      : esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, other: it.other, firm: it.firm || "", accent: T.grad2 }));
+      ? esc(JSON.stringify({ kind: "rankissuer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, twoway: it.twoway || 0, other: it.other, accent: T.grad1 }))
+      : esc(JSON.stringify({ kind: "rankdealer", name: it.name, count: it.count, buy: it.buy, sell: it.sell, twoway: it.twoway || 0, other: it.other, firm: it.firm || "", accent: T.grad2 }));
     return `<g class="pk-seg" style="cursor:pointer" data-tip="${tip}">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"></rect>
       <text x="${labelW - 8}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(it.name, 16))}</text>
@@ -2227,7 +2257,7 @@ function pulseBody(p) {
   // 4 — Most-active issuers (stacked buy/sell/other).
   const issuers = pulseCard({
     icon: "building-2", title: "Most-active issuers",
-    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}${pkDot(PULSE_OTHER, "2-way / other")}`,
+    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}${pkDot(TWOWAY_COL, "2-way")}${pkDot(PULSE_OTHER, "Other")}`,
     body: rankBarsSVG(p.topIssuers, "issuer"),
   });
 
@@ -2238,7 +2268,7 @@ function pulseBody(p) {
     : "";
   const dealers = pulseCard({
     icon: "users", title: "Dealer activity & scope",
-    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}${pkDot(PULSE_OTHER, "2-way / other")}`,
+    legend: `${pkDot(CHEAP, "Buy")}${pkDot(RICH, "Sell")}${pkDot(TWOWAY_COL, "2-way")}${pkDot(PULSE_OTHER, "Other")}`,
     body: rankBarsSVG(p.topDealers, "dealer") + quietLine,
   });
 
@@ -2262,7 +2292,7 @@ function pulseBody(p) {
 
 function pulseStatChips(p) {
   const chip = (icon, label, value) => `<span class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-600"><i data-lucide="${icon}" class="h-3 w-3"></i><span class="opacity-70">${label}</span><span class="font-bold nums text-slate-800">${esc(value)}</span></span>`;
-  return chip("layers", "Messages", p.stats.total) + chip("users", "Active dealers", p.stats.dealers) + chip("building-2", "Active issuers", p.stats.issuers);
+  return chip("layers", "Messages", p.stats.total) + chip("users", "Active dealers", p.stats.dealers) + chip("building-2", "Active issuers", p.stats.issuers) + (p.hiddenOutside ? chip("filter", "Outside-desk hidden", p.hiddenOutside) : "");
 }
 
 function pulseControls(p) {
