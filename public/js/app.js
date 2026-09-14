@@ -2053,6 +2053,62 @@ function isLkpQuote(q) {
   return false; // a named non-LKP institution -> outside-desk paste
 }
 
+/* ---- Dealer matching: the same bond bid by one desk and offered by another
+ *      during the day — a possible cross. The desk asked to be nudged ("Deepa was
+ *      selling PFC this morning; there's a buyer now — check with her"). Dismiss
+ *      hides a match for the rest of the day (per-viewer, localStorage). ---- */
+function crossDismissed() {
+  try { return new Set(JSON.parse(localStorage.getItem("xdismiss_" + (currentDay() || "")) || "[]")); } catch { return new Set(); }
+}
+function dismissCross(key) {
+  try { const s = crossDismissed(); s.add(key); localStorage.setItem("xdismiss_" + (currentDay() || ""), JSON.stringify([...s])); } catch { /* private mode / blocked storage */ }
+}
+function computeCrosses() {
+  const quotes = dayQuotes(state.data?.quotes || []).filter(isLkpQuote);
+  const byBond = new Map();
+  for (const q of quotes) {
+    if (!q.issuer) continue;
+    const isBuy = BUY_SIDES.has(q.side), isSell = SELL_SIDES.has(q.side);
+    if (!isBuy && !isSell) continue;
+    const k = `${(q.issuer || "").toLowerCase()}||${q.maturity || ""}`;
+    if (!byBond.has(k)) byBond.set(k, { issuer: q.issuer, maturity: q.maturity || "", tenor: q.tenor_years, buys: [], sells: [] });
+    const rec = { dealer: q.dealer || "—", t: tsSeconds(q.timestamp), level: levelStr(q) };
+    (isBuy ? byBond.get(k).buys : byBond.get(k).sells).push(rec);
+  }
+  const dismissed = crossDismissed();
+  const out = [];
+  for (const [k, e] of byBond) {
+    if (!e.buys.length || !e.sells.length) continue;
+    const desks = new Set([...e.buys, ...e.sells].map((r) => r.dealer).filter((x) => x && x !== "—"));
+    if (desks.size < 2 || dismissed.has(k)) continue; // need two different desks
+    const byTime = (a, b) => a.t - b.t;
+    e.buys.sort(byTime); e.sells.sort(byTime);
+    out.push({ key: k, issuer: e.issuer, maturity: e.maturity, category: categoryOf(e.issuer), buys: e.buys, sells: e.sells });
+  }
+  const lastT = (c) => Math.max(...[...c.buys, ...c.sells].map((r) => r.t)); // most-recent activity first
+  out.sort((a, b) => lastT(b) - lastT(a));
+  return out;
+}
+function crossCard(crosses) {
+  if (!crosses.length) return "";
+  const at = (t) => (t >= 0 ? hhmm(t) : "—");
+  const side = (arr) => arr.map((r) => `${esc(trunc(r.dealer, 14))} @ ${esc(r.level)} (${at(r.t)})`).join(" · ");
+  const rows = crosses.slice(0, 8).map((c) => `
+    <div class="flex items-start gap-2 border-b border-slate-50 py-2 last:border-0">
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800 text-[12px]">${esc(c.issuer)}</span>${c.maturity ? `<span class="text-[10px] text-slate-400 nums">${fmtMonYr(c.maturity)}</span>` : ""}${catChip(c.category)}</div>
+        <div class="mt-1 text-[11px] leading-relaxed"><span class="font-semibold text-rose-600">Selling</span> <span class="text-slate-600">${side(c.sells)}</span></div>
+        <div class="text-[11px] leading-relaxed"><span class="font-semibold text-emerald-600">Buying</span> <span class="text-slate-600">${side(c.buys)}</span></div>
+      </div>
+      <button data-cross-dismiss="${esc(c.key)}" class="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-slate-400 ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-600" title="Dismiss for today">✕</button>
+    </div>`).join("");
+  return pulseCard({
+    icon: "git-compare", title: `Possible crosses today (${crosses.length})`, span: true,
+    legend: `<span class="text-[10px] text-slate-400">same bond bid &amp; offered by different desks — connect them</span>`,
+    body: rows,
+  });
+}
+
 function computePulse() {
   const rawQuotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
   const quotes = rawQuotes.filter(isLkpQuote);           // Desk Pulse = LKP's own desk
@@ -2368,7 +2424,7 @@ function pulseBody(p) {
     body: specRows || `<div class="grid h-16 place-items-center text-xs text-slate-400">Not enough classified flow yet</div>`,
   });
 
-  return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${activity}${market}${buysell}${issuers}${dealers}${spec}</div>`;
+  return `<div class="grid grid-cols-1 gap-3 p-4 lg:grid-cols-2">${crossCard(computeCrosses())}${activity}${market}${buysell}${issuers}${dealers}${spec}</div>`;
 }
 
 function pulseStatChips(p) {
@@ -2651,6 +2707,8 @@ els.view.addEventListener("click", (e) => {
     }
     return;
   }
+  const crossX = e.target.closest("button[data-cross-dismiss]");
+  if (crossX) { dismissCross(crossX.dataset.crossDismiss); renderView(); return; }
   // Click a chart/table element to PIN its tooltip open (the client asked to
   // click a spread and read which benchmark it used). Stops the document
   // handler below from immediately dismissing it.
