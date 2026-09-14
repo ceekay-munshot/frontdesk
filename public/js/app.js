@@ -1367,7 +1367,7 @@ function renderTip(o) {
   if (o.kind === "opp") {
     const rows = (o.rows || []).map(([k, v]) => row(esc(k), esc(v))).join("");
     const raws = [o.raw, o.buyRaw, o.sellRaw].filter(Boolean);
-    const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
+    const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}${o.date ? ` · ${esc(o.date)}` : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
     return `${L(esc(o.title || "Opportunity"))}${rows}${rawHtml}`;
   }
   if (o.kind === "pulseinfo") {
@@ -1749,11 +1749,13 @@ function computeOpportunities() {
     return {
       type, key: `${b.section}|${(b.issuer || "").toLowerCase()}|${b.maturity || ""}`,
       issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon: b.coupon, bucket: b.bucket, tenor: b.tenor,
-      size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw,
+      size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, date: q.quote_date, side: q.side, fresh: isFresh(q), raw: q.raw,
       isin: b.isin, rating: b.rating, series: b.series, candidates: b.candidates,
       _val: 0,
     };
   };
+  // Plain bid / offer / two-way word from a quote's side, for side-aware reads.
+  const sideWord = (s) => (s === "bid" || s === "buy" ? "bid" : s === "offer" || s === "sell" || s === "ask" ? "offer" : s === "two_way" ? "two-way" : "quote");
 
   // ---- Bond-level categories from the shared universe (peer gap + govt spread).
   const cheap = [], rich = [], pickup = [];
@@ -1765,17 +1767,25 @@ function computeOpportunities() {
       const rateMatched = b.peerBasis === "rating" && b.rating;
       const scope = (rateMatched ? `${b.rating} · ` : "") + `${b.category} · ${b.bucket}`;
       const simTxt = rateMatched ? `similar ${b.rating}-rated ${b.bucket} bonds` : `similar ${b.bucket} bonds`;
+      const sw = sideWord(b.repr?.q?.side);
+      const yRow = (label) => [label, `${pct(b.uy)}${sw !== "quote" ? ` (${sw})` : ""}`];
       if (b.gap >= 10) {
         const o = baseFromBond(b, "cheap"); o._val = b.gap;
         o.headline = `+${b.gap} bps`; o.sub = rateMatched ? `vs ${b.rating} peers` : "vs similar";
-        o.why = `Pays ${b.gap} bps more yield than ${simTxt} — attractive to buy.`;
-        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Compared with", scope], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
+        // Side matters (client's point): a cheap OFFER is a good buy; a "cheap"
+        // (high-yield) BID is an aggressive buyer — a good level to SELL into.
+        o.why = sw === "offer" ? `This offer yields ${b.gap} bps more than ${simTxt} — cheap to BUY (you can lift it).`
+              : sw === "bid" ? `This bid sits ${b.gap} bps above ${simTxt} — an aggressive buyer; a good level to SELL into.`
+              : `Yields ${b.gap} bps more than ${simTxt} — on the cheap side.`;
+        o.rows = [yRow("Its yield"), ["Similar median", pct(b.peerMedian)], ["Compared with", scope], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
         cheap.push(o);
       } else if (b.gap <= -10) {
         const o = baseFromBond(b, "rich"); o._val = -b.gap;
         o.headline = `${b.gap} bps`; o.sub = rateMatched ? `vs ${b.rating} peers` : "vs similar";
-        o.why = `Yields ${-b.gap} bps LESS than ${simTxt} — expensive; don't overpay.`;
-        o.rows = [["Its yield", pct(b.uy)], ["Similar median", pct(b.peerMedian)], ["Compared with", scope], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
+        o.why = sw === "bid" ? `This bid yields ${-b.gap} bps LESS than ${simTxt} — a buyer paying up; don't chase.`
+              : sw === "offer" ? `This offer yields ${-b.gap} bps LESS than ${simTxt} — expensive; don't overpay.`
+              : `Yields ${-b.gap} bps less than ${simTxt} — on the rich side.`;
+        o.rows = [yRow("Its yield"), ["Similar median", pct(b.peerMedian)], ["Compared with", scope], ["Gap vs similar", fmtBps(b.gap, true) + " bps"]];
         rich.push(o);
       }
     }
@@ -1784,7 +1794,8 @@ function computeOpportunities() {
       const govtY = b.uy - b.govtSpread / 100;
       o.headline = `+${b.govtSpread} bps`; o.sub = "over govt";
       o.why = `Pays ${b.govtSpread} bps over ${b.bench ? b.bench.name : "the government curve"} for its maturity — a big extra yield.`;
-      o.rows = [["Its yield", pct(b.uy)], [b.bench ? "Benchmark" : "Govt curve", b.bench ? `${b.bench.name} · ${pct(govtY)}` : pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
+      const psw = sideWord(b.repr?.q?.side);
+      o.rows = [["Its yield", `${pct(b.uy)}${psw !== "quote" ? ` (${psw})` : ""}`], [b.bench ? "Benchmark" : "Govt curve", b.bench ? `${b.bench.name} · ${pct(govtY)}` : pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
       // Historical context — the client's key ask: a spread only means something
       // against its own normal. Adds a "good buy / good sell" read once history exists.
       const hs = histSpread(b.category, b.rating, b.bucket, currentDay());
@@ -1902,7 +1913,7 @@ function oppCard(o) {
   const c = OPP_CAT[o.type] || OPP_CAT.cheap;
   const sec = SECTION[o.section] || SECTION.Bonds;
   const fresh = o.fresh ? `<span class="ml-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse" title="fresh quote"></span>` : "";
-  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color });
+  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color });
 
   const primary = o.type === "twosided"
     ? `<div class="mt-2 grid grid-cols-2 gap-1.5">
@@ -1916,7 +1927,7 @@ function oppCard(o) {
       <div class="flex items-center gap-2">
         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.bg}"><i data-lucide="${c.icon}" class="h-4 w-4" style="color:${c.color}"></i></span>
         <span class="text-[10px] font-bold uppercase tracking-wide ${c.text}">${c.label}</span>
-        <span class="ml-auto flex items-center gap-1">${ratingChip(o.rating, o.series)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
+        <span class="ml-auto flex items-center gap-1">${o.side && sideStyle(o.side) ? `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sideStyle(o.side).chip}">${sideStyle(o.side).label}</span>` : ""}${ratingChip(o.rating, o.series)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
       </div>
       <div class="mt-2 flex items-center">
         <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}
@@ -1929,7 +1940,7 @@ function oppCard(o) {
         <span class="nums">${fmtCr(o.size)}</span>
         <span class="text-slate-300">·</span>
         <span class="truncate">${esc(o.dealer || (o.type === "twosided" ? "2 desks" : "—"))}</span>
-        <span class="ml-auto nums">${fmtTime(o.time)}</span>
+        <span class="ml-auto nums">${o.date ? fmtDate(o.date) + " · " : ""}${fmtTime(o.time)}</span>
       </div>
       <div class="mt-2 h-1 w-full overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full" style="width:${o.strength}%;background:${c.color}"></div></div>
     </div>`;
