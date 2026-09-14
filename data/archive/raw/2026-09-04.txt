@@ -1841,3 +1841,4 @@ SIDBI CD 25/3.. 60/70..50crs.. T+1 16:11:27
 6.40 JUPL SEP 2026 5.60 offer 25 crs 16:31:24
 HPCL 15 Sept over 14 Dec 500crs + GS Bidding @ 4:45...any int? 16:40:09
 425 crs at 6.60 for end oct maturity.. hdfc sec dealt 17:25:25
+Gsec
