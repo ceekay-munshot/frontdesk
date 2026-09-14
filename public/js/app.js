@@ -281,6 +281,20 @@ function titleCaseIssuer(s) {
   }).join(" ");
 }
 
+/* Benchmark anchor per category — "when we say AAA PSU, who is the reference?".
+ * The desk asked that each group name its benchmark issuer so the spread read is
+ * consistent (the AAA-PSU curve anchored to PFC, so PFC+NABARD / PFC−NTPC make
+ * sense). EDIT these to the desk's chosen names — one place, changes everywhere;
+ * confirm the final list with the WDM desk. */
+const BENCHMARKS = {
+  PSU: "PFC",
+  Bank: "SBI",
+  NBFC: "Bajaj Finance",
+  HFC: "LIC Housing Finance",
+  FI: "NABARD",
+};
+const benchmarkFor = (category) => BENCHMARKS[category] || null;
+
 /* ---- NSDL security master: ratings + confirmed identity (identity + rating
  *      for each quote, matched against the depository master in the pipeline). */
 
@@ -1342,7 +1356,7 @@ function renderTip(o) {
       <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
-  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${histSpreadLine(o.spread, o.category, null, o.bucket)}`;
+  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${histSpreadLine(o.spread, o.category, null, o.bucket)}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
