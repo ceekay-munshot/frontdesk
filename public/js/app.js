@@ -150,9 +150,17 @@ function _resolveCategory(issuer) {
   const c = catNorm(issuer);
   if (!c) return null;
   const toks = c.split(" ");
+  const ft = toks[0];
+  // Multi-word names: prefer an exact / specific directory match (e.g. "ICICI
+  // HOME FINANCE" -> HFC, "LIC HOUSING FINANCE" -> HFC) over a broad single-brand
+  // alias (ICICI/LIC/KOTAK -> Bank/Insurance) so a parent brand can't hijack its
+  // own subsidiary. Single-word names keep the old alias-first behaviour.
+  if (toks.length > 1) {
+    if (CAT_DIR[c]) return CAT_DIR[c];
+    for (const [nm, cat] of CAT_BY_FIRST.get(ft) || []) if (nm.startsWith(c)) return cat;
+  }
   for (const t of toks) if (CAT_ALIAS[t]) return CAT_ALIAS[t];
   if (CAT_DIR[c]) return CAT_DIR[c];
-  const ft = toks[0];
   for (const [nm, cat] of CAT_BY_FIRST.get(ft) || []) {
     if (nm.startsWith(c) || c.startsWith(nm)) return cat;
   }
@@ -193,13 +201,38 @@ function categorySelect(dataAttr, current) {
   return `<select ${dataAttr} title="Issuer category" class="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200">${opts}</select>`;
 }
 
+/** Per-category colour so the Category column reads at a glance. */
+const CAT_COLORS = {
+  PSU: "border-indigo-200 bg-indigo-50 text-indigo-700",
+  Bank: "border-cyan-200 bg-cyan-50 text-cyan-700",
+  NBFC: "border-orange-200 bg-orange-50 text-orange-700",
+  HFC: "border-purple-200 bg-purple-50 text-purple-700",
+  Insurance: "border-pink-200 bg-pink-50 text-pink-700",
+  Manufacturing: "border-amber-200 bg-amber-50 text-amber-700",
+  FI: "border-teal-200 bg-teal-50 text-teal-700",
+  REIT: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  Municipal: "border-sky-200 bg-sky-50 text-sky-700",
+  PTC: "border-slate-200 bg-slate-100 text-slate-600",
+};
 /** Small category chip; unmatched issuers show a flagged "?" so nothing is
  *  silently mis-bucketed (the client asked for like-for-like, honestly labelled). */
 function catChip(cat) {
   if (!cat || cat === "Other") {
     return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide border border-amber-200 bg-amber-50 text-amber-600" title="Issuer not matched to a category — comparison may be limited">cat?</span>`;
   }
-  return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide border border-slate-200 bg-slate-100 text-slate-600">${esc(cat)}</span>`;
+  const cls = CAT_COLORS[cat] || "border-slate-200 bg-slate-100 text-slate-600";
+  return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${cls}">${esc(cat)}</span>`;
+}
+/** Title-case a desk/issuer name while keeping common all-caps tickers upper
+ *  (PFC, NABARD, SIDBI, ICICI…). Used for the bond headline + confirmed name. */
+const _KEEP_UP = new Set(["PFC","REC","IRFC","NTPC","IOC","SBI","BOB","PNB","HDB","NCD","CD","PGC","NHB","NHAI","IIFL","IIFCL","EXIM","IDFC","RBL","ONGC","GAIL","SAIL","BHEL","NHPC","SJVN","SIDBI","NABARD","HDFC","ICICI","HUDCO","IREDA","LIC","NABFID","UGRO","SMFG","TMF","MMFSL","DME","PFS"]);
+function titleCaseIssuer(s) {
+  return String(s || "").trim().split(/\s+/).map((w) => {
+    const up = w.toUpperCase();
+    if (_KEEP_UP.has(up)) return up;
+    if (w.length <= 3 && w === up) return up;
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(" ");
 }
 
 /* ---- NSDL security master: ratings + confirmed identity (identity + rating
@@ -232,8 +265,8 @@ function ratingChip(rating, series) {
 function secConfirmLine(isin) {
   const s = secOf(isin);
   if (!s) return "";
-  const nm = s.name ? esc(s.name) : esc(s.issuer || "");
-  return `<div class="mt-0.5 flex items-center gap-1 text-[10px] text-emerald-600" title="Confirmed against NSDL depository master: ${esc(s.name || s.issuer || "")}"><span class="font-semibold">✓ ${esc(isin)}</span><span class="truncate text-emerald-700/70" style="max-width:230px">${nm}</span></div>`;
+  const nm = esc(titleCaseIssuer(s.issuer || s.name || ""));
+  return `<div class="mt-0.5 flex items-center gap-1 text-[10px] text-emerald-600" title="Confirmed against NSDL depository master: ${esc(s.name || s.issuer || "")}"><span class="font-semibold">✓ ${esc(isin)}</span><span class="truncate text-emerald-700/70" style="max-width:240px">${nm}</span></div>`;
 }
 
 /** The security-identity line for a quote/bond/card: the confirmed ✓ISIN when
@@ -319,6 +352,12 @@ function fmtDate(s) {
   // "2026-13-01" renders "—", never "01 undefined 26".
   if (!p || p.mo < 1 || p.mo > 12) return "—";
   return `${String(p.d).padStart(2, "0")} ${MON[p.mo - 1]} '${String(p.y).slice(2)}`;
+}
+/** Compact "Jan '27" month-year, for the bond headline. */
+function fmtMonYr(s) {
+  const p = parseISODate(s);
+  if (!p || p.mo < 1 || p.mo > 12) return "";
+  return `${MON[p.mo - 1]} '${String(p.y).slice(2)}`;
 }
 
 /** HH:MM from a "HH:MM:SS" chat timestamp. */
@@ -701,12 +740,14 @@ function nsdlProvenanceHTML() {
 const COLGROUP = `
   <colgroup>
     <col style="width:auto" />
-    <col style="width:118px" />
+    <col style="width:78px" />
+    <col style="width:96px" />
+    <col style="width:60px" />
+    <col style="width:82px" />
+    <col style="width:120px" />
     <col style="width:86px" />
-    <col style="width:126px" />
-    <col style="width:104px" />
-    <col style="width:150px" />
-    <col style="width:74px" />
+    <col style="width:140px" />
+    <col style="width:70px" />
   </colgroup>`;
 
 function th(label, align, extra = "") {
@@ -717,8 +758,10 @@ function tableHTML(rows) {
   const head = `
     <thead class="sticky-head">
       <tr class="border-b border-slate-200 bg-slate-50/95 backdrop-blur">
-        ${th("Issuer", "left")}
-        ${th("Maturity", "left")}
+        ${th("Bond", "left")}
+        ${th("Rating", "center")}
+        ${th("Category", "center")}
+        ${th("Tenor", "right")}
         ${th("Side", "center")}
         ${th("Level / Yield", "right")}
         ${th("Size (₹cr)", "right")}
@@ -730,58 +773,56 @@ function tableHTML(rows) {
   // The board shows one day at a time (chosen with the day picker), so rows
   // render flat — no date dividers.
   const body = rows.map(rowHTML).join("");
-  return `<table class="w-full min-w-[880px] border-collapse text-sm">${COLGROUP}${head}<tbody>${body}</tbody></table>`;
+  return `<table class="w-full min-w-[1040px] border-collapse text-sm">${COLGROUP}${head}<tbody>${body}</tbody></table>`;
 }
 
 function rowHTML(q) {
   const sec = SECTION[q.section] || SECTION.Bonds;
   const s = sideStyle(q.side);
   const lvl = levelCell(q);
-  const mat = fmtDate(q.maturity);
+  const monYr = fmtMonYr(q.maturity);
   const tenor = isNum(q.tenor_years) ? `${q.tenor_years}y` : "";
   const narrow = isNarrowRow(q);
-
   const coupon = isNum(q.coupon) ? `${fmtNum(q.coupon, 2)}%` : "";
-  const instr = q.instrument_type ? esc(q.instrument_type) : "";
-  const sub = [coupon, instr].filter(Boolean).join(" · ");
 
   const secTag =
     state.section === "All"
-      ? `<span class="ml-1.5 rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>`
+      ? `<span class="ml-1 shrink-0 rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>`
       : "";
-
-  // Exact re-pastes of this line were collapsed into this one row; show a quiet
-  // "×N" so nothing looks hidden. (De-dup happens in dayQuotes; see dedupeExact.)
+  // Exact re-pastes collapsed into one row; a quiet "×N" so nothing looks hidden.
   const repeats = q._repeats > 1
-    ? `<span class="ml-1.5 shrink-0 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold text-slate-400" title="${q._repeats} identical re-pastes collapsed into one row">×${q._repeats}</span>`
+    ? `<span class="ml-1 shrink-0 rounded bg-slate-100 px-1 py-0.5 text-[9px] font-semibold text-slate-400" title="${q._repeats} identical re-pastes collapsed into one row">×${q._repeats}</span>`
     : "";
-
   const flags = Array.isArray(q.flags) && q.flags.length
-    ? `<span class="ml-0.5 inline-flex flex-wrap gap-1 align-middle">${q.flags
+    ? `<span class="inline-flex flex-wrap gap-1 align-middle">${q.flags
         .map((f) => `<span class="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">${esc(FLAG_LABEL[f] || f)}</span>`)
         .join("")}</span>`
     : "";
+  // Instrument type only when there's no confirmed identity line already showing.
+  const instr = q.instrument_type && !q.isin ? `<span class="text-slate-400">${esc(q.instrument_type)}</span>` : "";
+  const subBits = [instr, flags].filter(Boolean).join(" ");
 
   const rchip = ratingChip(q.rating, q.series);
-  const rating = rchip ? `<span class="ml-1.5 shrink-0">${rchip}</span>` : "";
+  const rating = rchip || `<span class="text-[11px] text-slate-300">—</span>`;
+  const cat = catChip(categoryOf(q.issuer));
 
   const rowTip = JSON.stringify({ kind: "row", raw: q.raw, dealer: q.dealer || "", firm: q.firm || "", time: q.timestamp || "", accent: sectionColor(q.section) });
   return `
     <tr class="qrow ${narrow ? "narrow-glow" : sec.acc} border-b border-slate-100 cursor-default"
         data-tip="${esc(rowTip)}">
       <td class="px-3 py-2.5">
-        <div class="flex items-center font-semibold text-slate-800">
-          <span class="truncate">${esc(q.issuer || "—")}</span>${secTag}${repeats}${rating}
+        <div class="flex items-baseline gap-1.5 font-semibold text-slate-800">
+          <span class="truncate">${esc(titleCaseIssuer(q.issuer || "—"))}</span>
+          ${coupon ? `<span class="nums shrink-0 text-indigo-600">${coupon}</span>` : ""}
+          ${monYr ? `<span class="nums shrink-0 text-[11px] font-medium text-slate-400">· ${monYr}</span>` : ""}
+          ${secTag}${repeats}
         </div>
-        <div class="mt-0.5 flex items-center text-[11px] text-slate-400">
-          <span>${sub || "&nbsp;"}</span>${flags}
-        </div>
+        ${subBits ? `<div class="mt-0.5 flex items-center gap-1 text-[11px] text-slate-400">${subBits}</div>` : ""}
         ${securityLine(q.isin, q.candidates)}
       </td>
-      <td class="px-3 py-2.5">
-        <div class="nums font-medium text-slate-700">${mat}</div>
-        <div class="nums text-[11px] text-slate-400">${tenor}</div>
-      </td>
+      <td class="px-2 py-2.5 text-center">${rating}</td>
+      <td class="px-2 py-2.5 text-center">${cat}</td>
+      <td class="px-3 py-2.5 text-right"><span class="nums text-slate-600">${tenor || "—"}</span></td>
       <td class="px-3 py-2.5 text-center">
         <span class="inline-flex min-w-[52px] justify-center rounded-md px-2 py-1 text-[11px] font-bold ${s.chip}">${s.label}</span>
       </td>
