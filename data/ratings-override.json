@@ -1,0 +1,9 @@
+{
+  "_note": "Optional UPDATED-ratings override. NSDL's downloadable master freezes a bond's credit rating at the time of issue, so agency up/downgrades don't show. Drop updated ratings here (e.g. exported from CRISIL / CARE / ICRA / India Ratings) and the pipeline uses them automatically: it takes the LOWER when two agencies differ (conservative), keeps the change date, and adds a note. Empty = use NSDL ratings as-is.",
+  "_howto": "Add entries under byIsin, keyed by the bond's ISIN. Give either a per-agency map or a list of rating symbols, plus the date the latest rating was assigned.",
+  "_example": {
+    "INE0XXXX07XXX": { "agencies": { "CARE": "A+", "ICRA": "A" }, "date": "2026-09-08" },
+    "INE0YYYY07YYY": { "ratings": ["AA+", "AA"], "date": "2026-08-30" }
+  },
+  "byIsin": {}
+}

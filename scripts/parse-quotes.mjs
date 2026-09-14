@@ -40,6 +40,7 @@ import { dirname, join } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
 import { fetchGovtBenchmark } from "./ccil.mjs";
 import { fetchNsdlSources, fetchNsdlDirectory, buildNsdlIndex, resolveSecurity } from "./nsdl.mjs";
+import { combineRatings } from "./ratings.mjs";
 
 /* ---------------------------------------------------------------------------
    Configuration.
@@ -55,6 +56,9 @@ const OUT_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta
  *  only when NSDL posts new dated lists (~every 20 days); otherwise reused so a
  *  refresh never re-downloads ~30 MB. Committed alongside quotes.json. */
 const NSDL_CACHE_PATH = fileURLToPath(new URL("../data/nsdl-directory.json", import.meta.url));
+// Optional updated-ratings override (agency up/downgrades that NSDL freezes at
+// issue). Empty by default; the desk drops updated ratings here to activate it.
+const RATING_OVERRIDE_PATH = fileURLToPath(new URL("../data/ratings-override.json", import.meta.url));
 
 /** Quote lines per LLM call. Each input line expands into a verbose 20-field
  *  JSON object, so the OUTPUT bounds the chunk, not the input: 300-line chunks
@@ -564,6 +568,10 @@ export async function enrichWithNsdl(quotes) {
   try { dir = await loadNsdlDirectory(); } catch (err) { console.warn(`[nsdl] directory unavailable: ${err.message}`); }
   if (!dir?.securities?.length) return { securities: null, reference: null };
   const index = buildNsdlIndex(dir.securities);
+  // Optional updated-ratings override, keyed by ISIN. No-op unless the desk has
+  // dropped a ratings sheet into data/ratings-override.json.
+  let ovBy = {};
+  try { if (existsSync(RATING_OVERRIDE_PATH)) { const j = JSON.parse(readFileSync(RATING_OVERRIDE_PATH, "utf8")); ovBy = (j && (j.byIsin || j)) || {}; } } catch { ovBy = {}; }
   const securities = {};
   const addSec = (s) => { if (s?.isin && !securities[s.isin]) securities[s.isin] = { name: s.name, issuer: s.issuer || null, coupon: s.coupon, maturity: s.maturity, rating: s.rating || null, type: s.type }; };
   let confirmed = 0, rated = 0, shortlisted = 0;
@@ -585,6 +593,18 @@ export async function enrichWithNsdl(quotes) {
     }
     if (r.rating) { q.rating = r.rating; rated++; }
     if (r.count > 1) q.series = r.count; // one of N genuinely different same-issuer bonds
+  }
+  // Apply the updated-ratings override (lower-of-dual + note + date) to the matched
+  // securities and their quotes. No-op when the override file is empty.
+  let overridden = 0;
+  if (Object.keys(ovBy).length) {
+    for (const [isin, sec] of Object.entries(securities)) {
+      const o = ovBy[isin]; if (!o) continue;
+      const c = combineRatings(o.agencies || o.ratings || o.rating, o.date);
+      if (c) { sec.rating = c.rating; sec.ratingDate = c.date; sec.ratingNote = c.note; overridden++; }
+    }
+    for (const q of quotes) { const s = q.isin ? securities[q.isin] : null; if (s && ovBy[q.isin] && s.rating) { q.rating = s.rating; if (s.ratingNote) q.ratingNote = s.ratingNote; } }
+    if (overridden) console.log(`[nsdl] applied ${overridden} updated-rating override(s)`);
   }
   const reference = {
     source: "NSDL",
