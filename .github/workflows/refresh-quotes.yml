@@ -97,6 +97,12 @@ jobs:
           FORCE_REPARSE: ${{ github.event.inputs.force == 'true' && '1' || '' }}
         run: node scripts/parse-quotes.mjs
 
+      # Record the day's spread snapshot for the "normal range" history (idempotent
+      # upsert of the trading day). Never fail the refresh over history.
+      - name: Record spread history
+        continue-on-error: true
+        run: node scripts/record-spread-history.mjs
+
       # Commit the refreshed data if it changed, then push with a 4-attempt loop
       # that rebases on the branch head before each try — so a refresh that
       # overlaps another push (or a human commit) lands cleanly instead of
@@ -108,6 +114,7 @@ jobs:
           git add public/data/quotes.json
           [ -f data/nsdl-directory.json ] && git add data/nsdl-directory.json
           [ -d data/archive/raw ] && git add data/archive/raw
+          [ -f public/data/spread-history.json ] && git add public/data/spread-history.json
           if git diff --cached --quiet; then
             echo "No data changes — nothing to commit."
             exit 0

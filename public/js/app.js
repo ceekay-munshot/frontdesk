@@ -120,6 +120,52 @@ async function loadCategories() {
   } catch { /* categories stay unavailable -> everything is "Other" */ }
 }
 
+/* ---- Historical spread ("normal range") — built daily by
+ *      scripts/record-spread-history.mjs. A single spread number means little on
+ *      its own; the desk wants "today vs its normal range". Optional file: when
+ *      absent (or still building) Spread Watch simply omits the comparison. ---- */
+const SPREAD_HISTORY_URL = "data/spread-history.json";
+let SPREAD_HIST = null; // { days: { "YYYY-MM-DD": { "cat|rating|bucket": {med,n} } } }
+async function loadSpreadHistory() {
+  try {
+    const r = await fetch(SPREAD_HISTORY_URL, { cache: "no-store" });
+    if (!r.ok) return;
+    const j = await r.json();
+    SPREAD_HIST = j && j.days ? j : null;
+  } catch { /* history stays unavailable -> "normal range" line is skipped */ }
+}
+/** Median of PRIOR days' bucket medians (excludes today), preferring the
+ *  same-rating series and falling back to the rating-agnostic one. */
+function histSpread(category, rating, bucket, exceptDay) {
+  if (!SPREAD_HIST || !category || !bucket) return null;
+  const days = SPREAD_HIST.days || {};
+  const rb = String(rating || "").toUpperCase().trim();
+  const collect = (key) => {
+    if (!key) return [];
+    const out = [];
+    for (const [d, snap] of Object.entries(days)) { if (d === exceptDay) continue; const c = snap[key]; if (c && isNum(c.med)) out.push(c.med); }
+    return out;
+  };
+  let series = collect(rb ? `${category}|${rb}|${bucket}` : null), basis = "rating";
+  if (series.length < 3) { const a = collect(`${category}|ALL|${bucket}`); if (a.length >= series.length) { series = a; basis = "sector"; } }
+  if (!series.length) return null;
+  const s = series.slice().sort((a, b) => a - b);
+  return { avg: Math.round(median(s)), min: s[0], max: s[s.length - 1], days: series.length, basis };
+}
+/** Tooltip line: "Normal (Nd) ~X bps · today is wider/tighter/in range". */
+function histSpreadLine(cur, category, rating, bucket) {
+  const rowHtml = (k, v) => `<div style="display:flex;justify-content:space-between;gap:18px"><span style="color:${T.n400}">${k}</span><span style="font-variant-numeric:tabular-nums">${v}</span></div>`;
+  const h = histSpread(category, rating, bucket, currentDay());
+  if (!h) {
+    const have = SPREAD_HIST && SPREAD_HIST.days ? Object.keys(SPREAD_HIST.days).length : 0;
+    return have ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">Normal range: building (${have}d so far)</div>` : "";
+  }
+  const diff = Math.round(cur - h.avg);
+  const dirn = diff >= 15 ? "wider than normal · looks cheap" : diff <= -15 ? "tighter than normal · looks rich" : "in its normal range";
+  const col = diff >= 15 ? T.buyInk : diff <= -15 ? T.sellInk : T.n500;
+  return rowHtml(`Normal (${h.days}d)`, `~${h.avg} bps`) + `<div style="color:${col};font-weight:600;font-size:11px;margin-top:2px">${diff >= 0 ? "+" : ""}${diff} bps ${dirn}</div>`;
+}
+
 const _CAT_SUFFIX = /\b(?:LIMITED|LTD|PVT|PRIVATE|COMPANY|CO|CORPORATION|CORP|THE|AND)\b/g;
 /** Normalize an issuer name exactly as data/categories.json was built. */
 function catNorm(s) {
@@ -1296,7 +1342,7 @@ function renderTip(o) {
       <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
-  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}`;
+  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${histSpreadLine(o.spread, o.category, null, o.bucket)}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
@@ -1431,7 +1477,7 @@ function spreadGridHTML(rows, buckets, gridStats) {
       const c = r.cells[bk];
       if (!c) return `<td class="px-2 py-2 text-right"><span class="text-slate-200">·</span></td>`;
       const bg = divergingColor(c.median, gridStats.min, gridStats.med, gridStats.max);
-      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, bench: c.bench ? { name: c.bench.name, y: +c.bench.y.toFixed(2), t: c.bench.t, type: c.bench.type } : null, accent: bg });
+      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, category: r.category, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, bench: c.bench ? { name: c.bench.name, y: +c.bench.y.toFixed(2), t: c.bench.t, type: c.bench.type } : null, accent: bg });
       return `<td class="px-1.5 py-1.5 text-right"><span class="inline-block w-full rounded-md px-2 py-1 text-right text-xs font-bold nums" style="background:${bg};color:${textOn(bg)}" data-tip="${esc(tip)}">${fmtBps(c.median)}</span></td>`;
     }).join("");
     return `<tr class="heat-row hov border-b border-slate-100">
@@ -1725,6 +1771,16 @@ function computeOpportunities() {
       o.headline = `+${b.govtSpread} bps`; o.sub = "over govt";
       o.why = `Pays ${b.govtSpread} bps over ${b.bench ? b.bench.name : "the government curve"} for its maturity — a big extra yield.`;
       o.rows = [["Its yield", pct(b.uy)], [b.bench ? "Benchmark" : "Govt curve", b.bench ? `${b.bench.name} · ${pct(govtY)}` : pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
+      // Historical context — the client's key ask: a spread only means something
+      // against its own normal. Adds a "good buy / good sell" read once history exists.
+      const hs = histSpread(b.category, b.rating, b.bucket, currentDay());
+      if (hs) {
+        o.rows.push([`Normal (${hs.days}d)`, `~${hs.avg} bps`]);
+        const diff = b.govtSpread - hs.avg;
+        o.why += diff >= 15 ? ` That's ${diff} bps wider than its normal — looks cheap (good to buy).`
+               : diff <= -15 ? ` That's ${-diff} bps tighter than normal — looks rich (good to sell).`
+               : ` Broadly in its normal range.`;
+      }
       pickup.push(o);
     }
   }
@@ -2692,6 +2748,11 @@ render(); // paint the loading skeleton immediately
 loadCategories().then(() => {
   // Categories arrived after the first paint — refresh the current tab so the
   // like-for-like comparisons and category chips reflect them.
+  if (state.data && !state.loading && !state.error) renderView();
+});
+loadSpreadHistory().then(() => {
+  // "Normal range" history arrived — refresh so Spread Watch / Opportunities can
+  // show today vs its normal.
   if (state.data && !state.loading && !state.error) renderView();
 });
 loadData({ initial: true });
