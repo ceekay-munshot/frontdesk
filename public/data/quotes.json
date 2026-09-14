@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-11T22:04:40+05:30",
+  "generated_at": "2026-09-14T19:48:00+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "ec88740eab912959ebc645b79ac4c5bc4916421eebfc3873217dd4b8b31e0400",
   "trading_day": "2026-09-11",
@@ -70,9 +70,9 @@
     },
     "securities_count": 573,
     "matched": {
-      "confirmed": 3342,
+      "confirmed": 3348,
       "shortlisted": 71,
-      "rated": 3215
+      "rated": 3221
     }
   },
   "securities": {
@@ -3532,6 +3532,14 @@
       "rating": "AAA",
       "type": "bond"
     },
+    "INE115A07RI2": {
+      "name": "7.59% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE TRANCHE 457 DATE OF MATURITY 12/06/2031",
+      "issuer": "LIC HOUSING FINANCE LTD",
+      "coupon": 7.59,
+      "maturity": "2031-06-12",
+      "rating": "AAA",
+      "type": "bond"
+    },
     "INE296A07TH8": {
       "name": "7.55% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE DATE OF MATURITY 03/04/2035",
       "issuer": "BAJAJ FINANCE LIMITED",
@@ -4225,14 +4233,6 @@
       "issuer": "INDIAN RAILWAY FINANCE CORPORATION LIMITED",
       "coupon": 7.65,
       "maturity": "2032-12-30",
-      "rating": "AAA",
-      "type": "bond"
-    },
-    "INE115A07RI2": {
-      "name": "7.59% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE TRANCHE 457 DATE OF MATURITY 12/06/2031",
-      "issuer": "LIC HOUSING FINANCE LTD",
-      "coupon": 7.59,
-      "maturity": "2031-06-12",
       "rating": "AAA",
       "type": "bond"
     },
@@ -123425,7 +123425,9 @@
       "quote_date": "2026-09-08",
       "flags": [],
       "raw": "7.59 LICHF 12/6/31 7.70 offer 75cr RFQ",
-      "confidence": 0.6
+      "confidence": 0.6,
+      "isin": "INE115A07RI2",
+      "rating": "AAA"
     },
     {
       "id": "q4827",
@@ -170903,7 +170905,9 @@
         "cbc"
       ],
       "raw": "7.70 LICHF May 2028 59 bid 25-50crs cbc mkt 09:37:48",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE115A07QJ2",
+      "rating": "AAA"
     },
     {
       "id": "q6781",
@@ -170928,7 +170932,9 @@
         "cbc"
       ],
       "raw": "7.70 LICHF May 2028 59 bid 25-50crs cbc 09:38:06",
-      "confidence": 0.65
+      "confidence": 0.65,
+      "isin": "INE115A07QJ2",
+      "rating": "AAA"
     },
     {
       "id": "q6782",
@@ -174659,7 +174665,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7.59 LICHF 12/6/31 7.70 offer 7.70 offer 75cr RFQ",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE115A07RI2",
+      "rating": "AAA"
     },
     {
       "id": "q6933",
@@ -174730,7 +174738,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7.59 LICHF 12/6/31 7.70 offer 75cr RFQ",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE115A07RI2",
+      "rating": "AAA"
     },
     {
       "id": "q6936",
@@ -174776,7 +174786,9 @@
       "quote_date": "2026-09-07",
       "flags": [],
       "raw": "7.59 LICHF 12/6/31 7.70 offer 75cr RFQ",
-      "confidence": 0.75
+      "confidence": 0.75,
+      "isin": "INE115A07RI2",
+      "rating": "AAA"
     },
     {
       "id": "q6938",
