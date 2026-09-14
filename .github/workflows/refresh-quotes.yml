@@ -103,6 +103,13 @@ jobs:
         continue-on-error: true
         run: node scripts/record-spread-history.mjs
 
+      # Pull recent BSE "Revision in Credit Rating" filings for the desk's own
+      # bonds into data/ratings-override.json (the parser applies it next run:
+      # latest / lower-of-two + date). Best-effort; never fails the refresh.
+      - name: Refresh updated ratings
+        continue-on-error: true
+        run: node scripts/fetch-rating-actions.mjs
+
       # Commit the refreshed data if it changed, then push with a 4-attempt loop
       # that rebases on the branch head before each try — so a refresh that
       # overlaps another push (or a human commit) lands cleanly instead of
@@ -115,6 +122,7 @@ jobs:
           [ -f data/nsdl-directory.json ] && git add data/nsdl-directory.json
           [ -d data/archive/raw ] && git add data/archive/raw
           [ -f public/data/spread-history.json ] && git add public/data/spread-history.json
+          [ -f data/ratings-override.json ] && git add data/ratings-override.json
           if git diff --cached --quiet; then
             echo "No data changes — nothing to commit."
             exit 0
