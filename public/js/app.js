@@ -312,12 +312,16 @@ function ratingClass(r) {
 
 /** A small rating chip. `series` (>1) notes that the exact ISIN is one of N
  *  same-issuer series that all carry this rating — honest about the ambiguity. */
-function ratingChip(rating, series) {
+function ratingChip(rating, series, note) {
   if (!rating) return "";
-  const t = series > 1
+  const base = series > 1
     ? `Credit rating ${esc(rating)} — NSDL. ${series} same-issuer series match; all rated ${esc(rating)} (exact ISIN not unique)`
     : `Credit rating ${esc(rating)} — NSDL depository master`;
-  return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${ratingClass(rating)}" title="${t}">${esc(rating)}</span>`;
+  // `note` is set only when an updated-rating override applied (e.g. "Lower of
+  // CRISIL AA+, ICRA AA (conservative) · 2026-09-08") — show it + a small dot.
+  const t = note ? esc(note) : base;
+  const dot = note ? `<span class="ml-0.5" style="color:#059669" title="Updated rating — latest / lower-of-two">•</span>` : "";
+  return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${ratingClass(rating)}" title="${t}">${esc(rating)}${dot}</span>`;
 }
 
 /** A muted "confirmed against NSDL" line: the official instrument name + ISIN,
@@ -862,7 +866,7 @@ function rowHTML(q) {
   const instr = q.instrument_type && !q.isin ? `<span class="text-slate-400">${esc(q.instrument_type)}</span>` : "";
   const subBits = [instr, flags].filter(Boolean).join(" ");
 
-  const rchip = ratingChip(q.rating, q.series);
+  const rchip = ratingChip(q.rating, q.series, secOf(q.isin)?.ratingNote);
   const rating = rchip || `<span class="text-[11px] text-slate-300">—</span>`;
   const cat = catChip(categoryOf(q.issuer));
 
@@ -1162,7 +1166,10 @@ function computeUniverse() {
   // underlying items so a card can show a representative dealer / time / raw line.
   const bondMap = new Map();
   for (const e of corp) {
-    const key = `${e.section}||${e.issuer.toLowerCase()}||${e.maturity}`;
+    // Key by confirmed ISIN when we have one, so the SAME bond quoted under name
+    // variants ("BOB" vs "Bank of Baroda" vs "BOB CD") collapses to one row instead
+    // of splitting. Fall back to issuer+maturity only when unmatched.
+    const key = e.q.isin ? `isin||${e.q.isin}` : `${e.section}||${e.issuer.toLowerCase()}||${e.maturity}`;
     if (!bondMap.has(key)) bondMap.set(key, { issuer: e.issuer, maturity: e.maturity, section: e.section, category: e.category, tenor: e.tenor, bucket: e.bucket, uys: [], sizes: [], who: new Set(), items: [] });
     const b = bondMap.get(key);
     b.uys.push(e.uy);
@@ -1184,7 +1191,9 @@ function computeUniverse() {
     const rating = b.items.map((e) => e.q.rating).find(Boolean) ?? null;
     const series = b.items.map((e) => e.q.series).find(isNum) ?? null;
     const candidates = b.items.map((e) => e.q.candidates).find(Boolean) ?? null;
-    return { issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series, candidates };
+    // Once matched, show the official registered name so all variants read alike.
+    const dispIssuer = isin ? titleCaseIssuer(secOf(isin)?.issuer || b.issuer) : b.issuer;
+    return { issuer: dispIssuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series, candidates };
   });
 
   // Leave-one-out peer median — LIKE-FOR-LIKE. The client wants same CATEGORY +
@@ -1511,7 +1520,7 @@ function peersTableHTML(shown) {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
     return `<tr class="qrow ${sec.acc} border-b border-slate-100">
-      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${securityLine(b.isin, b.candidates)}</td>
+      <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${securityLine(b.isin, b.candidates)}</td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums text-slate-500">${b.peerMedian.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums font-bold ${col}">${fmtBps(b.gap, true)}</td>
@@ -1927,7 +1936,7 @@ function oppCard(o) {
       <div class="flex items-center gap-2">
         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.bg}"><i data-lucide="${c.icon}" class="h-4 w-4" style="color:${c.color}"></i></span>
         <span class="text-[10px] font-bold uppercase tracking-wide ${c.text}">${c.label}</span>
-        <span class="ml-auto flex items-center gap-1">${o.side && sideStyle(o.side) ? `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sideStyle(o.side).chip}">${sideStyle(o.side).label}</span>` : ""}${ratingChip(o.rating, o.series)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
+        <span class="ml-auto flex items-center gap-1">${o.side && sideStyle(o.side) ? `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sideStyle(o.side).chip}">${sideStyle(o.side).label}</span>` : ""}${ratingChip(o.rating, o.series, secOf(o.isin)?.ratingNote)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
       </div>
       <div class="mt-2 flex items-center">
         <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}
@@ -2165,7 +2174,9 @@ function computePulse() {
   // --- Most-active issuers (by quote count, with buy/sell split).
   const issMap = new Map();
   for (const q of quotes) {
-    const name = (q.issuer || "").trim();
+    // Use the official registered name when matched, so "BOB" and "Bank of
+    // Baroda" count as one issuer, not two.
+    const name = q.isin ? titleCaseIssuer(secOf(q.isin)?.issuer || q.issuer || "") : (q.issuer || "").trim();
     if (!name) continue;
     const key = name.toLowerCase();
     if (!issMap.has(key)) issMap.set(key, { name, count: 0, buy: 0, sell: 0, twoway: 0, other: 0 });
