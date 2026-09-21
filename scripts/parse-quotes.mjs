@@ -601,7 +601,11 @@ export async function enrichWithNsdl(quotes) {
     for (const [isin, sec] of Object.entries(securities)) {
       const o = ovBy[isin]; if (!o) continue;
       const c = combineRatings(o.agencies || o.ratings || o.rating, o.date);
-      if (c) { sec.rating = c.rating; sec.ratingDate = c.date; sec.ratingNote = c.note; overridden++; }
+      if (c) {
+        sec.rating = c.rating; sec.ratingDate = c.date; sec.ratingNote = c.note;
+        if (Array.isArray(o.sources) && o.sources.length) sec.ratingSources = o.sources.slice(0, 4);
+        overridden++;
+      }
     }
     for (const q of quotes) { const s = q.isin ? securities[q.isin] : null; if (s && ovBy[q.isin] && s.rating) { q.rating = s.rating; if (s.ratingNote) q.ratingNote = s.ratingNote; } }
     if (overridden) console.log(`[nsdl] applied ${overridden} updated-rating override(s)`);

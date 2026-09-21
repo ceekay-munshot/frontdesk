@@ -30,6 +30,11 @@ on:
         required: false
         type: boolean
         default: false
+      ratings_dry_run:
+        description: "Ratings: only PRINT what would be updated (don't write the override) — for validating extraction"
+        required: false
+        type: boolean
+        default: false
 
 # The commit back to the repo uses the built-in Actions token.
 permissions:
@@ -103,12 +108,24 @@ jobs:
         continue-on-error: true
         run: node scripts/record-spread-history.mjs
 
-      # Pull recent BSE "Revision in Credit Rating" filings for the desk's own
-      # bonds into data/ratings-override.json (the parser applies it next run:
-      # latest / lower-of-two + date). Best-effort; never fails the refresh.
+      # Auto-update credit ratings: read BSE "Credit Rating" filings (SEBI LODR
+      # Reg 30 — every agency, near real-time) for the desk's own issuers, read the
+      # new rating out of the attached agency PDF with the LLM, and write
+      # data/ratings-override.json (the parser applies latest / lower-of-two + date
+      # next run). pymupdf extracts the PDF text. Best-effort; never fails refresh.
       - name: Refresh updated ratings
         continue-on-error: true
-        run: node scripts/fetch-rating-actions.mjs
+        env:
+          BEDROCK_API_KEY: ${{ secrets.BEDROCK_API_KEY }}
+          BEDROCK_REGION: ${{ secrets.BEDROCK_REGION }}
+          BEDROCK_MODEL: ${{ github.event.inputs.bedrock_model || secrets.BEDROCK_MODEL }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          RATINGS_DRY_RUN: ${{ github.event.inputs.ratings_dry_run == 'true' && '1' || '' }}
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check pymupdf
+          node scripts/fetch-rating-actions.mjs
 
       # Commit the refreshed data if it changed, then push with a 4-attempt loop
       # that rebases on the branch head before each try — so a refresh that
