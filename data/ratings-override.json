@@ -1,6 +1,6 @@
 {
   "_note": "AUTO-GENERATED updated ratings. Source: BSE 'Credit Rating' filings (SEBI LODR Reg 30), all agencies; rating read from the agency report PDF by the pipeline LLM. Applied as latest / lower-of-two + date. Each entry links the exact exchange filing. Edit/clear entries freely.",
-  "_updated_at": "2026-09-21T07:04:05.435Z",
+  "_updated_at": "2026-09-21T08:17:53.100Z",
   "_seen": [
     "8a0d89f7-ac73-457e-86ca-35411f8d81d1",
     "c3c5cd41-ddc2-4e45-8741-38ab715b72c8",
@@ -36,7 +36,21 @@
     "a351231d-05ef-4ea8-aab4-4264f35d83d9",
     "a507f5ab-ac0d-46b6-8035-3ac2f09bbb40",
     "4618398f-017c-4ac9-b3d3-7c4ee9bdcb48",
-    "5efca856-bc21-468a-9715-ed3a179fddba"
+    "5efca856-bc21-468a-9715-ed3a179fddba",
+    "bb42bd71-29e5-48f7-9f20-16330725d511",
+    "9d693ea8-570f-4040-8145-f82418ed07a1",
+    "9bbd40c0-aded-41b2-8680-f27a7187e7a4",
+    "16612038-5c0a-49e6-983b-f938b1c877aa",
+    "ee37fa38-1c4b-45f0-b2d1-ffc00ddeed15",
+    "02f0e555-5b1d-43cc-b412-865c513bf53f",
+    "f818b2bf-9f85-41b4-84d8-a1d30390986b",
+    "b2ec9dea-65d2-4aee-97c4-1092d7e3070c",
+    "e130c68b-d8f1-43fd-ba52-c3e156a15107",
+    "cb5ad57e-8a51-4b73-af97-0fcfee5e9018",
+    "ed879e3f-d2bf-40f4-a851-0ccb0f65f537",
+    "e20dd41f-7963-4dd0-b772-2d909ad32b96",
+    "63874845-b803-412a-9088-96dbeeef51b8",
+    "7be878b5-c89b-4b43-b74a-0b42ef22937b"
   ],
   "byIsin": {
     "INE692A16LP9": {
@@ -304,6 +318,12 @@
         "CARE": "2026-09-08"
       },
       "sources": [
+        {
+          "agency": "CARE",
+          "date": "2026-09-07",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/91756337-61f6-4122-ab6c-c7f2a85b8fcb.pdf"
+        },
         {
           "agency": "CARE",
           "date": "2026-09-08",
@@ -823,7 +843,7 @@
     },
     "INE484J14G05": {
       "agencies": {
-        "ICRA": "A1+"
+        "ICRA": "AA+"
       },
       "agencyDates": {
         "ICRA": "2026-09-02"
@@ -840,7 +860,7 @@
     },
     "INE484J14H53": {
       "agencies": {
-        "ICRA": "A1+"
+        "ICRA": "AA+"
       },
       "agencyDates": {
         "ICRA": "2026-09-02"
@@ -857,7 +877,7 @@
     },
     "INE484J14F97": {
       "agencies": {
-        "ICRA": "A1+"
+        "ICRA": "AA+"
       },
       "agencyDates": {
         "ICRA": "2026-09-02"
@@ -874,7 +894,7 @@
     },
     "INE484J14H46": {
       "agencies": {
-        "ICRA": "A1+"
+        "ICRA": "AA+"
       },
       "agencyDates": {
         "ICRA": "2026-09-02"
@@ -891,7 +911,7 @@
     },
     "INE484J14H38": {
       "agencies": {
-        "ICRA": "A1+"
+        "ICRA": "AA+"
       },
       "agencyDates": {
         "ICRA": "2026-09-02"
