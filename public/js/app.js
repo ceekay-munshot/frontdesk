@@ -312,7 +312,7 @@ function ratingClass(r) {
 
 /** A small rating chip. `series` (>1) notes that the exact ISIN is one of N
  *  same-issuer series that all carry this rating — honest about the ambiguity. */
-function ratingChip(rating, series, note) {
+function ratingChip(rating, series, note, sources) {
   if (!rating) return "";
   const base = series > 1
     ? `Credit rating ${esc(rating)} — NSDL. ${series} same-issuer series match; all rated ${esc(rating)} (exact ISIN not unique)`
@@ -320,7 +320,16 @@ function ratingChip(rating, series, note) {
   // `note` is set only when an updated-rating override applied (e.g. "Lower of
   // CRISIL AA+, ICRA AA (conservative) · 2026-09-08") — show it + a small dot.
   const t = note ? esc(note) : base;
-  const dot = note ? `<span class="ml-0.5" style="color:#059669" title="Updated rating — latest / lower-of-two">•</span>` : "";
+  // When the override came from an exchange filing, the dot links to that exact
+  // filing (agency · date) so an updated rating is always one click from proof.
+  const src = Array.isArray(sources) && sources[0] && sources[0].url ? sources[0] : null;
+  let dot = "";
+  if (src) {
+    const tip = `Auto-updated from ${esc(src.agency || "agency")} exchange filing${src.date ? " · " + esc(src.date) : ""} — click to view`;
+    dot = `<a href="${esc(src.url)}" target="_blank" rel="noopener" class="ml-0.5" style="color:#059669;text-decoration:none;cursor:pointer" title="${tip}">•</a>`;
+  } else if (note) {
+    dot = `<span class="ml-0.5" style="color:#059669" title="Updated rating — latest / lower-of-two">•</span>`;
+  }
   return `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${ratingClass(rating)}" title="${t}">${esc(rating)}${dot}</span>`;
 }
 
@@ -866,7 +875,7 @@ function rowHTML(q) {
   const instr = q.instrument_type && !q.isin ? `<span class="text-slate-400">${esc(q.instrument_type)}</span>` : "";
   const subBits = [instr, flags].filter(Boolean).join(" ");
 
-  const rchip = ratingChip(q.rating, q.series, secOf(q.isin)?.ratingNote);
+  const rchip = ratingChip(q.rating, q.series, secOf(q.isin)?.ratingNote, secOf(q.isin)?.ratingSources);
   const rating = rchip || `<span class="text-[11px] text-slate-300">—</span>`;
   const cat = catChip(categoryOf(q.issuer));
 
@@ -1936,7 +1945,7 @@ function oppCard(o) {
       <div class="flex items-center gap-2">
         <span class="grid h-7 w-7 shrink-0 place-items-center rounded-lg ${c.bg}"><i data-lucide="${c.icon}" class="h-4 w-4" style="color:${c.color}"></i></span>
         <span class="text-[10px] font-bold uppercase tracking-wide ${c.text}">${c.label}</span>
-        <span class="ml-auto flex items-center gap-1">${o.side && sideStyle(o.side) ? `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sideStyle(o.side).chip}">${sideStyle(o.side).label}</span>` : ""}${ratingChip(o.rating, o.series, secOf(o.isin)?.ratingNote)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
+        <span class="ml-auto flex items-center gap-1">${o.side && sideStyle(o.side) ? `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sideStyle(o.side).chip}">${sideStyle(o.side).label}</span>` : ""}${ratingChip(o.rating, o.series, secOf(o.isin)?.ratingNote, secOf(o.isin)?.ratingSources)}${catChip(o.category)}<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span></span>
       </div>
       <div class="mt-2 flex items-center">
         <span class="truncate font-display text-sm font-bold text-slate-800">${esc(o.issuer || "—")}</span>${fresh}

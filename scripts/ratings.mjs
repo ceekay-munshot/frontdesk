@@ -86,6 +86,9 @@ export function applyRatingOverrides(securities, override) {
     s.rating = combined.rating;
     s.ratingDate = combined.date;
     s.ratingNote = combined.note;
+    // Carry the auditable source(s) — agency, date, and a link to the exact
+    // exchange filing — so the board can show where an updated rating came from.
+    if (Array.isArray(o.sources) && o.sources.length) s.ratingSources = o.sources.slice(0, 4);
     n++;
   }
   return n;
