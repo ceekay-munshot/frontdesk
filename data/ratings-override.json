@@ -1,9 +1,809 @@
 {
-  "_note": "Optional UPDATED-ratings override. NSDL's downloadable master freezes a bond's credit rating at the time of issue, so agency up/downgrades don't show. Drop updated ratings here (e.g. exported from CRISIL / CARE / ICRA / India Ratings) and the pipeline uses them automatically: it takes the LOWER when two agencies differ (conservative), keeps the change date, and adds a note. Empty = use NSDL ratings as-is.",
-  "_howto": "Add entries under byIsin, keyed by the bond's ISIN. Give either a per-agency map or a list of rating symbols, plus the date the latest rating was assigned.",
-  "_example": {
-    "INE0XXXX07XXX": { "agencies": { "CARE": "A+", "ICRA": "A" }, "date": "2026-09-08" },
-    "INE0YYYY07YYY": { "ratings": ["AA+", "AA"], "date": "2026-08-30" }
-  },
-  "byIsin": {}
+  "_note": "AUTO-GENERATED updated ratings. Source: BSE 'Credit Rating' filings (SEBI LODR Reg 30), all agencies; rating read from the agency report PDF by the pipeline LLM. Applied as latest / lower-of-two + date. Each entry links the exact exchange filing. Edit/clear entries freely.",
+  "_updated_at": "2026-09-21T06:55:21.902Z",
+  "_seen": [
+    "8a0d89f7-ac73-457e-86ca-35411f8d81d1",
+    "c3c5cd41-ddc2-4e45-8741-38ab715b72c8",
+    "f4c2283b-1b1b-45b7-bd52-99c4bb108c30",
+    "383cda04-80a4-41a0-ab16-453f68e10753",
+    "adfc9aa1-c09b-4490-b8ea-91ccdcf0cfbf",
+    "226a74d9-32bd-4625-8fdc-e1c5dbdd0458",
+    "0e4db0b2-aaee-41eb-86f0-c1b7caf23039",
+    "dbe24480-d3d4-4879-aa16-99729ccd8e6d",
+    "f3d75e2b-cf87-4037-8515-449341c9c79c",
+    "06e6d94e-0f24-4eb2-9cc8-88cfb75c9e04",
+    "d67d6fd7-3d56-4028-95ea-ec8c9f04c82e",
+    "b866e887-515c-477f-9ad1-57501f31f0a4",
+    "2018c3dd-cb44-41e1-9d36-1e6207631c8b",
+    "eaf66798-7d00-466e-adcc-491c83ad30a6",
+    "d2a2829a-f0ad-4a98-b30a-efe915e9d356",
+    "7cc159b2-3561-4694-bf35-a51e113e6649",
+    "10145da6-7280-4a49-8442-79eabb9ebfaa",
+    "3825f429-286f-4cd3-8fc9-003fbddb7581",
+    "32867db6-28b9-471a-a8b2-3eb1ab0acf28"
+  ],
+  "byIsin": {
+    "INE692A16LP9": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16NC3": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16KU1": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16KQ9": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16MP7": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16MM4": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16LQ7": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE692A16MR3": {
+      "agencies": {
+        "Brickwork": "AAA"
+      },
+      "agencyDates": {
+        "Brickwork": "2026-09-17"
+      },
+      "sources": [
+        {
+          "agency": "Brickwork",
+          "date": "2026-09-17",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
+        }
+      ],
+      "date": "2026-09-17"
+    },
+    "INE338I14LQ5": {
+      "agencies": {
+        "India Ratings": "A1+"
+      },
+      "agencyDates": {
+        "India Ratings": "2026-09-15"
+      },
+      "sources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-09-15",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/14052e16-4d26-49ec-87b7-55938f61d41a.pdf"
+        }
+      ],
+      "date": "2026-09-15"
+    },
+    "INE511C07912": {
+      "agencies": {
+        "CRISIL": "AAA"
+      },
+      "agencyDates": {
+        "CRISIL": "2026-09-09"
+      },
+      "sources": [
+        {
+          "agency": "CRISIL",
+          "date": "2026-09-09",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/54936afe-61fe-4e53-8a21-69eaaaaea23f.pdf"
+        }
+      ],
+      "date": "2026-09-09"
+    },
+    "INE511C07946": {
+      "agencies": {
+        "CRISIL": "AAA"
+      },
+      "agencyDates": {
+        "CRISIL": "2026-09-09"
+      },
+      "sources": [
+        {
+          "agency": "CRISIL",
+          "date": "2026-09-09",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/54936afe-61fe-4e53-8a21-69eaaaaea23f.pdf"
+        }
+      ],
+      "date": "2026-09-09"
+    },
+    "INE511C07AC7": {
+      "agencies": {
+        "CRISIL": "AAA"
+      },
+      "agencyDates": {
+        "CRISIL": "2026-09-09"
+      },
+      "sources": [
+        {
+          "agency": "CRISIL",
+          "date": "2026-09-09",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/54936afe-61fe-4e53-8a21-69eaaaaea23f.pdf"
+        }
+      ],
+      "date": "2026-09-09"
+    },
+    "INE002A14LU6": {
+      "agencies": {
+        "CARE": "A1+"
+      },
+      "agencyDates": {
+        "CARE": "2026-09-09"
+      },
+      "sources": [
+        {
+          "agency": "CARE",
+          "date": "2026-09-09",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/2699a434-576c-4161-b4dc-ab474096f479.pdf"
+        }
+      ],
+      "date": "2026-09-09"
+    },
+    "INE002A14LT8": {
+      "agencies": {
+        "CARE": "A1+"
+      },
+      "agencyDates": {
+        "CARE": "2026-09-09"
+      },
+      "sources": [
+        {
+          "agency": "CARE",
+          "date": "2026-09-09",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/2699a434-576c-4161-b4dc-ab474096f479.pdf"
+        }
+      ],
+      "date": "2026-09-09"
+    },
+    "INE002A14LS0": {
+      "agencies": {
+        "CARE": "A1+"
+      },
+      "agencyDates": {
+        "CARE": "2026-09-09"
+      },
+      "sources": [
+        {
+          "agency": "CARE",
+          "date": "2026-09-09",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/2699a434-576c-4161-b4dc-ab474096f479.pdf"
+        }
+      ],
+      "date": "2026-09-09"
+    },
+    "INE063P16BE6": {
+      "agencies": {
+        "India Ratings": "A1+"
+      },
+      "agencyDates": {
+        "India Ratings": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-09-08",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/64dc61eb-577e-4c0d-8425-7bf759bf669a.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16F78": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16G28": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16G36": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16G10": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16K14": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16G44": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16H43": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16F94": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16H84": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16E38": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16I00": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16K48": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16K97": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16G02": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16H01": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE476A16I26": {
+      "agencies": {
+        "ICRA": "A1+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-08"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-08",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/28a05c14-1904-47b3-b18c-411e47406416.pdf"
+        }
+      ],
+      "date": "2026-09-08"
+    },
+    "INE423Y14019": {
+      "agencies": {
+        "ICRA": "AA-"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-07"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-07",
+          "action": "Revalidated",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/03c30401-64a7-4b1a-852b-ac2177a35996.pdf"
+        }
+      ],
+      "date": "2026-09-07"
+    },
+    "INE774D07UM6": {
+      "agencies": {
+        "CRISIL": "AAA"
+      },
+      "agencyDates": {
+        "CRISIL": "2026-09-07"
+      },
+      "sources": [
+        {
+          "agency": "CRISIL",
+          "date": "2026-09-07",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/9094c2b0-f09c-4db9-bd8c-7a8b835a4840.pdf"
+        }
+      ],
+      "date": "2026-09-07"
+    },
+    "INE721A07RQ0": {
+      "agencies": {
+        "ICRA": "AAA"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-03"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-03",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c3902d7b-542e-4ed2-98f9-e84a0c601450.pdf"
+        }
+      ],
+      "date": "2026-09-03"
+    },
+    "INE721A07SP0": {
+      "agencies": {
+        "ICRA": "AAA"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-03"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-03",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c3902d7b-542e-4ed2-98f9-e84a0c601450.pdf"
+        }
+      ],
+      "date": "2026-09-03"
+    },
+    "INE721A07RV0": {
+      "agencies": {
+        "ICRA": "AAA"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-03"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-03",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c3902d7b-542e-4ed2-98f9-e84a0c601450.pdf"
+        }
+      ],
+      "date": "2026-09-03"
+    },
+    "INE721A07SA2": {
+      "agencies": {
+        "ICRA": "AAA"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-03"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-03",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/c3902d7b-542e-4ed2-98f9-e84a0c601450.pdf"
+        }
+      ],
+      "date": "2026-09-03"
+    },
+    "INE484J14G05": {
+      "agencies": {
+        "ICRA": "AA+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-02"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ],
+      "date": "2026-09-02"
+    },
+    "INE484J14H53": {
+      "agencies": {
+        "ICRA": "AA+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-02"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ],
+      "date": "2026-09-02"
+    },
+    "INE484J14F97": {
+      "agencies": {
+        "ICRA": "AA+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-02"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ],
+      "date": "2026-09-02"
+    },
+    "INE484J14H46": {
+      "agencies": {
+        "ICRA": "AA+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-02"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ],
+      "date": "2026-09-02"
+    },
+    "INE484J14H38": {
+      "agencies": {
+        "ICRA": "AA+"
+      },
+      "agencyDates": {
+        "ICRA": "2026-09-02"
+      },
+      "sources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ],
+      "date": "2026-09-02"
+    },
+    "INE814H07190": {
+      "agencies": {
+        "India Ratings": "AA+"
+      },
+      "agencyDates": {
+        "India Ratings": "2026-09-01"
+      },
+      "sources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-09-01",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/868fad34-41d7-45b1-849f-9a64f3ab4dbf.pdf"
+        }
+      ],
+      "date": "2026-09-01"
+    },
+    "INE883F07330": {
+      "agencies": {
+        "India Ratings": "AA+"
+      },
+      "agencyDates": {
+        "India Ratings": "2026-08-28"
+      },
+      "sources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-28",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/99c9785c-8fad-42ea-8663-27c8b0893249.pdf"
+        }
+      ],
+      "date": "2026-08-28"
+    },
+    "INE883F07363": {
+      "agencies": {
+        "India Ratings": "AA+"
+      },
+      "agencyDates": {
+        "India Ratings": "2026-08-28"
+      },
+      "sources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-28",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/99c9785c-8fad-42ea-8663-27c8b0893249.pdf"
+        }
+      ],
+      "date": "2026-08-28"
+    }
+  }
 }
