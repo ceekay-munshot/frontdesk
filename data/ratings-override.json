@@ -1,6 +1,6 @@
 {
   "_note": "AUTO-GENERATED updated ratings. Source: BSE 'Credit Rating' filings (SEBI LODR Reg 30), all agencies; rating read from the agency report PDF by the pipeline LLM. Applied as latest / lower-of-two + date. Each entry links the exact exchange filing. Edit/clear entries freely.",
-  "_updated_at": "2026-09-21T08:17:53.100Z",
+  "_updated_at": "2026-09-21T15:10:08.275Z",
   "_seen": [
     "8a0d89f7-ac73-457e-86ca-35411f8d81d1",
     "c3c5cd41-ddc2-4e45-8741-38ab715b72c8",
@@ -50,7 +50,21 @@
     "ed879e3f-d2bf-40f4-a851-0ccb0f65f537",
     "e20dd41f-7963-4dd0-b772-2d909ad32b96",
     "63874845-b803-412a-9088-96dbeeef51b8",
-    "7be878b5-c89b-4b43-b74a-0b42ef22937b"
+    "7be878b5-c89b-4b43-b74a-0b42ef22937b",
+    "edc08226-28dc-48af-874f-545fa9b7b9eb",
+    "fd6bb401-4fd8-433e-b15d-1640a11c74d2",
+    "028521b8-441f-402e-8bf8-4c6e733a96a3",
+    "95741ec6-9254-43b5-ab27-324278c97558",
+    "cb6567c5-0d8d-4200-ad22-6ecfeea8c849",
+    "a8e6a94f-bd16-4f92-97c7-e8a98716afc8",
+    "0f4876ea-5b9e-442c-8654-e028a4495e2f",
+    "9f26eca1-b8a9-4d46-8ad3-60b564bcbcd8",
+    "1187df77-9d16-4b9a-bfef-4506851548d5",
+    "78a86a36-afbf-4c8e-a434-2dd0842ac206",
+    "1b624f05-47bd-4390-b090-64498a3430f3",
+    "95c5fc05-ba5f-41a3-a369-a686736c6c8b",
+    "399636ac-6807-43ca-9262-8f4325a85e70",
+    "2f234827-7f8e-4c58-b655-fd43fc49398e"
   ],
   "byIsin": {
     "INE692A16LP9": {
