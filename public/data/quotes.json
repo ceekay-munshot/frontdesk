@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T09:46:21+05:30",
+  "generated_at": "2026-09-22T07:14:32.008Z",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "54c57a204424ea73b0dc6327cab35c2b96443826fe1359bbd84b5589eb7495ef",
   "trading_day": "2026-09-18",
@@ -21,37 +21,37 @@
   "quote_count": 7165,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-22 09:43:52",
+    "as_of": "2026-09-22 12:42:05",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.0512
+        "yield": 7.057
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.2014
+        "yield": 7.2129
       },
       {
         "type": "gsec",
-        "name": "07.63 GS 2056",
-        "maturity": "2056-07-01",
-        "yield": 7.5619
+        "name": "06.36 GS 2031",
+        "maturity": "2031-07-01",
+        "yield": 6.7416
       },
       {
         "type": "gsec",
-        "name": "06.57 GS 2033 17 AUG",
-        "maturity": "2033-07-01",
-        "yield": 6.9436
+        "name": "06.54 GS 2032",
+        "maturity": "2032-07-01",
+        "yield": 6.8535
       },
       {
-        "type": "gsec",
-        "name": "06.01 GS 2030",
-        "maturity": "2030-07-01",
-        "yield": 6.6947
+        "type": "overnight",
+        "name": "TREP overnight (CCIL)",
+        "maturity": "2026-09-23",
+        "yield": 5.19
       }
     ]
   },

@@ -24,11 +24,41 @@
 /** Home dashboard "G-Sec table" portlet — most-liquid traded G-Secs AND T-bills.
  *  The X-Requested-With header is REQUIRED; without it the portlet replies
  *  "Data not found". */
-const CCIL_GSEC_URL =
+const CCIL_PORTLET =
   "https://www.ccilindia.com/home?p_p_id=CCIL_HomeCombineGraphTable_CCIL_HomeCombineGraphTablePortlet_INSTANCE_uzwa" +
-  "&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_cacheability=cacheLevelPage&p_p_resource_id=gsecTable";
+  "&p_p_lifecycle=2&p_p_state=normal&p_p_mode=view&p_p_cacheability=cacheLevelPage&p_p_resource_id=";
+const CCIL_GSEC_URL = CCIL_PORTLET + "gsecTable";
+const CCIL_MM_URL = CCIL_PORTLET + "moneyMarketTable"; // overnight money-market (CALL/TREP)
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const ccilHeaders = {
+  "X-Requested-With": "XMLHttpRequest",
+  Referer: "https://www.ccilindia.com/",
+  Accept: "application/json, text/plain, */*",
+};
+
+/**
+ * The overnight money-market rate (TREP, the triparty-repo weighted average — the
+ * most liquid near-riskless overnight rate; falls back to CALL). CCIL's G-Sec
+ * table starts at ~5y, so without this the curve has no short end and a 3-month
+ * CD gets priced off a multi-year G-Sec. This anchors t≈0 with a real traded
+ * rate; the parser adds it as an "overnight" curve point so sub-1y (and 1-5y)
+ * spreads interpolate against a realistic front instead of clamping. Returns a
+ * number (%) or null (best-effort; a missing anchor just means no short point).
+ */
+export async function fetchOvernightRate() {
+  try {
+    const res = await fetch(CCIL_MM_URL, { headers: ccilHeaders, signal: AbortSignal.timeout(20000) });
+    if (!res.ok) return null;
+    const data = JSON.parse(await res.text());
+    const rows = Array.isArray(data?.result1) ? data.result1 : [];
+    const pick = (m) => rows.find((r) => String(r?.market || "").toUpperCase() === m);
+    const row = pick("TREP") || pick("TREPS") || pick("CALL");
+    const y = row?.wgtdAvrgTradRate ?? row?.lastTradRate;
+    return typeof y === "number" && Number.isFinite(y) && y > 0 && y < 15 ? { rate: Math.round(y * 1e4) / 1e4, market: row.market } : null;
+  } catch { return null; }
+}
 
 /** Parse a CCIL instrument name into { type, maturity(ISO), name }.
  *   "091 DTB 03122026"  -> tbill, 2026-12-03  (ddmmyyyy tail)
@@ -49,11 +79,7 @@ export function parseCcilName(rawName) {
 
 async function fetchOnce() {
   const res = await fetch(CCIL_GSEC_URL, {
-    headers: {
-      "X-Requested-With": "XMLHttpRequest",
-      Referer: "https://www.ccilindia.com/",
-      Accept: "application/json, text/plain, */*",
-    },
+    headers: ccilHeaders,
     signal: AbortSignal.timeout(30000),
   });
   if (!res.ok) throw new Error(`CCIL ${res.status}`);
@@ -90,11 +116,20 @@ export async function fetchGovtBenchmark() {
     if (!p) continue;
     points.push({ type: p.type, name: p.name, maturity: p.maturity, yield: Math.round(y * 10000) / 10000 });
   }
+  // Short-end anchor: CCIL's G-Sec table starts ~5y, so add the overnight rate as
+  // a t≈0 point. Sub-1y CDs and 1-5y bonds then interpolate against a realistic
+  // front instead of clamping to a multi-year G-Sec (an ~overnight..5y bootstrap).
+  const on = await fetchOvernightRate();
+  if (on) {
+    const d = new Date(); d.setUTCDate(d.getUTCDate() + 1);
+    points.push({ type: "overnight", name: `${on.market} overnight (CCIL)`, maturity: d.toISOString().slice(0, 10), yield: on.rate });
+    console.log(`[ccil] short-end anchor: ${on.market} overnight ${on.rate}%`);
+  }
   if (points.length < 2) {
     console.warn(`[ccil] only ${points.length} usable benchmark point(s) — treating as unavailable`);
     return null;
   }
   const as_of = typeof data?.maxTradeTimestamp === "string" ? data.maxTradeTimestamp : null;
-  console.log(`[ccil] benchmark: ${points.length} points (${points.filter((p) => p.type === "tbill").length} T-bill, ${points.filter((p) => p.type === "gsec").length} G-Sec) as of ${as_of}`);
+  console.log(`[ccil] benchmark: ${points.length} points (${points.filter((p) => p.type === "overnight").length} overnight, ${points.filter((p) => p.type === "tbill").length} T-bill, ${points.filter((p) => p.type === "gsec").length} G-Sec) as of ${as_of}`);
   return { as_of, points };
 }
