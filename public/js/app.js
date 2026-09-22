@@ -134,6 +134,37 @@ async function loadSpreadHistory() {
     SPREAD_HIST = j && j.days ? j : null;
   } catch { /* history stays unavailable -> "normal range" line is skipped */ }
 }
+
+// Real reported traded yields (the client's "Cbrics"): NSE's CBM bhavcopy, per
+// ISIN — last traded yield/price + a rolling history. Used to show where a bond
+// ACTUALLY traded and to flag a desk quote far from the last real trade.
+const TRADED_REF_URL = "data/traded-ref.json";
+let TRADED_REF = null; // { as_of, byIsin: { <isin>: { date, yield, price, valueCr, history:[{d,y}] } } }
+async function loadTradedRef() {
+  try {
+    const r = await fetch(TRADED_REF_URL, { cache: "no-store" });
+    if (!r.ok) return;
+    const j = await r.json();
+    TRADED_REF = j && j.byIsin ? j : null;
+  } catch { /* traded reference stays unavailable -> the "last traded" line is skipped */ }
+}
+/** The real last-traded reference (NSE reported) for an ISIN, or null. */
+function tradedRef(isin) {
+  return TRADED_REF && isin ? (TRADED_REF.byIsin[isin] || null) : null;
+}
+/** Tooltip line: "Last traded X.XX% · DD-Mon (NSE reported)", plus a warning when
+ *  the desk quote sits far (>=50 bps) from the last real trade. */
+function tradedLine(isin, deskYield) {
+  const t = tradedRef(isin);
+  if (!t || !isNum(t.yield)) return "";
+  const when = t.date ? fmtDate(t.date) : "";
+  let flag = "";
+  if (isNum(deskYield)) {
+    const diff = Math.round((deskYield - t.yield) * 100);
+    if (Math.abs(diff) >= 50) flag = `<div style="color:${T.tintAmber};font-weight:600;font-size:11px;margin-top:1px">⚠ ${diff > 0 ? "+" : ""}${diff} bps vs last real trade — check the level</div>`;
+  }
+  return `<div style="color:${T.n400};font-size:11px;margin-top:6px">Last traded <b style="color:${T.n600}">${t.yield.toFixed(2)}%</b>${when ? ` · ${when}` : ""} · <a href="https://www.nseindia.com/market-data/debt-market-reporting-corporate-bonds-traded-on-exchange" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">NSE reported ↗</a></div>${flag}`;
+}
 /** Median of PRIOR days' bucket medians (excludes today), preferring the
  *  same-rating series and falling back to the rating-agnostic one. */
 function histSpread(category, rating, bucket, exceptDay) {
@@ -1416,7 +1447,7 @@ function renderTip(o, pinned) {
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL ${o.bench.type === "overnight" ? "overnight money-market rate" : "traded " + (o.bench.type === "tbill" ? "T-bill" : "G-Sec") + ", nearest " + o.bench.t + "y"} ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${histSpreadLine(o.spread, o.category, null, o.bucket)}`;
-  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${peerDrill(o, pinned)}`;
+  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
       <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Easy to trade</b> — a two-way with a small bid–offer gap; easy to deal.</div>
@@ -1427,7 +1458,7 @@ function renderTip(o, pinned) {
     const rows = (o.rows || []).map(([k, v]) => row(esc(k), esc(v))).join("");
     const raws = [o.raw, o.buyRaw, o.sellRaw].filter(Boolean);
     const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}${o.date ? ` · ${esc(o.date)}` : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
-    return `${L(esc(o.title || "Opportunity"))}${rows}${peerDrill(o, pinned)}${rawHtml}`;
+    return `${L(esc(o.title || "Opportunity"))}${rows}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}${rawHtml}`;
   }
   if (o.kind === "pulseinfo") {
     return `${L("How to read Desk Pulse")}<div style="line-height:1.55">A quick read on the desk today:
@@ -1519,7 +1550,7 @@ function peersBarsSVG(shown) {
     const x2 = bx(b.gap), left = Math.min(zeroX, x2), w = Math.max(2, Math.abs(x2 - zeroX));
     const col = b.gap >= 0 ? "url(#peerBuy)" : "url(#peerSell)";
     const valX = b.gap >= 0 ? x2 + 4 : x2 - 4, anchor = b.gap >= 0 ? "start" : "end";
-    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket });
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin });
     return `<g data-tip="${esc(tip)}" style="cursor:pointer">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
       <text x="${labelW - 10}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(b.issuer, 22))}</text>
@@ -1569,7 +1600,7 @@ function peersTableHTML(shown) {
   const body = shown.map((b) => {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
-    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket });
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin });
     return `<tr class="qrow ${sec.acc} border-b border-slate-100" data-tip="${esc(tip)}" style="cursor:pointer">
       <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${securityLine(b.isin, b.candidates)}</td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
@@ -1975,7 +2006,7 @@ function oppCard(o) {
   const c = OPP_CAT[o.type] || OPP_CAT.cheap;
   const sec = SECTION[o.section] || SECTION.Bonds;
   const fresh = o.fresh ? `<span class="ml-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse" title="fresh quote"></span>` : "";
-  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color, peers: o.peers || null, peerMedian: isNum(o.peerMedian) ? +o.peerMedian.toFixed(2) : null, uy: isNum(o.uy) ? +o.uy.toFixed(2) : null, basis: o.peerBasis, rating: o.rating, category: o.category, bucket: o.bucket, issuer: o.issuer, maturity: o.maturity });
+  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color, peers: o.peers || null, peerMedian: isNum(o.peerMedian) ? +o.peerMedian.toFixed(2) : null, uy: isNum(o.uy) ? +o.uy.toFixed(2) : null, basis: o.peerBasis, rating: o.rating, category: o.category, bucket: o.bucket, issuer: o.issuer, maturity: o.maturity, isin: o.isin });
 
   const primary = o.type === "twosided"
     ? `<div class="mt-2 grid grid-cols-2 gap-1.5">
@@ -2900,6 +2931,11 @@ loadCategories().then(() => {
 loadSpreadHistory().then(() => {
   // "Normal range" history arrived — refresh so Spread Watch / Opportunities can
   // show today vs its normal.
+  if (state.data && !state.loading && !state.error) renderView();
+});
+loadTradedRef().then(() => {
+  // Real traded yields (Cbrics) arrived — refresh so tooltips can show where each
+  // bond actually last traded and flag desk quotes far from it.
   if (state.data && !state.loading && !state.error) renderView();
 });
 loadData({ initial: true });

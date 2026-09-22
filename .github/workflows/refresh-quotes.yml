@@ -127,6 +127,14 @@ jobs:
           python3 -m pip install --quiet --disable-pip-version-check pymupdf
           node scripts/fetch-rating-actions.mjs
 
+      # Refresh the real traded-yield reference (the client's "Cbrics"): NSE's
+      # public CBM bhavcopy of reported corporate-bond trades -> per-ISIN last
+      # traded yield + rolling history (public/data/traded-ref.json). Free, no
+      # login. Best-effort; never fails the refresh.
+      - name: Refresh traded reference (Cbrics)
+        continue-on-error: true
+        run: node scripts/fetch-traded-ref.mjs
+
       # Commit the refreshed data if it changed, then push with a 4-attempt loop
       # that rebases on the branch head before each try — so a refresh that
       # overlaps another push (or a human commit) lands cleanly instead of
@@ -140,6 +148,7 @@ jobs:
           [ -d data/archive/raw ] && git add data/archive/raw
           [ -f public/data/spread-history.json ] && git add public/data/spread-history.json
           [ -f data/ratings-override.json ] && git add data/ratings-override.json
+          [ -f public/data/traded-ref.json ] && git add public/data/traded-ref.json
           if git diff --cached --quiet; then
             echo "No data changes — nothing to commit."
             exit 0
