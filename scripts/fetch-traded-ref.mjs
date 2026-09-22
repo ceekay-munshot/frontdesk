@@ -20,7 +20,9 @@ async function main() {
   let prev = null;
   if (existsSync(OUT)) { try { prev = JSON.parse(readFileSync(OUT, "utf8")); } catch { prev = null; } }
 
-  const ref = await buildTradedRef(prev);
+  // A small rolling backfill self-heals days missed over a weekend or a failed
+  // run; the per-ISIN history dedupes by date, so re-merging a day is a no-op.
+  const ref = await buildTradedRef(prev, { backfillDays: 6 });
   if (!ref) { console.warn("[traded-ref] no update — kept previous file"); return; }
 
   mkdirSync(dirname(OUT), { recursive: true });

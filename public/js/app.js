@@ -165,6 +165,34 @@ function tradedLine(isin, deskYield) {
   }
   return `<div style="color:${T.n400};font-size:11px;margin-top:6px">Last traded <b style="color:${T.n600}">${t.yield.toFixed(2)}%</b>${when ? ` · ${when}` : ""} · <a href="https://www.nseindia.com/market-data/debt-market-reporting-corporate-bonds-traded-on-exchange" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">NSE reported ↗</a></div>${flag}`;
 }
+/** A bond's "usual" traded yield from CBRICS real trades — median of its traded
+ *  history (needs >=3 real trades). null when too thin (caller uses our own
+ *  spread-history "Normal" as the fallback). */
+function tradedNormal(isin) {
+  const t = tradedRef(isin);
+  const h = t && Array.isArray(t.history) ? t.history.filter((x) => isNum(x.y)) : [];
+  if (h.length < 3) return null;
+  const ys = h.map((x) => x.y).sort((a, b) => a - b);
+  const m = Math.floor(ys.length / 2);
+  const med = ys.length % 2 ? ys[m] : (ys[m - 1] + ys[m]) / 2;
+  return { yield: Math.round(med * 100) / 100, n: ys.length, from: h[0].d, to: h[h.length - 1].d };
+}
+/** The "Normal" line PREFERRING CBRICS real trades: "Usually trades ~X% · NSE (n
+ *  trades)" plus today-vs-usual. Returns "" when CBRICS is too thin, so the caller
+ *  falls back to the spread-history line (histSpreadLine). */
+function tradedNormalLine(isin, curYield) {
+  const nrm = tradedNormal(isin);
+  if (!nrm) return "";
+  const rowHtml = (k, v) => `<div style="display:flex;justify-content:space-between;gap:18px"><span style="color:${T.n400}">${k}</span><span style="font-variant-numeric:tabular-nums">${v}</span></div>`;
+  let read = "";
+  if (isNum(curYield)) {
+    const diff = Math.round((curYield - nrm.yield) * 100);
+    const dirn = diff >= 15 ? "cheaper than usual · looks cheap" : diff <= -15 ? "richer than usual · looks rich" : "in its usual range";
+    const col = diff >= 15 ? T.buyInk : diff <= -15 ? T.sellInk : T.n500;
+    read = `<div style="color:${col};font-weight:600;font-size:11px;margin-top:2px">${diff >= 0 ? "+" : ""}${diff} bps ${dirn}</div>`;
+  }
+  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · NSE (${nrm.n} trades)`)}${read}</div>`;
+}
 /** Median of PRIOR days' bucket medians (excludes today), preferring the
  *  same-rating series and falling back to the rating-agnostic one. */
 function histSpread(category, rating, bucket, exceptDay) {
@@ -933,6 +961,7 @@ function rowHTML(q) {
       <td class="px-3 py-2.5 text-right">
         <div class="nums font-semibold text-slate-900">${esc(lvl.main)}</div>
         ${lvl.unit ? `<div class="text-[10px] uppercase tracking-wide text-slate-400">${lvl.unit}</div>` : ""}
+        ${(() => { const t = tradedRef(q.isin); return t && isNum(t.yield) ? `<div class="nums text-[10px] text-slate-400" title="Last reported trade on NSE (Cbrics) on ${t.date || ""}">↔ ${t.yield.toFixed(2)}% <span class="text-slate-300">NSE</span></div>` : ""; })()}
       </td>
       <td class="px-3 py-2.5 text-right">
         <span class="nums font-medium text-slate-700">${isNum(q.size_cr) ? fmtNum(q.size_cr) : "—"}</span>
@@ -1310,7 +1339,7 @@ function computeSpread() {
       const iss = b.issuer.toLowerCase();
       const ck = `${b.section}|||${iss}|||${b.bucket}`;
       if (!cellMap.has(ck)) cellMap.set(ck, []);
-      cellMap.get(ck).push({ spread: (b.uy - gy) * 100, corpY: b.uy, govtY: gy, tenor: b.tenor });
+      cellMap.get(ck).push({ spread: (b.uy - gy) * 100, corpY: b.uy, govtY: gy, tenor: b.tenor, isin: b.isin });
       const ik = `${b.section}|||${iss}`;
       if (!issuerAgg.has(ik)) issuerAgg.set(ik, { issuer: b.issuer, section: b.section, who: new Set() });
       if (b.who) issuerAgg.get(ik).who.add(b.who);
@@ -1331,7 +1360,11 @@ function computeSpread() {
           // benchmark nearest the cell's typical tenor) — for the "show your
           // working" popup the client asked for.
           const bench = nearestBenchmark(govtCurve, median(obs.map((o) => o.tenor)));
-          cells[bk] = { median: Math.round(mean((o) => o.spread)), n, corpY: mean((o) => o.corpY), govtY: mean((o) => o.govtY), bench };
+          // Representative ISIN for the cell's "Normal" (CBRICS): the member bond
+          // with the most real trades, else any matched ISIN.
+          let repIsin = null, repN = -1;
+          for (const o of obs) { if (!o.isin) continue; const tn = tradedNormal(o.isin); const k = tn ? tn.n : 0; if (k > repN) { repN = k; repIsin = o.isin; } }
+          cells[bk] = { median: Math.round(mean((o) => o.spread)), n, corpY: mean((o) => o.corpY), govtY: mean((o) => o.govtY), bench, isin: repIsin };
         }
       }
       return { issuer: it.issuer, section: it.section, category: catOrOther(it.issuer), who: [...it.who].join(" ").toLowerCase(), cells };
@@ -1446,7 +1479,7 @@ function renderTip(o, pinned) {
       <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
-  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL ${o.bench.type === "overnight" ? "overnight money-market rate" : "traded " + (o.bench.type === "tbill" ? "T-bill" : "G-Sec") + ", nearest " + o.bench.t + "y"} ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${histSpreadLine(o.spread, o.category, null, o.bucket)}`;
+  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL ${o.bench.type === "overnight" ? "overnight money-market rate" : "traded " + (o.bench.type === "tbill" ? "T-bill" : "G-Sec") + ", nearest " + o.bench.t + "y"} ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${tradedNormalLine(o.isin, o.corpY) || histSpreadLine(o.spread, o.category, null, o.bucket)}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
@@ -1581,7 +1614,7 @@ function spreadGridHTML(rows, buckets, gridStats) {
       const c = r.cells[bk];
       if (!c) return `<td class="px-2 py-2 text-right"><span class="text-slate-200">·</span></td>`;
       const bg = divergingColor(c.median, gridStats.min, gridStats.med, gridStats.max);
-      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, category: r.category, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, bench: c.bench ? { name: c.bench.name, y: +c.bench.y.toFixed(2), t: c.bench.t, type: c.bench.type } : null, accent: bg });
+      const tip = JSON.stringify({ kind: "cell", issuer: r.issuer, category: r.category, bucket: bk, spread: c.median, corpY: +c.corpY.toFixed(2), govtY: +c.govtY.toFixed(2), n: c.n, bench: c.bench ? { name: c.bench.name, y: +c.bench.y.toFixed(2), t: c.bench.t, type: c.bench.type } : null, accent: bg, isin: c.isin });
       return `<td class="px-1.5 py-1.5 text-right"><span class="inline-block w-full rounded-md px-2 py-1 text-right text-xs font-bold nums" style="background:${bg};color:${textOn(bg)}" data-tip="${esc(tip)}">${fmtBps(c.median)}</span></td>`;
     }).join("");
     return `<tr class="heat-row hov border-b border-slate-100">
@@ -1596,20 +1629,27 @@ function spreadGridHTML(rows, buckets, gridStats) {
 
 function peersTableHTML(shown) {
   const head = `<thead class="sticky-head"><tr class="border-b border-slate-200 bg-slate-50/95 backdrop-blur">
-    ${th("Bond", "left")}${th("Its yield", "right")}${th("Similar median", "right")}${th("Gap (bps)", "right")}${th("Size (₹cr)", "right")}</tr></thead>`;
+    ${th("Bond", "left")}${th("Its yield", "right")}${th("Last traded (NSE)", "right")}${th("Similar median", "right")}${th("Gap (bps)", "right")}${th("Size (₹cr)", "right")}</tr></thead>`;
   const body = shown.map((b) => {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
     const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin });
+    // Real last-traded yield (NSE/Cbrics), shown right next to the desk quote so a
+    // quote far from where the bond actually traded stands out (amber).
+    const tr = tradedRef(b.isin);
+    const trHtml = tr && isNum(tr.yield)
+      ? `<td class="px-3 py-2 text-right nums ${Math.abs(Math.round((b.uy - tr.yield) * 100)) >= 50 ? "font-semibold text-amber-600" : "text-slate-500"}">${tr.yield.toFixed(2)}<span class="text-[9px] text-slate-300"> ${tr.date ? fmtDate(tr.date).replace(/ '\d+$/, "") : ""}</span></td>`
+      : `<td class="px-3 py-2 text-right nums text-slate-300">—</td>`;
     return `<tr class="qrow ${sec.acc} border-b border-slate-100" data-tip="${esc(tip)}" style="cursor:pointer">
       <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${securityLine(b.isin, b.candidates)}</td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
+      ${trHtml}
       <td class="px-3 py-2 text-right nums text-slate-500">${b.peerMedian.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums font-bold ${col}">${fmtBps(b.gap, true)}</td>
       <td class="px-3 py-2 text-right nums text-slate-600">${b.size != null ? fmtNum(b.size) : "—"}</td>
     </tr>`;
   }).join("");
-  return `<table class="w-full min-w-[560px] border-collapse text-sm"><colgroup><col style="width:auto"/><col style="width:92px"/><col style="width:112px"/><col style="width:100px"/><col style="width:104px"/></colgroup>${head}<tbody>${body}</tbody></table>`;
+  return `<table class="w-full min-w-[640px] border-collapse text-sm"><colgroup><col style="width:auto"/><col style="width:92px"/><col style="width:108px"/><col style="width:112px"/><col style="width:100px"/><col style="width:104px"/></colgroup>${head}<tbody>${body}</tbody></table>`;
 }
 
 /* =========================================================================
@@ -1889,15 +1929,26 @@ function computeOpportunities() {
       o.why = `Pays ${b.govtSpread} bps over ${b.bench ? b.bench.name : "the government curve"} for its maturity — a big extra yield.`;
       const psw = sideWord(b.repr?.q?.side);
       o.rows = [["Its yield", `${pct(b.uy)}${psw !== "quote" ? ` (${psw})` : ""}`], [b.bench ? "Benchmark" : "Govt curve", b.bench ? `${b.bench.name} · ${pct(govtY)}` : pct(govtY)], ["Pickup", "+" + b.govtSpread + " bps"]];
-      // Historical context — the client's key ask: a spread only means something
-      // against its own normal. Adds a "good buy / good sell" read once history exists.
-      const hs = histSpread(b.category, b.rating, b.bucket, currentDay());
-      if (hs) {
-        o.rows.push([`Normal (${hs.days}d)`, `~${hs.avg} bps`]);
-        const diff = b.govtSpread - hs.avg;
-        o.why += diff >= 15 ? ` That's ${diff} bps wider than its normal — looks cheap (good to buy).`
-               : diff <= -15 ? ` That's ${-diff} bps tighter than normal — looks rich (good to sell).`
-               : ` Broadly in its normal range.`;
+      // Historical context — the client's key ask: a level only means something
+      // against its own normal. PREFER CBRICS real trades ("usually trades ~X%"),
+      // and fall back to our own rolling spread history when a bond has too few
+      // real trades.
+      const tn = tradedNormal(b.isin);
+      if (tn) {
+        o.rows.push(["Usually trades", `~${tn.yield.toFixed(2)}% · NSE (${tn.n})`]);
+        const diff = Math.round((b.uy - tn.yield) * 100);
+        o.why += diff >= 15 ? ` It's ${diff} bps cheaper than where it usually trades (NSE) — looks cheap (good to buy).`
+               : diff <= -15 ? ` It's ${-diff} bps richer than where it usually trades (NSE) — looks rich (good to sell).`
+               : ` Broadly where it usually trades (NSE).`;
+      } else {
+        const hs = histSpread(b.category, b.rating, b.bucket, currentDay());
+        if (hs) {
+          o.rows.push([`Normal (${hs.days}d)`, `~${hs.avg} bps`]);
+          const diff = b.govtSpread - hs.avg;
+          o.why += diff >= 15 ? ` That's ${diff} bps wider than its normal — looks cheap (good to buy).`
+                 : diff <= -15 ? ` That's ${-diff} bps tighter than normal — looks rich (good to sell).`
+                 : ` Broadly in its normal range.`;
+        }
       }
       pickup.push(o);
     }
@@ -2027,6 +2078,7 @@ function oppCard(o) {
       </div>
       <div class="text-[11px] text-slate-400 nums">${isNum(o.coupon) ? fmtNum(o.coupon, 2) + "% · " : ""}${o.maturity ? fmtDate(o.maturity) : "—"}${o.bucket ? " · " + o.bucket : ""}</div>
       ${securityLine(o.isin, o.candidates)}
+      ${(() => { const t = tradedRef(o.isin); if (!t || !isNum(t.yield)) return ""; const diff = isNum(o.uy) ? Math.round((o.uy - t.yield) * 100) : null; const far = diff != null && Math.abs(diff) >= 50; return `<div class="mt-1 text-[11px] ${far ? "font-semibold text-amber-600" : "text-slate-400"}">Last traded <b>${t.yield.toFixed(2)}%</b> (NSE)${far ? ` · ⚠ desk ${diff > 0 ? "+" : ""}${diff}bps` : ""}</div>`; })()}
       ${primary}
       <div class="mt-1.5 flex-1 text-[12px] leading-snug text-slate-500">${esc(c.plain || o.why)}</div>
       <div class="mt-2.5 flex items-center gap-1.5 text-[11px] text-slate-400">
