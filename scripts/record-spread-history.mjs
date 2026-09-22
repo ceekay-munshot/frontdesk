@@ -30,11 +30,16 @@ const median = (a) => { const s = a.slice().sort((x, y) => x - y); const n = s.l
 
 /* ---- pricing primitives (mirror public/js/app.js) ---- */
 const USABLE_Y_MIN = 2, USABLE_Y_MAX = 13;
+const MM_TYPES = new Set(["CD", "CP"]);
 function usableYield(q) {
   let y = null;
   if (num(q.yield)) y = q.yield;
   else if (q.side === "two_way" && num(q.bid) && num(q.offer) && q.level_meaning === "yield") y = (q.bid + q.offer) / 2;
-  return y != null && y >= USABLE_Y_MIN && y <= USABLE_Y_MAX ? y : null;
+  if (y == null || y < USABLE_Y_MIN || y > USABLE_Y_MAX) return null;
+  // Money-market safety net (mirrors app.js): a CD/CP yield left as a bare integer
+  // >= 10 is an un-rebuilt dropped "6." handle ("10" = 6.10%), not a real 10% CD.
+  if (MM_TYPES.has(String(q.instrument_type || "").toUpperCase()) && Number.isInteger(y) && y >= 10) return null;
+  return y;
 }
 const tenorBucket = (t) => (!num(t) ? null : t <= 1 ? "<=1y" : t <= 3 ? "1-3y" : t <= 5 ? "3-5y" : t <= 10 ? "5-10y" : "10y+");
 function ccilCurve(points, day) {
@@ -62,7 +67,7 @@ function govtYieldAt(pts, t) {
 const tsSeconds = (s) => { const m = /^(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(String(s || "")); return m ? (+m[1]) * 3600 + (+m[2]) * 60 + (+(m[3] || 0)) : -1; };
 
 /* ---- category resolver (mirrors the fixed _resolveCategory in app.js) ---- */
-function makeCategoryOf(cats) {
+export function makeCategoryOf(cats) {
   const CAT_DIR = cats.directory || {}, CAT_ALIAS = cats.aliases || {};
   const CBF = new Map();
   for (const [nm, c] of Object.entries(CAT_DIR)) { const ft = nm.split(" ")[0]; if (!CBF.has(ft)) CBF.set(ft, []); CBF.get(ft).push([nm, c]); }

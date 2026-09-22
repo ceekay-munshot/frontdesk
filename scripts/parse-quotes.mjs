@@ -41,6 +41,7 @@ import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
 import { fetchGovtBenchmark } from "./ccil.mjs";
 import { fetchNsdlSources, fetchNsdlDirectory, buildNsdlIndex, resolveSecurity } from "./nsdl.mjs";
 import { combineRatings } from "./ratings.mjs";
+import { fixMoneyMarketYields } from "./mm-handle.mjs";
 
 /* ---------------------------------------------------------------------------
    Configuration.
@@ -1024,6 +1025,12 @@ async function main() {
   if (reuse.size || incomplete_days.length) {
     console.log(`[frontdesk] reused ${reuse.size} day(s); incomplete (retry next run): ${incomplete_days.join(", ") || "none"}`);
   }
+
+  // 5a1. Money-market handle repair — the desk drops the "6." handle on CD/CP
+  //      quotes ("10 offer" means 6.10%, not 10%). Rebuild those before anything
+  //      reads a yield, so a sub-1y A1+ CD never shows a false ~380bps "cheap".
+  const mmFix = fixMoneyMarketYields(quotes);
+  if (mmFix.fixed) console.log(`[frontdesk] money-market handles rebuilt on ${mmFix.fixed} quote(s)`);
 
   // 5a2. NSDL security master — confirm each quote's ISIN + official name where
   //      unique, and attach a confident credit rating (even across same-issuer

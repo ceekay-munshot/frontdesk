@@ -266,6 +266,9 @@
         transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
       }
       #tooltip.show { opacity: 1; transform: translateY(0) scale(1); }
+      /* A pinned (clicked) tooltip becomes interactive so its drill-down table
+         can be scrolled; a plain hover tooltip stays click-through. */
+      #tooltip.pinned { pointer-events: auto; max-height: 80vh; overflow: auto; }
       #tooltip .tt-label {
         color: var(--text-soft);
         font-size: var(--fs-micro);

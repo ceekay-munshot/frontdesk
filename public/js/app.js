@@ -1028,6 +1028,11 @@ const trunc = (s, n) => { s = String(s ?? ""); return s.length > n ? s.slice(0, 
    spread computation at once — the Live Board still shows each quote's raw level
    as-is (it never calls usableYield). */
 const USABLE_Y_MIN = 2, USABLE_Y_MAX = 13;
+// Money-market paper (CD/CP). The desk drops the "6." handle on these ("10 offer"
+// = 6.10%); the pipeline rebuilds them, but as a last-resort guard we never treat
+// a bare integer >= 10 on a CD/CP as a real yield — it is an un-rebuilt handle,
+// not a 10%+ CD, and letting it through prints a false "cheap / buy" flag.
+const MM_TYPES = new Set(["CD", "CP"]);
 
 /** Usable yield for a quote: q.yield, else the mid of a yield two-way, else null —
  *  but only when it falls in the plausible [2, 13]% band (else null). */
@@ -1035,7 +1040,9 @@ function usableYield(q) {
   let y = null;
   if (isNum(q.yield)) y = q.yield;
   else if (q.side === "two_way" && isNum(q.bid) && isNum(q.offer) && q.level_meaning === "yield") y = (q.bid + q.offer) / 2;
-  return y != null && y >= USABLE_Y_MIN && y <= USABLE_Y_MAX ? y : null;
+  if (y == null || y < USABLE_Y_MIN || y > USABLE_Y_MAX) return null;
+  if (MM_TYPES.has(String(q.instrument_type || "").toUpperCase()) && Number.isInteger(y) && y >= 10) return null;
+  return y;
 }
 
 function median(arr) {
@@ -1233,6 +1240,9 @@ function computeUniverse() {
     const pm = others.length ? median(others.map((x) => x.uy)) : null;
     b.peerMedian = pm;
     b.peerBasis = pm != null ? basis : null; // "rating" = same-rating peers, "sector" = category+tenor
+    // The exact bonds behind the median — powers the "which bonds?" drill-down the
+    // client asked for (click a bar / card / row to see the peer set + the median).
+    b.peers = pm != null ? others.map((x) => ({ issuer: x.issuer, maturity: x.maturity, uy: x.uy, rating: x.rating, isin: x.isin })) : null;
     b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
     b.govtSpread = govtCurve ? Math.round((b.uy - govtYieldAt(govtCurve, b.tenor)) * 100) : null;
     b.bench = nearestBenchmark(govtCurve, b.tenor); // which govt security this maps to (CCIL)
@@ -1359,7 +1369,38 @@ function divergingColor(v, min, med, max) {
    Spread Watch — tooltips (rich, built at hover from a JSON payload)
    ========================================================================= */
 
-function renderTip(o) {
+/** The "which bonds?" drill-down: the exact peer set behind a bond's "similar
+ *  median", as a compact table (Bond · Rating · Maturity · Yield) with the bond
+ *  itself marked. o carries peers[], peerMedian, uy, issuer, maturity, rating,
+ *  basis, category, bucket. Shown when a peer bar / opportunity card / peers-table
+ *  row is CLICKED (the tooltip pins open). */
+function peerTableTip(o) {
+  if (!Array.isArray(o.peers) || !o.peers.length || !isNum(o.peerMedian)) return "";
+  const rows = [{ issuer: o.issuer, maturity: o.maturity, uy: o.uy, rating: o.rating, self: true }, ...o.peers]
+    .filter((p) => isNum(p.uy))
+    .sort((a, b) => b.uy - a.uy);
+  const scope = (o.basis === "rating" && o.rating ? `${o.rating} · ` : "") + [o.category, o.bucket].filter(Boolean).join(" · ");
+  const body = rows.map((p) => {
+    const hi = p.self ? `background:${T.tintIndigo}1f;font-weight:700` : "";
+    return `<tr style="${hi}">
+      <td style="padding:2px 8px 2px 0;white-space:nowrap">${esc(trunc(p.issuer || "—", 24))}${p.self ? " ◀" : ""}</td>
+      <td style="padding:2px 8px;color:${T.n400}">${esc(p.rating || "—")}</td>
+      <td style="padding:2px 8px;color:${T.n400};white-space:nowrap">${p.maturity ? esc(fmtDate(p.maturity)) : "—"}</td>
+      <td style="padding:2px 0;text-align:right;font-variant-numeric:tabular-nums">${p.uy.toFixed(2)}%</td>
+    </tr>`;
+  }).join("");
+  return `<div class="tt-label" style="margin-top:8px">The ${o.peers.length} similar bond${o.peers.length === 1 ? "" : "s"} used${scope ? ` · ${esc(scope)}` : ""}</div>
+    <div style="max-height:210px;overflow:auto;margin-top:3px"><table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead><tr style="color:${T.n400};text-align:left"><th style="padding:0 8px 3px 0">Bond</th><th style="padding:0 8px 3px">Rating</th><th style="padding:0 8px 3px">Maturity</th><th style="padding:0 0 3px;text-align:right">Yield</th></tr></thead>
+      <tbody>${body}</tbody></table></div>
+    <div style="margin-top:5px;color:${T.n500}">Middle (median) of the group = <b>${o.peerMedian.toFixed(2)}%</b> · this bond <b>${isNum(o.uy) ? o.uy.toFixed(2) + "%" : "—"}</b></div>`;
+}
+/** Hover shows a hint; a click (pinned) opens the full peer table. */
+const peerDrill = (o, pinned) => (Array.isArray(o.peers) && o.peers.length)
+  ? (pinned ? peerTableTip(o) : `<div style="margin-top:7px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see the ${o.peers.length} similar bonds ↗</div>`)
+  : "";
+
+function renderTip(o, pinned) {
   const L = (t) => `<div class="tt-label">${t}</div>`;
   const row = (k, v) => `<div style="display:flex;justify-content:space-between;gap:18px"><span style="color:${T.n400}">${k}</span><span style="font-variant-numeric:tabular-nums">${v}</span></div>`;
   if (o.kind === "row") {
@@ -1375,7 +1416,7 @@ function renderTip(o) {
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL traded ${o.bench.type === "tbill" ? "T-bill" : "G-Sec"}, nearest ${o.bench.t}y ↗</a></div>` : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${histSpreadLine(o.spread, o.category, null, o.bucket)}`;
-  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}`;
+  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${peerDrill(o, pinned)}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
       <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Easy to trade</b> — a two-way with a small bid–offer gap; easy to deal.</div>
@@ -1386,7 +1427,7 @@ function renderTip(o) {
     const rows = (o.rows || []).map(([k, v]) => row(esc(k), esc(v))).join("");
     const raws = [o.raw, o.buyRaw, o.sellRaw].filter(Boolean);
     const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}${o.date ? ` · ${esc(o.date)}` : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
-    return `${L(esc(o.title || "Opportunity"))}${rows}${rawHtml}`;
+    return `${L(esc(o.title || "Opportunity"))}${rows}${peerDrill(o, pinned)}${rawHtml}`;
   }
   if (o.kind === "pulseinfo") {
     return `${L("How to read Desk Pulse")}<div style="line-height:1.55">A quick read on the desk today:
@@ -1478,7 +1519,7 @@ function peersBarsSVG(shown) {
     const x2 = bx(b.gap), left = Math.min(zeroX, x2), w = Math.max(2, Math.abs(x2 - zeroX));
     const col = b.gap >= 0 ? "url(#peerBuy)" : "url(#peerSell)";
     const valX = b.gap >= 0 ? x2 + 4 : x2 - 4, anchor = b.gap >= 0 ? "start" : "end";
-    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell });
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket });
     return `<g data-tip="${esc(tip)}" style="cursor:pointer">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
       <text x="${labelW - 10}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(b.issuer, 22))}</text>
@@ -1528,7 +1569,8 @@ function peersTableHTML(shown) {
   const body = shown.map((b) => {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
-    return `<tr class="qrow ${sec.acc} border-b border-slate-100">
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket });
+    return `<tr class="qrow ${sec.acc} border-b border-slate-100" data-tip="${esc(tip)}" style="cursor:pointer">
       <td class="px-3 py-2"><div class="flex flex-wrap items-center gap-1.5"><span class="truncate font-semibold text-slate-800" style="max-width:230px">${esc(b.issuer)}</span><span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}</div><div class="text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${b.bucket}</div>${securityLine(b.isin, b.candidates)}</td>
       <td class="px-3 py-2 text-right nums font-semibold text-slate-900">${b.uy.toFixed(2)}</td>
       <td class="px-3 py-2 text-right nums text-slate-500">${b.peerMedian.toFixed(2)}</td>
@@ -1789,6 +1831,7 @@ function computeOpportunities() {
       const yRow = (label) => [label, `${pct(b.uy)}${sw !== "quote" ? ` (${sw})` : ""}`];
       if (b.gap >= 10) {
         const o = baseFromBond(b, "cheap"); o._val = b.gap;
+        o.peers = b.peers; o.peerMedian = b.peerMedian; o.peerBasis = b.peerBasis; o.uy = b.uy;
         o.headline = `+${b.gap} bps`; o.sub = rateMatched ? `vs ${b.rating} peers` : "vs similar";
         // Side matters (client's point): a cheap OFFER is a good buy; a "cheap"
         // (high-yield) BID is an aggressive buyer — a good level to SELL into.
@@ -1799,6 +1842,7 @@ function computeOpportunities() {
         cheap.push(o);
       } else if (b.gap <= -10) {
         const o = baseFromBond(b, "rich"); o._val = -b.gap;
+        o.peers = b.peers; o.peerMedian = b.peerMedian; o.peerBasis = b.peerBasis; o.uy = b.uy;
         o.headline = `${b.gap} bps`; o.sub = rateMatched ? `vs ${b.rating} peers` : "vs similar";
         o.why = sw === "bid" ? `This bid yields ${-b.gap} bps LESS than ${simTxt} — a buyer paying up; don't chase.`
               : sw === "offer" ? `This offer yields ${-b.gap} bps LESS than ${simTxt} — expensive; don't overpay.`
@@ -1931,7 +1975,7 @@ function oppCard(o) {
   const c = OPP_CAT[o.type] || OPP_CAT.cheap;
   const sec = SECTION[o.section] || SECTION.Bonds;
   const fresh = o.fresh ? `<span class="ml-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse" title="fresh quote"></span>` : "";
-  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color });
+  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color, peers: o.peers || null, peerMedian: isNum(o.peerMedian) ? +o.peerMedian.toFixed(2) : null, uy: isNum(o.uy) ? +o.uy.toFixed(2) : null, basis: o.peerBasis, rating: o.rating, category: o.category, bucket: o.bucket, issuer: o.issuer, maturity: o.maturity });
 
   const primary = o.type === "twosided"
     ? `<div class="mt-2 grid grid-cols-2 gap-1.5">
@@ -2769,9 +2813,9 @@ function positionTooltipAtEl(el) {
 function pinTooltip(el) {
   let obj;
   try { obj = JSON.parse(el.dataset.tip); } catch { return false; }
-  els.tooltip.innerHTML = renderTip(obj) + `<div style="margin-top:7px;font-size:10px;color:${T.n400};opacity:.8">Click anywhere to close</div>`;
+  els.tooltip.innerHTML = renderTip(obj, true) + `<div style="margin-top:7px;font-size:10px;color:${T.n400};opacity:.8">Click outside to close</div>`;
   els.tooltip.style.setProperty("--tt-accent", obj.accent || T.grad2);
-  els.tooltip.classList.add("show");
+  els.tooltip.classList.add("show", "pinned");
   tipPinned = true;
   positionTooltipAtEl(el);
   return true;
@@ -2837,9 +2881,9 @@ els.view.addEventListener("mouseout", (e) => {
 });
 // Click anywhere that isn't a tooltip trigger dismisses a pinned tooltip.
 document.addEventListener("click", (e) => {
-  if (tipPinned && !e.target.closest("[data-tip]")) {
+  if (tipPinned && !e.target.closest("[data-tip]") && !els.tooltip.contains(e.target)) {
     tipPinned = false;
-    els.tooltip.classList.remove("show");
+    els.tooltip.classList.remove("show", "pinned");
   }
 });
 
