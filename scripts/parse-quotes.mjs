@@ -209,9 +209,24 @@ Return {"quotes":[ ... ]}, with EVERY listed field present on each row (null whe
    ------------------------------------------------------------------------- */
 
 async function fetchDoc() {
-  const res = await fetch(DOC_URL, { redirect: "follow", signal: AbortSignal.timeout(60000) });
-  if (!res.ok) throw new Error(`doc fetch ${res.status}`);
-  return await res.text();
+  // The desk doc is ~1.5 MB and Google's export can be slow / rate-limited from a
+  // data-centre IP (GitHub Actions), so a single 60s try was intermittently
+  // aborting — which froze the board on the last good day until a manual re-run.
+  // Give each try longer and retry a few times with backoff before giving up.
+  const attempts = 3, timeoutMs = 120000;
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const res = await fetch(DOC_URL, { redirect: "follow", signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) throw new Error(`doc fetch ${res.status}`);
+      return await res.text();
+    } catch (err) {
+      lastErr = err;
+      console.warn(`[frontdesk] doc fetch attempt ${i}/${attempts} failed: ${String(err.message || err).slice(0, 120)}`);
+      if (i < attempts) await new Promise((r) => setTimeout(r, i * 3000));
+    }
+  }
+  throw lastErr;
 }
 
 /* ---------------------------------------------------------------------------
