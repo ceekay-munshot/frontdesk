@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T11:12:50.790Z",
+  "generated_at": "2026-09-23T11:15:16.735Z",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "54c57a204424ea73b0dc6327cab35c2b96443826fe1359bbd84b5589eb7495ef",
   "trading_day": "2026-09-18",
@@ -21,43 +21,43 @@
   "quote_count": 7165,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-22 13:26:20",
+    "as_of": "2026-09-23 13:30:44",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.057
+        "yield": 7.0226
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.2106
+        "yield": 7.1869
       },
       {
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.7416
+        "yield": 6.7041
       },
       {
         "type": "gsec",
         "name": "06.10 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.8252
+        "yield": 6.7978
       },
       {
         "type": "gsec",
-        "name": "06.54 GS 2032",
-        "maturity": "2032-07-01",
-        "yield": 6.8535
+        "name": "06.90 GS 2065",
+        "maturity": "2065-07-01",
+        "yield": 7.64
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
-        "maturity": "2026-09-23",
-        "yield": 5.18
+        "maturity": "2026-09-24",
+        "yield": 5.13
       }
     ]
   },
@@ -217,9 +217,15 @@
       "maturity": "2027-08-21",
       "rating": "AA+",
       "type": "bond",
-      "ratingDate": "2026-08-28",
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingDate": "2026-09-22",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "ratingSources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-22",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1b162ccf-d9af-4a26-8f3a-7a04b7b9fb0b.pdf"
+        },
         {
           "agency": "India Ratings",
           "date": "2026-08-28",
@@ -1830,7 +1836,23 @@
       "coupon": null,
       "maturity": "2026-11-17",
       "rating": "A1+",
-      "type": "cp"
+      "type": "cp",
+      "ratingDate": "2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
+      "ratingSources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-26",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5d75858d-4815-4f71-bc4a-fdc21f6a88ab.pdf"
+        },
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ]
     },
     "INE484J14H53": {
       "name": "GODREJ PROPERTIES LIMITED 91D CP 17DEC26",
@@ -1838,7 +1860,23 @@
       "coupon": null,
       "maturity": "2026-12-17",
       "rating": "A1+",
-      "type": "cp"
+      "type": "cp",
+      "ratingDate": "2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
+      "ratingSources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-26",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5d75858d-4815-4f71-bc4a-fdc21f6a88ab.pdf"
+        },
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ]
     },
     "INE160A16UI3": {
       "name": "PUNJAB NATIONAL BANK CD 10FEB27",
@@ -2705,9 +2743,15 @@
       "maturity": "2027-12-02",
       "rating": "AA+",
       "type": "bond",
-      "ratingDate": "2026-08-28",
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingDate": "2026-09-22",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "ratingSources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-22",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1b162ccf-d9af-4a26-8f3a-7a04b7b9fb0b.pdf"
+        },
         {
           "agency": "India Ratings",
           "date": "2026-08-28",
@@ -2868,7 +2912,23 @@
       "coupon": null,
       "maturity": "2026-11-16",
       "rating": "A1+",
-      "type": "cp"
+      "type": "cp",
+      "ratingDate": "2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
+      "ratingSources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-26",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5d75858d-4815-4f71-bc4a-fdc21f6a88ab.pdf"
+        },
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ]
     },
     "INE484J14H46": {
       "name": "GODREJ PROPERTIES LIMITED 91D CP 16DEC26",
@@ -2876,7 +2936,23 @@
       "coupon": null,
       "maturity": "2026-12-16",
       "rating": "A1+",
-      "type": "cp"
+      "type": "cp",
+      "ratingDate": "2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
+      "ratingSources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-26",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5d75858d-4815-4f71-bc4a-fdc21f6a88ab.pdf"
+        },
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ]
     },
     "INE233AD4124": {
       "name": "GODREJ INDUSTRIES LIMITED 91D CP 16DEC26",
@@ -3730,7 +3806,23 @@
       "coupon": null,
       "maturity": "2026-12-15",
       "rating": "A1+",
-      "type": "cp"
+      "type": "cp",
+      "ratingDate": "2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
+      "ratingSources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-08-26",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5d75858d-4815-4f71-bc4a-fdc21f6a88ab.pdf"
+        },
+        {
+          "agency": "ICRA",
+          "date": "2026-09-02",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
+        }
+      ]
     },
     "INE020B08EX7": {
       "name": "7.64% UNSECURED RATED LISTED REDEEMABLE NON CONVERTIBLE BOND IN NATURE OF DEBENTURE SERIES 231-A DATE OF MATUR",
@@ -6785,7 +6877,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.6,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -6936,7 +7028,7 @@
       ],
       "raw": "8.65  Aadhar Housing Finance Ltd.  NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.6,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -41938,7 +42030,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -42072,7 +42164,7 @@
       ],
       "raw": "8.65  Aadhar Housing Finance Ltd.  20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -47907,7 +47999,7 @@
       "flags": [],
       "raw": "2m - 6.30",
       "confidence": 0.45,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14G05",
       "rating": "A1+"
     },
@@ -47933,7 +48025,7 @@
       "flags": [],
       "raw": "3m - 6.40",
       "confidence": 0.45,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14H53",
       "rating": "A1+"
     },
@@ -75592,7 +75684,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.5% NA Taxable 02-Dec-2027 offer for 10crs 7.95  bid 10crs cbc",
       "confidence": 0.45,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07363",
       "rating": "AA+"
     },
@@ -88280,6 +88372,7 @@
       "flags": [],
       "raw": "The Federal Bank Limited CD (MD 10/12/2026) 200 crs 6.32 bid   mkt 09:54:25",
       "confidence": 0.7,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -88330,6 +88423,7 @@
       "flags": [],
       "raw": "10 dec federal cd 6.32 bid 200crs 09:54:33",
       "confidence": 0.7,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -88358,6 +88452,7 @@
       "raw": "10/12 Federal CD 32 bid 200crs cbc 09:54:56",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -89042,7 +89137,7 @@
       "flags": [],
       "raw": "2m offer @6.25",
       "confidence": 0.4,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14F97",
       "rating": "A1+"
     },
@@ -89068,7 +89163,7 @@
       "flags": [],
       "raw": "3m offer @6.35",
       "confidence": 0.4,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14H46",
       "rating": "A1+"
     },
@@ -90864,6 +90959,7 @@
       "raw": "The Federal Bank Limited CD (MD 10/12/2026) 27/30 50 crs over /100 crs",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -91010,6 +91106,7 @@
       "raw": "10/12 Federal CD 27/30 bid 50/100crs cbc 10:34:13",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -91036,6 +91133,7 @@
       "raw": "10 dec federal cd 27/30 50/100crs 10:34:24",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -95131,6 +95229,7 @@
       "raw": "10/12 Federal 25/29 50/25 - dp cbc 11:48:38",
       "confidence": 0.4,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -103718,7 +103817,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -104232,7 +104331,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -104260,7 +104359,7 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -104885,7 +104984,7 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc 10:04:31",
       "confidence": 0.8,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -106309,7 +106408,7 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc 10:29:48",
       "confidence": 0.75,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -130359,6 +130458,7 @@
       "raw": "10/12 Federal Bank CD 25 offer 50crs cbc",
       "confidence": 0.55,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -131652,6 +131752,7 @@
       "raw": "10/12 Federal Bank CD 40 bid 25 cr 12:19:30",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -132185,6 +132286,7 @@
       "raw": "10/12 Federal Bank CD 25 offer 50crs cbc 12:49:28",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -135746,6 +135848,7 @@
       "raw": "10 Dec Federal Bank CD 50 cr  25/40",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -137210,7 +137313,7 @@
       "flags": [],
       "raw": "3m offer @6.35",
       "confidence": 0.6,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14H38",
       "rating": "A1+"
     },
@@ -149114,7 +149217,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.10  bid cbc 5 crs",
       "confidence": 0.7,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -149492,7 +149595,7 @@
       "flags": [],
       "raw": "8.65%   Aadhar Housing  20-Aug-2027 7.75/8.05   5 crs",
       "confidence": 0.6,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -150487,7 +150590,7 @@
       "flags": [],
       "raw": "8.65%   Aadhar Housing  20-Aug-2027 @ 7.75 offer 12:03:17",
       "confidence": 0.75,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -168294,6 +168397,7 @@
       "flags": [],
       "raw": "10 dec federal cd 6.05 offer 50crs",
       "confidence": 0.65,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -168319,6 +168423,7 @@
       "flags": [],
       "raw": "10 dec federal cd 6.05 offer 50crs",
       "confidence": 0.65,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -169062,6 +169167,7 @@
       "flags": [],
       "raw": "Federal Bank CD 10/12  6.10 OFFER  T+1 50crs 09:41:53",
       "confidence": 0.8,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -170333,6 +170439,7 @@
       "flags": [],
       "raw": "10 dec federal cd 6.15 offer 50crs t1",
       "confidence": 0.5,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -170404,6 +170511,7 @@
       "flags": [],
       "raw": "Federal Bnak cd 10/12 50 crs - 6.15 offer t+1",
       "confidence": 0.55,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -176936,6 +177044,7 @@
       "raw": "10 Dec Federal 20 choice Federal Bank cd 50 crs t+0",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -176962,6 +177071,7 @@
       "raw": "10 Dec Federal 20 choice Federal Bank cd 50 crs t+0",
       "confidence": 0.6,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
@@ -177213,6 +177323,7 @@
       "raw": "10 Dec Fedear 20 choice 50 over 100 crs t+0 12:40:48",
       "confidence": 0.5,
       "handle_fixed": true,
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
       "isin": "INE171A16NS4",
       "rating": "A1+"
     },
