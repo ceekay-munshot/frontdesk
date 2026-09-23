@@ -492,6 +492,7 @@ const els = {
   pill: document.getElementById("livePill"),
   pillText: document.getElementById("livePillText"),
   tooltip: document.getElementById("tooltip"),
+  alertBanner: document.getElementById("alertBanner"),
 };
 
 /* =========================================================================
@@ -2488,6 +2489,38 @@ function crossCard(crosses) {
   });
 }
 
+/* Board-wide match alert. The desk asked to be nudged the moment a buyer and a
+ * seller are both live on the same bond. This banner sits above EVERY tab (not
+ * just Desk Pulse) so a cross can't be missed. It reuses computeCrosses(), so it
+ * already respects the per-day per-cross dismissals from the Desk Pulse card;
+ * the banner's own ✕ hushes it until a genuinely NEW match appears. */
+let ackCrossKeys = new Set();
+function renderAlertBanner() {
+  const el = els.alertBanner;
+  if (!el) return;
+  if (state.loading || state.error || !state.data) { el.innerHTML = ""; return; }
+  const crosses = computeCrosses();
+  const fresh = crosses.filter((c) => !ackCrossKeys.has(c.key)); // stay hushed until a new one shows
+  if (!crosses.length || !fresh.length) { el.innerHTML = ""; return; }
+  const n = crosses.length;
+  // Lead with the FRESHEST named matches (the actionable nudge), not the big
+  // count — a busy two-way desk has many, and a blaring number reads as noise.
+  const names = crosses.slice(0, 3).map((c) => `${esc(trunc(titleCaseIssuer(c.issuer), 16))}${c.maturity ? " " + esc(fmtMonYr(c.maturity)) : ""}`);
+  const more = n > names.length ? ` <span class="font-normal text-slate-400">+${n - names.length} more</span>` : "";
+  el.innerHTML = `<div class="mb-3 flex items-center gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50/90 px-3.5 py-2.5 shadow-sm shadow-amber-200/40">
+    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl shadow-sm pulse" style="background:${T.act}"><span style="color:#ffffff;font-size:18px;font-weight:800;line-height:1">⇄</span></span>
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-baseline gap-x-2">
+        <span class="font-display text-sm font-extrabold text-slate-800">Possible cross${n === 1 ? "" : "es"} — connect a buyer &amp; seller</span>
+        <span class="text-[12px] text-slate-500">both sides live on the same bond</span>
+      </div>
+      <div class="mt-0.5 truncate text-[12px] font-semibold text-slate-600">${names.join(" &nbsp;·&nbsp; ")}${more}</div>
+    </div>
+    <button data-cross-goto class="shrink-0 rounded-lg grad-bar px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25">View all ${n} →</button>
+    <button data-cross-hush class="shrink-0 rounded-md px-1.5 py-1 text-slate-400 ring-1 ring-slate-200 transition hover:bg-white hover:text-slate-600" title="Hide until a new match appears" aria-label="Hide match alert">✕</button>
+  </div>`;
+}
+
 function computePulse() {
   const rawQuotes = dayQuotes(state.data?.quotes || []); // every tab reads the selected day
   const quotes = rawQuotes.filter(isLkpQuote);           // Desk Pulse = LKP's own desk
@@ -2954,6 +2987,8 @@ function render() {
   renderTabs();
   renderPill();
   renderView();
+  renderAlertBanner();
+  afterRender(); // (re)create icons for the tabs + the alert banner
 }
 
 /* =========================================================================
@@ -3023,6 +3058,16 @@ els.tabs.addEventListener("click", (e) => {
   if (!btn) return;
   state.tab = btn.dataset.tab;
   render();
+});
+
+// Board-wide match-alert banner: jump to the matches, or hush until a new one.
+els.alertBanner.addEventListener("click", (e) => {
+  if (e.target.closest("button[data-cross-goto]")) { state.tab = "pulse"; render(); return; }
+  if (e.target.closest("button[data-cross-hush]")) {
+    computeCrosses().forEach((c) => ackCrossKeys.add(c.key));
+    renderAlertBanner();
+    afterRender();
+  }
 });
 
 // Delegated clicks inside the view (controls, sort, state buttons).
