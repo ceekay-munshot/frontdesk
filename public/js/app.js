@@ -180,7 +180,7 @@ function tradedNormal(isin) {
 /** The "Normal" line PREFERRING CBRICS real trades: "Usually trades ~X% · NSE (n
  *  trades)" plus today-vs-usual. Returns "" when CBRICS is too thin, so the caller
  *  falls back to the spread-history line (histSpreadLine). */
-function tradedNormalLine(isin, curYield) {
+function tradedNormalLine(isin, curYield, pinned) {
   const nrm = tradedNormal(isin);
   if (!nrm) return "";
   const rowHtml = (k, v) => `<div style="display:flex;justify-content:space-between;gap:18px"><span style="color:${T.n400}">${k}</span><span style="font-variant-numeric:tabular-nums">${v}</span></div>`;
@@ -191,7 +191,22 @@ function tradedNormalLine(isin, curYield) {
     const col = diff >= 15 ? T.buyInk : diff <= -15 ? T.sellInk : T.n500;
     read = `<div style="color:${col};font-weight:600;font-size:11px;margin-top:2px">${diff >= 0 ? "+" : ""}${diff} bps ${dirn}</div>`;
   }
-  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · NSE (${nrm.n} trades)`)}${read}</div>`;
+  // Drill-down: the actual NSE trades behind "usually trades" (the client asked to
+  // SEE them). A click pins the tooltip and shows date + traded yield; hover shows
+  // a hint. Newest first, capped for display.
+  const hist = (tradedRef(isin)?.history || []).filter((h) => isNum(h.y));
+  let drill = "";
+  if (hist.length) {
+    if (pinned) {
+      const rows = hist.slice().reverse().slice(0, 30).map((h) =>
+        `<tr><td style="padding:2px 12px 2px 0;color:${T.n400};white-space:nowrap">${esc(fmtDate(h.d))}</td><td style="padding:2px 0;text-align:right;font-variant-numeric:tabular-nums">${h.y.toFixed(2)}%</td></tr>`).join("");
+      drill = `<div class="tt-label" style="margin-top:8px">The ${nrm.n} real trades · NSE${hist.length > 30 ? " (latest 30)" : ""}</div>
+        <div style="max-height:190px;overflow:auto;margin-top:3px"><table style="border-collapse:collapse;font-size:11px"><thead><tr style="color:${T.n400};text-align:left"><th style="padding:0 12px 3px 0">Date</th><th style="padding:0 0 3px;text-align:right">Traded yield</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    } else {
+      drill = `<div style="margin-top:6px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see the ${nrm.n} trades ↗</div>`;
+    }
+  }
+  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · NSE (${nrm.n} trades)`)}${read}${drill}</div>`;
 }
 /** Median of PRIOR days' bucket medians (excludes today), preferring the
  *  same-rating series and falling back to the rating-agnostic one. */
@@ -1488,7 +1503,7 @@ function renderTip(o, pinned) {
   if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? (o.bench.approx
   ? `<div style="color:${T.tintAmber};font-size:11px;margin:1px 0 5px;line-height:1.35">⚠ No govt bond traded near ${esc(o.bucket)} — govt yield <b>interpolated</b> on the <a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL curve ↗</a> (nearest: ${esc(o.bench.name)}, ${o.bench.t}y). For short bonds the <b>vs Similar bonds</b> view is the truer read.</div>`
   : `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL ${o.bench.type === "overnight" ? "overnight money-market rate" : "traded " + (o.bench.type === "tbill" ? "T-bill" : "G-Sec") + ", nearest " + o.bench.t + "y"} ↗</a></div>`
-) : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${tradedNormalLine(o.isin, o.corpY) || histSpreadLine(o.spread, o.category, null, o.bucket)}`;
+) : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${tradedNormalLine(o.isin, o.corpY, pinned) || histSpreadLine(o.spread, o.category, null, o.bucket)}`;
   if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
