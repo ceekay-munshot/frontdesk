@@ -40,7 +40,7 @@ import { dirname, join } from "node:path";
 import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
 import { fetchGovtBenchmark } from "./ccil.mjs";
 import { fetchNsdlSources, fetchNsdlDirectory, buildNsdlIndex, resolveSecurity } from "./nsdl.mjs";
-import { combineRatings } from "./ratings.mjs";
+import { combineRatings, instrumentScale } from "./ratings.mjs";
 import { fixMoneyMarketYields } from "./mm-handle.mjs";
 
 /* ---------------------------------------------------------------------------
@@ -616,7 +616,7 @@ export async function enrichWithNsdl(quotes) {
   if (Object.keys(ovBy).length) {
     for (const [isin, sec] of Object.entries(securities)) {
       const o = ovBy[isin]; if (!o) continue;
-      const c = combineRatings(o.agencies || o.ratings || o.rating, o.date);
+      const c = combineRatings(o.agencies || o.ratings || o.rating, o.date, instrumentScale(isin, sec.type));
       if (c) {
         sec.rating = c.rating; sec.ratingDate = c.date; sec.ratingNote = c.note;
         if (Array.isArray(o.sources) && o.sources.length) sec.ratingSources = o.sources.slice(0, 4);

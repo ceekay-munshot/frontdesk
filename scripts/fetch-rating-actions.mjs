@@ -45,7 +45,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { normalizeRating, combineRatings } from "./ratings.mjs";
+import { normalizeRating, combineRatings, instrumentScale, ratingScale } from "./ratings.mjs";
 import { llmStructured } from "./llm.mjs";
 
 const QUOTES_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta.url));
@@ -260,12 +260,15 @@ async function main() {
     const str = normalizeRating(ext.issuer_short_term);
 
     for (const { isin, type } of a.info.isins) {
+      // Respect the instrument's rating scale — a CP/CD is money-market (A1+…), a
+      // bond is long-term (AAA…). Store ONLY a same-scale rating; never fall back
+      // across scales (that is what stamped A1+ on bonds / AA+ on CDs before).
+      const scale = instrumentScale(isin, type);
       let sym = "";
       const inst = perIsin.get(isin.toUpperCase());
-      if (inst) sym = normalizeRating(inst.rating);
-      else if (isMoneyMarket(type)) sym = str || ltr;
-      else sym = ltr || str;
-      if (!sym) continue;
+      if (inst) { const s = normalizeRating(inst.rating); if (s && ratingScale(s) === scale) sym = s; }
+      if (!sym) sym = scale === "MM" ? str : ltr;
+      if (!sym || ratingScale(sym) !== scale) continue;
 
       const e = byIsin[isin] || { agencies: {}, agencyDates: {}, sources: [] };
       e.agencies = e.agencies || {}; e.agencyDates = e.agencyDates || {}; e.sources = e.sources || [];

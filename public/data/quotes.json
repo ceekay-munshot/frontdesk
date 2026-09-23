@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T13:29:25+05:30",
+  "generated_at": "2026-09-23T11:12:50.790Z",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "54c57a204424ea73b0dc6327cab35c2b96443826fe1359bbd84b5589eb7495ef",
   "trading_day": "2026-09-18",
@@ -63,22 +63,22 @@
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-09-18",
+    "as_of": "2026-09-23",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_15.09.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_15-09-2026.xls",
-      "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-11.09.2026.xlsx"
+      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_22.09.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_22-09-2026.xls",
+      "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-18.09.2026.xlsx"
     },
     "counts": {
-      "bond": 27451,
-      "cp": 1978,
-      "cd": 418
+      "bond": 27561,
+      "cp": 2035,
+      "cd": 409
     },
-    "securities_count": 477,
+    "securities_count": 468,
     "matched": {
-      "confirmed": 2704,
+      "confirmed": 2689,
       "shortlisted": 62,
-      "rated": 2693
+      "rated": 2659
     }
   },
   "securities": {
@@ -817,10 +817,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2026-12-18",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -961,18 +961,8 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2027-03-15",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE040A16IQ5": {
       "name": "HDFC BANK LIMITED CD 02MAR27",
@@ -987,10 +977,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-01-28",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -1019,18 +1009,8 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2027-02-23",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE160A16UE2": {
       "name": "PUNJAB NATIONAL BANK CD 05FEB27",
@@ -1055,14 +1035,6 @@
       "maturity": "2026-11-19",
       "rating": null,
       "type": "cd"
-    },
-    "INE790I14HO0": {
-      "name": "HSBC INVESTDIRECT FINANCIAL SERVICES (I)LTD 180D CP 21SEP26",
-      "issuer": "HSBC INVESTDIRECT FINANCIAL SERVICES (INDIA) LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "A1+",
-      "type": "cp"
     },
     "INE028A16KY0": {
       "name": "BANK OF BARODA CD 08JAN27",
@@ -1125,10 +1097,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-01-29",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -1852,49 +1824,21 @@
       "rating": "A1+",
       "type": "cp"
     },
-    "INE357L14412": {
-      "name": "NOMURA CAPITAL (INDIA) PVT. LTD. 24D CP 18SEP26",
-      "issuer": "NOMURA CAPITAL (INDIA) PRIVATE LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-18",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE484J14G05": {
       "name": "GODREJ PROPERTIES LIMITED 91D CP 17NOV26",
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-11-17",
-      "rating": "AA+",
-      "type": "cp",
-      "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
-      "ratingSources": [
-        {
-          "agency": "ICRA",
-          "date": "2026-09-02",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cp"
     },
     "INE484J14H53": {
       "name": "GODREJ PROPERTIES LIMITED 91D CP 17DEC26",
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-12-17",
-      "rating": "AA+",
-      "type": "cp",
-      "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
-      "ratingSources": [
-        {
-          "agency": "ICRA",
-          "date": "2026-09-02",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cp"
     },
     "INE160A16UI3": {
       "name": "PUNJAB NATIONAL BANK CD 10FEB27",
@@ -1973,18 +1917,8 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2026-12-10",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE238AD6BP3": {
       "name": "AXIS BANK LIMITED CD 27NOV26",
@@ -2031,18 +1965,8 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2026-09-24",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE110O14JQ0": {
       "name": "AXIS SECURITIES LIMITED 91D CP 02DEC26",
@@ -2076,14 +2000,6 @@
       "rating": "A1+",
       "type": "cp"
     },
-    "INE01C314GH7": {
-      "name": "BAJAJ FINANCIAL SECURITIES LIMITED 81D CP 22SEP26",
-      "issuer": "BAJAJ FINANCIAL SECURITIES LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-22",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE028E14XG7": {
       "name": "KOTAK SECURITIES LTD 91D CP 24SEP26",
       "issuer": "KOTAK SECURITIES LTD",
@@ -2113,10 +2029,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-01-22",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2145,10 +2061,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-06-28",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2201,10 +2117,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-02-02",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2249,10 +2165,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-03-04",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2273,10 +2189,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-01-08",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2305,10 +2221,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-03-11",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2380,32 +2296,6 @@
       "rating": null,
       "type": "cd"
     },
-    "INE763G14M28": {
-      "name": "ICICI SECURITIES LIMITED 154D CP 24DEC26",
-      "issuer": "ICICI SECURITIES LIMITED (EARLIER ICICI BROKERAGE SERVICES LIMITED)",
-      "coupon": null,
-      "maturity": "2026-12-24",
-      "rating": "A1+",
-      "type": "cp"
-    },
-    "INE692A16MM4": {
-      "name": "UNION BANK OF INDIA CD 21SEP26",
-      "issuer": "UNION BANK OF INDIA",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
-    },
     "INE261F14PX2": {
       "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT 90D CP 01OCT26",
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
@@ -2419,7 +2309,7 @@
       "issuer": "BANK OF BARODA",
       "coupon": null,
       "maturity": "2027-03-11",
-      "rating": null,
+      "rating": "A1+",
       "type": "cd"
     },
     "INE028A16KW4": {
@@ -2897,28 +2787,18 @@
       "issuer": "SBFC FINANCE LIMITED",
       "coupon": null,
       "maturity": "2026-09-24",
-      "rating": "AA-",
-      "type": "cp",
-      "ratingDate": "2026-09-07",
-      "ratingNote": "ICRA AA- · 2026-09-07",
-      "ratingSources": [
-        {
-          "agency": "ICRA",
-          "date": "2026-09-07",
-          "action": "Revalidated",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/03c30401-64a7-4b1a-852b-ac2177a35996.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cp"
     },
     "INE476A16E38": {
       "name": "CANARA BANK CD 11NOV26",
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2026-11-11",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2939,10 +2819,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-02-26",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -2966,14 +2846,6 @@
       "rating": "A1+",
       "type": "cd"
     },
-    "INE929O14FF4": {
-      "name": "RELIANCE RETAIL VENTURES LIMITED 91D CP 21SEP26",
-      "issuer": "RELIANCE RETAIL VENTURES LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE261F16AQ3": {
       "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT CD 18MAR27",
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
@@ -2995,36 +2867,16 @@
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-11-16",
-      "rating": "AA+",
-      "type": "cp",
-      "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
-      "ratingSources": [
-        {
-          "agency": "ICRA",
-          "date": "2026-09-02",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cp"
     },
     "INE484J14H46": {
       "name": "GODREJ PROPERTIES LIMITED 91D CP 16DEC26",
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-12-16",
-      "rating": "AA+",
-      "type": "cp",
-      "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
-      "ratingSources": [
-        {
-          "agency": "ICRA",
-          "date": "2026-09-02",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cp"
     },
     "INE233AD4124": {
       "name": "GODREJ INDUSTRIES LIMITED 91D CP 16DEC26",
@@ -3095,18 +2947,8 @@
       "issuer": "BANK OF INDIA",
       "coupon": null,
       "maturity": "2026-12-03",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-08-28",
-      "ratingNote": "Acuite AAA · 2026-08-28",
-      "ratingSources": [
-        {
-          "agency": "Acuite",
-          "date": "2026-08-28",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/11ee0321-ea2f-4e51-b052-9368933a43af.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE102D14CL6": {
       "name": "GODREJ CONSUMER PRODUCTS LIMITED 61D CP 16NOV26",
@@ -3115,14 +2957,6 @@
       "maturity": "2026-11-16",
       "rating": "A1+",
       "type": "cp"
-    },
-    "INE040A16HR5": {
-      "name": "HDFC BANK LIMITED CD 21SEP26",
-      "issuer": "HDFC BANK LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": null,
-      "type": "cd"
     },
     "INE733E14CI2": {
       "name": "NTPC LIMITED 40D CP 19OCT26",
@@ -3241,18 +3075,8 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2027-02-18",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE028A16LD2": {
       "name": "BANK OF BARODA CD 25JAN27",
@@ -3291,18 +3115,8 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2027-01-19",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE0CCU07165": {
       "name": "7% SECURED RATED LISTED REDEEMABLE NON CONVERTIBLE DEBENTURE SERIES NCD14 DATE OF MATURITY 14/09/2027",
@@ -3715,28 +3529,18 @@
       "issuer": "UNION BANK OF INDIA",
       "coupon": null,
       "maturity": "2026-10-01",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cd"
     },
     "INE476A16K48": {
       "name": "CANARA BANK CD 05OCT26",
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2026-10-05",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -3784,23 +3588,15 @@
       "rating": "A1+",
       "type": "cp"
     },
-    "INE261F16AB5": {
-      "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT CD 18SEP26",
-      "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
-      "coupon": null,
-      "maturity": "2026-09-18",
-      "rating": null,
-      "type": "cd"
-    },
     "INE476A16K97": {
       "name": "CANARA BANK CD 23NOV26",
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2026-11-23",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -3821,10 +3617,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-01-12",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -3893,10 +3689,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-02-12",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -3933,18 +3729,8 @@
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-12-15",
-      "rating": "AA+",
-      "type": "cp",
-      "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
-      "ratingSources": [
-        {
-          "agency": "ICRA",
-          "date": "2026-09-02",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/8a889f58-0592-49f1-89d6-dd459b30e5b5.pdf"
-        }
-      ]
+      "rating": "A1+",
+      "type": "cp"
     },
     "INE020B08EX7": {
       "name": "7.64% UNSECURED RATED LISTED REDEEMABLE NON CONVERTIBLE BOND IN NATURE OF DEBENTURE SERIES 231-A DATE OF MATUR",
@@ -4252,23 +4038,15 @@
       "rating": "A1+",
       "type": "cp"
     },
-    "INE422H14487": {
-      "name": "DSP FINANCE PRIVATE LIMITED 91D CP 21SEP26",
-      "issuer": "DSP FINANCE PRIVATE LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE063P16BE6": {
       "name": "EQUITAS SMALL FINANCE BANK LIMITED CD 26NOV26",
       "issuer": "EQUITAS SMALL FINANCE BANK LIMITED",
       "coupon": null,
       "maturity": "2026-11-26",
-      "rating": "AA-",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of India Ratings A1+, CARE AA- (conservative) · 2026-09-08",
+      "ratingNote": "India Ratings A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "CARE",
@@ -4327,10 +4105,10 @@
       "issuer": "CANARA BANK",
       "coupon": null,
       "maturity": "2027-03-25",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cd",
       "ratingDate": "2026-09-08",
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "ratingSources": [
         {
           "agency": "India Ratings",
@@ -17960,9 +17738,9 @@
       ],
       "raw": "18/12 CANARA CD 6.05 offer cbc 09:24:10",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q545",
@@ -19350,10 +19128,10 @@
       "flags": [],
       "raw": "18/12 CANARA CD  12 offer  25 crs t1 09:53:45",
       "confidence": 0.5,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q601",
@@ -20215,7 +19993,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16LP9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q635",
@@ -20365,7 +20143,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16LP9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q641",
@@ -20509,10 +20287,10 @@
       "flags": [],
       "raw": "28/01 CANARA CD 65 offer 25crs",
       "confidence": 0.75,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q647",
@@ -20863,7 +20641,7 @@
       "confidence": 0.75,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16NC3",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q661",
@@ -21043,7 +20821,7 @@
       "confidence": 0.8,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16NC3",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q668",
@@ -21194,9 +20972,7 @@
       "quote_date": "2026-09-18",
       "flags": [],
       "raw": "HSBC INVESTDIRECT CP (21SEP2026) 50+25 package 5.05 offer 10:51:32",
-      "confidence": 0.6,
-      "isin": "INE790I14HO0",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q674",
@@ -22172,9 +21948,9 @@
       ],
       "raw": "Canara Bank CD MAT 290127, offering at 6.67%, bid pls, Rs.100 crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16G36",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q714",
@@ -22381,10 +22157,10 @@
       "flags": [],
       "raw": "28/01 canara bank CD @ 69 offer 100crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q722",
@@ -22787,10 +22563,10 @@
       "flags": [],
       "raw": "28/01 canara bank CD @ 70 offer 100crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q739",
@@ -22864,10 +22640,10 @@
       "flags": [],
       "raw": "28/01 canara bank CD 75 bid",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q742",
@@ -22891,10 +22667,10 @@
       "flags": [],
       "raw": "28/1 Canara cd 70/75",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q743",
@@ -48036,9 +47812,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "Nomura Capital India Pvt Ltd CP (MD 18/09/2026) offer 100 crs @ 5.10 09:14:26",
-      "confidence": 0.65,
-      "isin": "INE357L14412",
-      "rating": "A1+"
+      "confidence": 0.65
     },
     {
       "id": "q1759",
@@ -48063,9 +47837,7 @@
         "switch"
       ],
       "raw": "Punjab National Bank CD (MD 18/09/2026) offer 400 crs  - Looking to switch 09:15:29",
-      "confidence": 0.5,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.5
     },
     {
       "id": "q1760",
@@ -48137,7 +47909,7 @@
       "confidence": 0.45,
       "ratingNote": "ICRA AA+ · 2026-09-02",
       "isin": "INE484J14G05",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q1763",
@@ -48163,7 +47935,7 @@
       "confidence": 0.45,
       "ratingNote": "ICRA AA+ · 2026-09-02",
       "isin": "INE484J14H53",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q1764",
@@ -50221,7 +49993,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16KQ9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q1847",
@@ -50271,7 +50043,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16KQ9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q1849",
@@ -50297,7 +50069,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16KQ9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q1850",
@@ -51839,7 +51611,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16MP7",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q1912",
@@ -52852,9 +52624,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "Bajaj Financial Securities Ltd CP 22092026 5.5 offer 200 cr",
-      "confidence": 0.6,
-      "isin": "INE01C314GH7",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q1954",
@@ -53056,9 +52826,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "Bajaj Financial Securities Ltd CP 22092026 5.60offer 200 cr",
-      "confidence": 0.6,
-      "isin": "INE01C314GH7",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q1962",
@@ -53963,10 +53731,10 @@
       "flags": [],
       "raw": "Canara Bank 22JAN27 CD  68/70 11:31:13",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G10",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q1999",
@@ -54021,9 +53789,9 @@
       ],
       "raw": "canara Bank CD 28/6 can sell @ 7.20.. 25crs, cbc 11:32:51",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16K14",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2001",
@@ -55138,10 +54906,10 @@
       "flags": [],
       "raw": "canara 28 jan 75 Bid 12:22:37",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2046",
@@ -55600,10 +55368,10 @@
       "flags": [],
       "raw": "cnara 2 feb 77 bid T0 12:48:34",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G44",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2065",
@@ -55720,10 +55488,10 @@
       "flags": [],
       "raw": "cnara 2 feb 75 bid t+1 //t+0 passing 74 offer 12:50:50",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G44",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2070",
@@ -55916,10 +55684,10 @@
       "flags": [],
       "raw": "Canara 2 feb 75 bid T0/T1 12:59:59",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G44",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2078",
@@ -57114,9 +56882,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "1D Godrej Fin cp, 4.90 offer 250cr",
-      "confidence": 0.5,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.5
     },
     {
       "id": "q2128",
@@ -57220,10 +56986,10 @@
       ],
       "raw": "4/03 CANARA CD 70/80 cbc",
       "confidence": 0.5,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2132",
@@ -57366,10 +57132,10 @@
       ],
       "raw": "4/03 CANARA CD 72/80 cbc",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2138",
@@ -57443,10 +57209,10 @@
       "flags": [],
       "raw": "8/1  canara  cd 68 bid t+0 100crs",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16F94",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2141",
@@ -57777,10 +57543,10 @@
       "flags": [],
       "raw": "11 03 canara cd  70/80  100 crs",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H84",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2154",
@@ -58815,10 +58581,10 @@
       "flags": [],
       "raw": "18 Dec Canara , 15 offer , 25cr , t+0 / t+1",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q2198",
@@ -59246,9 +59012,7 @@
         "bid_pls"
       ],
       "raw": "CD - UNION BANK OF INDIA - 21/09/2026 bid pls 15:31:46",
-      "confidence": 0.7,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.7
     },
     {
       "id": "q2215",
@@ -59273,8 +59037,8 @@
       "raw": "ICICI Securities Limited CP (MD 24/12/2026) 10 offer",
       "confidence": 0.6,
       "handle_fixed": true,
-      "isin": "INE763G14M28",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q2216",
@@ -59371,9 +59135,7 @@
       "raw": "Union CD 21 sep 50 crs t+1 10 bid cbc 15:40:50",
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
-      "handle_fixed": true,
-      "isin": "INE692A16MM4",
-      "rating": "AAA"
+      "handle_fixed": true
     },
     {
       "id": "q2220",
@@ -59473,7 +59235,8 @@
       "raw": "11/03 BOB CD 70/80 15:59:58",
       "confidence": 0.55,
       "handle_fixed": true,
-      "isin": "INE028A16LW2"
+      "isin": "INE028A16LW2",
+      "rating": "A1+"
     },
     {
       "id": "q2224",
@@ -59579,7 +59342,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16KQ9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q2228",
@@ -87731,7 +87494,7 @@
       "confidence": 0.6,
       "ratingNote": "ICRA AA- · 2026-09-07",
       "isin": "INE423Y14019",
-      "rating": "AA-"
+      "rating": "A1+"
     },
     {
       "id": "q3383",
@@ -87827,9 +87590,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Punjab National Bank 18SEP26 CD  offer @ 4.95% 09:32:40",
-      "confidence": 0.85,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.85
     },
     {
       "id": "q3387",
@@ -87952,9 +87713,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Union Bank of India 21SEP26 CD  offer @ 5% 09:35:52",
-      "confidence": 0.7,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.7
     },
     {
       "id": "q3392",
@@ -88468,9 +88227,9 @@
       "flags": [],
       "raw": "me to sell 11/11 Canara cd 09:52:30",
       "confidence": 0.5,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16E38",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3413",
@@ -88494,10 +88253,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 26/02/2027) 6.75% offer 50 crs",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3414",
@@ -88962,10 +88721,10 @@
       "flags": [],
       "raw": "26 feb canara cd 75/83 t1/t0 50crs 09:57:11",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3433",
@@ -88989,10 +88748,10 @@
       "flags": [],
       "raw": "26/02 CANARA CD  75/83  t+1/t+0 50cr 09:57:14",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3434",
@@ -89015,9 +88774,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Reliance Retail Ventures Ltd. 21SEP26 CP  offer @ 5.10% 09:57:40",
-      "confidence": 0.7,
-      "isin": "INE929O14FF4",
-      "rating": "A1+"
+      "confidence": 0.7
     },
     {
       "id": "q3435",
@@ -89287,7 +89044,7 @@
       "confidence": 0.4,
       "ratingNote": "ICRA AA+ · 2026-09-02",
       "isin": "INE484J14F97",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3446",
@@ -89313,7 +89070,7 @@
       "confidence": 0.4,
       "ratingNote": "ICRA AA+ · 2026-09-02",
       "isin": "INE484J14H46",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3447",
@@ -89634,9 +89391,9 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 26/02/2027) 6.75% offer  50 crs",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3460",
@@ -91732,7 +91489,7 @@
       "ratingNote": "Acuite AAA · 2026-08-28",
       "handle_fixed": true,
       "isin": "INE084A16GH6",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q3545",
@@ -92089,8 +91846,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "HDFC Bank Ltd. 21SEP26 CD  offer @ 5% 10:54:04",
-      "confidence": 0.7,
-      "isin": "INE040A16HR5"
+      "confidence": 0.7
     },
     {
       "id": "q3560",
@@ -92525,9 +92281,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Punjab National Bank 18SEP26 CD  offer @ 5%",
-      "confidence": 0.6,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.6
     },
     {
       "id": "q3578",
@@ -92550,8 +92304,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "HDFC Bank Ltd. 21SEP26 CD  offer @ 5% 11:02:23",
-      "confidence": 0.7,
-      "isin": "INE040A16HR5"
+      "confidence": 0.7
     },
     {
       "id": "q3579",
@@ -92988,9 +92741,9 @@
       ],
       "raw": "11-March Canara CD 100crs can sell at 6.76 have 6.79 bid",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H84",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3596",
@@ -94900,10 +94653,10 @@
       ],
       "raw": "11-March Canara CD 50crs can sell at 6.73 have 77 bid 11:41:09",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H84",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3673",
@@ -95082,10 +94835,10 @@
       ],
       "raw": "11-March Canara CD 50crs can sell at 6.73 have 76 bid 11:43:17",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H84",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3680",
@@ -95214,10 +94967,10 @@
       ],
       "raw": "11-March Canara CD 50crs can sell at 6.74 have 76 bid 11:45:18",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H84",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3685",
@@ -95243,10 +94996,10 @@
       ],
       "raw": "11-March Canara CD 50crs can sell at 6.74 have 76 bid 11:45:19",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H84",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3686",
@@ -99224,7 +98977,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16LQ7",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q3843",
@@ -100447,7 +100200,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16LQ7",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q3892",
@@ -101748,7 +101501,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16KU1",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q3945",
@@ -101772,9 +101525,9 @@
       "flags": [],
       "raw": "04-March Canara CD 75crs cna sell at 6.70",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3946",
@@ -123974,9 +123727,9 @@
       ],
       "raw": "26-Feb Canara CD 75crs can sell at 6.50 09:20:44",
       "confidence": 0.8,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4851",
@@ -124026,9 +123779,9 @@
       ],
       "raw": "26-Feb Canara CD 75crs can sell at 6.55 09:22:19",
       "confidence": 0.8,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4853",
@@ -124176,7 +123929,7 @@
       "confidence": 0.8,
       "ratingNote": "ICRA AA- · 2026-09-07",
       "isin": "INE423Y14019",
-      "rating": "AA-"
+      "rating": "A1+"
     },
     {
       "id": "q4859",
@@ -124252,9 +124005,9 @@
       ],
       "raw": "26-Feb Canara CD 75crs can sell at 6.60 have 00 bid 09:26:36",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4862",
@@ -124280,9 +124033,9 @@
       ],
       "raw": "26-Feb Canara CD 75crs can sell at 6.60 have 00 bid 09:26:41",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4863",
@@ -124527,10 +124280,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 28/01/2027) 75bid t+0 09:33:01",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4873",
@@ -124606,10 +124359,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 28/01/2027) 75bid t+0 09:33:29",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4876",
@@ -124633,10 +124386,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 28/01/2027) 75bid t+0 09:33:33",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4877",
@@ -124710,10 +124463,10 @@
       ],
       "raw": "26-Feb Canara CD 75crs can sell at 6.60 have 80 bid 09:34:34",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4880",
@@ -124857,10 +124610,10 @@
       "flags": [],
       "raw": "Canara 28-Jan - offering @62/75 100/25crs 09:36:03",
       "confidence": 0.5,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4886",
@@ -124884,10 +124637,10 @@
       "flags": [],
       "raw": "Canara 26-Feb - 100cr..offering @62..have 78 bid 09:38:57",
       "confidence": 0.5,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4887",
@@ -124934,10 +124687,10 @@
       "flags": [],
       "raw": "Canara CD 28/1 - 75bid - t0,  25 cr",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4889",
@@ -124985,10 +124738,10 @@
       "flags": [],
       "raw": "26 feb canara cd 62/80 100/25crs 09:39:38",
       "confidence": 0.55,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4891",
@@ -125865,10 +125618,10 @@
       "flags": [],
       "raw": "26/2 Canara CD 80 bid t+0 09:57:51",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4926",
@@ -126043,10 +125796,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 26/02/2027) 62/80 09:59:46",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4933",
@@ -126149,10 +125902,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 02/02/2027) 65/75 t+1 // t+0 10:00:52",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G44",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4937",
@@ -126281,10 +126034,10 @@
       ],
       "raw": "26-Feb Canara CD 75crs can sell at 6.62 have 75 bid 10:05:55",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4942",
@@ -127169,10 +126922,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 26/02/2027) 65 offer 75 crs 10:25:04",
       "confidence": 0.55,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4978",
@@ -127276,10 +127029,10 @@
       "flags": [],
       "raw": "Canara 26-Feb - 100cr..offering @65..have 75 bid 10:30:11",
       "confidence": 0.55,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4982",
@@ -127303,10 +127056,10 @@
       "flags": [],
       "raw": "Canara 26-Feb - 100cr..offering @65..have 75 bid 10:30:38",
       "confidence": 0.55,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q4983",
@@ -127704,7 +127457,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16MR3",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q4999",
@@ -128131,10 +127884,10 @@
       "flags": [],
       "raw": "Canara 5 oct 25 offer 50 crs 10:49:54",
       "confidence": 0.4,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16K48",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5016",
@@ -129380,8 +129133,7 @@
         "bid_pls"
       ],
       "raw": "18 Seo Nabard CD 100 crs can sell at 5.15...bid pls 11:11:52",
-      "confidence": 0.5,
-      "isin": "INE261F16AB5"
+      "confidence": 0.5
     },
     {
       "id": "q5066",
@@ -129573,9 +129325,9 @@
       ],
       "raw": "28-Jan Canara CD 100crs can sell at 6.65 11:14:34",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5074",
@@ -129622,10 +129374,10 @@
       "flags": [],
       "raw": "28/1  Canara CD 75 bid t+0 11:15:39",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5076",
@@ -129800,10 +129552,10 @@
       "flags": [],
       "raw": "CANARA BANK CD 23/11/2026 15 bid t+0",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16K97",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5083",
@@ -130856,10 +130608,10 @@
       ],
       "raw": "Canara CD 12 Jan 75 bid 25 crs cbc 11:54:07",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G02",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5125",
@@ -130909,8 +130661,7 @@
         "can_sell"
       ],
       "raw": "18 Sep Nabard CD 100 crs can sell at 5.20",
-      "confidence": 0.65,
-      "isin": "INE261F16AB5"
+      "confidence": 0.65
     },
     {
       "id": "q5127",
@@ -131060,9 +130811,9 @@
       "flags": [],
       "raw": "18 dec Canara , 15 offer , 25cr 12:02:14",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5133",
@@ -131086,9 +130837,9 @@
       "flags": [],
       "raw": "18 dec Canara , 15 offer , 25cr 12:02:58",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5134",
@@ -131424,9 +131175,9 @@
       "flags": [],
       "raw": "Canara 26-Feb - 100cr..offering @67..have 75 bid 12:13:01",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5147",
@@ -131528,9 +131279,9 @@
       "flags": [],
       "raw": "Canara 28-Jan - 100cr..offering @67..have 75 bid..not offering 26-feb 12:13:41",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5151",
@@ -132001,10 +131752,10 @@
       "flags": [],
       "raw": "Canara 28-Jan - 100cr..offering @67..have 73 bid 12:32:07",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5170",
@@ -132511,10 +132262,10 @@
       ],
       "raw": "28-Jan Canara CD 100crs can sell at 6.67 have 73 bid 12:57:16",
       "confidence": 0.55,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G28",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5190",
@@ -134148,7 +133899,7 @@
       "confidence": 0.7,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16KQ9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q5255",
@@ -136758,9 +136509,9 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 12/02/2027) 6.70% offer t+1 100 crs",
       "confidence": 0.85,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H01",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5359",
@@ -136864,7 +136615,7 @@
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "handle_fixed": true,
       "isin": "INE692A16KU1",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q5363",
@@ -137461,7 +137212,7 @@
       "confidence": 0.6,
       "ratingNote": "ICRA AA+ · 2026-09-02",
       "isin": "INE484J14H38",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5387",
@@ -167787,9 +167538,9 @@
       ],
       "raw": "CANARA BANK CD (04MAR2027) - can sell at 6.45 - 75crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6630",
@@ -167946,7 +167697,7 @@
       "ratingNote": "Acuite AAA · 2026-08-28",
       "handle_fixed": true,
       "isin": "INE084A16GH6",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q6636",
@@ -168069,9 +167820,7 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "21/09 DSP Fin CP @ 5.80 offer 100-200crs",
-      "confidence": 0.6,
-      "isin": "INE422H14487",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q6641",
@@ -168150,9 +167899,9 @@
       ],
       "raw": "CANARA BANK CD (04MAR2027) - can sell at 6.50 - 75crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6644",
@@ -168327,9 +168076,9 @@
       ],
       "raw": "CANARA BANK CD (04MAR2027) - can sell at 6.50 - 75crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6651",
@@ -169211,10 +168960,10 @@
       ],
       "raw": "CANARA BANK CD (04MAR2027) - can sell at 6.55 - 75crs - have 60 bid cbc 09:39:23",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6687",
@@ -169238,9 +168987,9 @@
       "flags": [],
       "raw": "CD - EQUITAS SMALL FINANCE BANK - 26/11/2026 6.20 offer 100 cr t+1 09:40:20",
       "confidence": 0.8,
-      "ratingNote": "Lower of India Ratings A1+, CARE AA- (conservative) · 2026-09-08",
+      "ratingNote": "India Ratings A1+ · 2026-09-08",
       "isin": "INE063P16BE6",
-      "rating": "AA-"
+      "rating": "A1+"
     },
     {
       "id": "q6688",
@@ -169264,9 +169013,9 @@
       "flags": [],
       "raw": "CD - EQUITAS SMALL FINANCE BANK - 26/11/2026 6.20 offer 100 cr t+1 09:40:26",
       "confidence": 0.8,
-      "ratingNote": "Lower of India Ratings A1+, CARE AA- (conservative) · 2026-09-08",
+      "ratingNote": "India Ratings A1+ · 2026-09-08",
       "isin": "INE063P16BE6",
-      "rating": "AA-"
+      "rating": "A1+"
     },
     {
       "id": "q6689",
@@ -169751,7 +169500,7 @@
       "ratingNote": "Acuite AAA · 2026-08-28",
       "handle_fixed": true,
       "isin": "INE084A16GH6",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q6709",
@@ -169899,9 +169648,9 @@
       "flags": [],
       "raw": "CANARA BANK CD (04MAR2027)   6.55 / 60 - 75crs  mrkt 09:47:42",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6715",
@@ -170346,8 +170095,8 @@
       "raw": "ICICI Securities Limited CP (MD 24/12/2026) 80 offer t+1 /*/ t+0",
       "confidence": 0.5,
       "handle_fixed": true,
-      "isin": "INE763G14M28",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q6733",
@@ -172549,7 +172298,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16KQ9",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q6821",
@@ -173805,10 +173554,10 @@
       ],
       "raw": "25-03-2027       60/65       cbc sbi mf",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I26",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6872",
@@ -173860,10 +173609,10 @@
       ],
       "raw": "25 03 canara cd 60 /65 sp tbtol  cbc 11:14:33",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I26",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6874",
@@ -174475,9 +174224,7 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "21/09 DSP Fin CP @ 6.00 offer",
-      "confidence": 0.8,
-      "isin": "INE422H14487",
-      "rating": "A1+"
+      "confidence": 0.8
     },
     {
       "id": "q6899",
@@ -174936,9 +174683,7 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "21/09 DSP Fin CP @ 6.00 offer 100",
-      "confidence": 0.75,
-      "isin": "INE422H14487",
-      "rating": "A1+"
+      "confidence": 0.75
     },
     {
       "id": "q6918",
@@ -174988,9 +174733,9 @@
       "flags": [],
       "raw": "18/12 Canara banK CD @ 05 offer   50crs t1",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6920",
@@ -175039,10 +174784,10 @@
       "flags": [],
       "raw": "18/12 Canara banK CD 20 bid t+0",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6922",
@@ -175066,9 +174811,9 @@
       "flags": [],
       "raw": "18/12 Canara banK CD @ 07 offer t1  50crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6923",
@@ -175092,10 +174837,10 @@
       "flags": [],
       "raw": "18/12 Canara banK CD @  10 offer   passing 14 bid   t0  2 bidder",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6924",
@@ -175171,10 +174916,10 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 02/02/2027) 55/60",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G44",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6927",
@@ -175198,10 +174943,10 @@
       "flags": [],
       "raw": "22jan canara 55 offer 145crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G10",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q6928",
@@ -175514,7 +175259,7 @@
       "confidence": 0.55,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16MP7",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q6941",
@@ -175540,7 +175285,7 @@
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16MP7",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q6942",
@@ -175769,7 +175514,7 @@
       "confidence": 0.55,
       "ratingNote": "Brickwork AAA · 2026-09-17",
       "isin": "INE692A16MP7",
-      "rating": "AAA"
+      "rating": "A1+"
     },
     {
       "id": "q6951",
@@ -177291,9 +177036,9 @@
       "flags": [],
       "raw": "28/6 Canara 00/08",
       "confidence": 0.5,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16K14",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q7013",
@@ -178830,10 +178575,10 @@
       ],
       "raw": "canara bank CD 4/3 can sell @ 60.. 50crs, cbc.. T+0/T+1, cbc",
       "confidence": 0.65,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16H43",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q7074",
@@ -178887,10 +178632,10 @@
       ],
       "raw": "canara Bank CD 26/2 can sell @ 58.. 75crs, cbc",
       "confidence": 0.65,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16I00",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q7076",
@@ -178914,10 +178659,10 @@
       "flags": [],
       "raw": "2 feb Canaraa cd 70 bid t+0",
       "confidence": 0.6,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "handle_fixed": true,
       "isin": "INE476A16G44",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q7077",
@@ -179575,9 +179320,9 @@
       "flags": [],
       "raw": "Canara Bank CD (MD 18/12/2026) 6.05% offer t+0 75crs",
       "confidence": 0.7,
-      "ratingNote": "Lower of ICRA A1+, India Ratings AA+ (conservative) · 2026-09-08",
+      "ratingNote": "ICRA A1+ · 2026-09-08",
       "isin": "INE476A16F78",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q7104",
