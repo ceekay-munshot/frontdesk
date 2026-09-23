@@ -346,10 +346,33 @@ function catChip(cat) {
 /** Title-case a desk/issuer name while keeping common all-caps tickers upper
  *  (PFC, NABARD, SIDBI, ICICI…). Used for the bond headline + confirmed name. */
 const _KEEP_UP = new Set(["PFC","REC","IRFC","NTPC","IOC","SBI","BOB","PNB","HDB","NCD","CD","PGC","NHB","NHAI","IIFL","IIFCL","EXIM","IDFC","RBL","ONGC","GAIL","SAIL","BHEL","NHPC","SJVN","SIDBI","NABARD","HDFC","ICICI","HUDCO","IREDA","LIC","NABFID","UGRO","SMFG","TMF","MMFSL","DME","PFS"]);
+/* Long official names that the desk (and everyone) says by a short name. Display
+ * only — the ISIN and the NSDL record still carry the full legal name, so the
+ * board reads "NABARD" while the confirm line/ISIN prove the exact security.
+ * These are the universally-abbreviated PSU/FI names; edit in one place. */
+const ISSUER_ALIAS = new Map([
+  ["national bank for agriculture and rural development", "NABARD"],
+  ["national bank for financing infrastructure and development", "NABFID"],
+  ["small industries development bank of india", "SIDBI"],
+  ["power finance corporation limited", "PFC"],
+  ["power finance corporation ltd", "PFC"],
+  ["rural electrification corporation limited", "REC Limited"],
+  ["indian railway finance corporation limited", "IRFC"],
+  ["export-import bank of india", "EXIM Bank"],
+  ["export import bank of india", "EXIM Bank"],
+  ["housing and urban development corporation limited", "HUDCO"],
+]);
+/* Connector words stay lowercase mid-name (normal title-case convention), so an
+ * ALL-CAPS official name doesn't read "National Bank FOR Agriculture AND …". */
+const _LC_WORDS = new Set(["for", "and", "of", "the", "&"]);
 function titleCaseIssuer(s) {
-  return String(s || "").trim().split(/\s+/).map((w) => {
+  const raw = String(s || "").trim();
+  const alias = ISSUER_ALIAS.get(raw.toLowerCase().replace(/\s+/g, " "));
+  if (alias) return alias;
+  return raw.split(/\s+/).map((w, i) => {
     const up = w.toUpperCase();
     if (_KEEP_UP.has(up)) return up;
+    if (i > 0 && _LC_WORDS.has(w.toLowerCase())) return w.toLowerCase();
     if (w.length <= 3 && w === up) return up;
     return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
   }).join(" ");
@@ -449,10 +472,12 @@ const state = {
   sortDir: "desc", // "asc" | "desc"
   lastGeneratedAt: null,
   // Spread Watch
-  spreadView: "govt", // "govt" | "peers"
+  spreadView: "govt", // "govt" | "peers" | "compare"
   spreadSection: "All", // "All" | "Bonds" | "DCM"
   spreadTenor: "All", // "All" | one of TENOR_BUCKETS
   spreadCategory: "All", // "All" | one issuer category (NBFC / HFC / PSU / …)
+  cmpA: null, // Bond vs Bond — key of the first bond (null -> auto-pick)
+  cmpB: null, // Bond vs Bond — key of the second bond
   // Opportunities
   oppCat: "all", // "all" | "cheap" | "tight" | "pickup" | "twosided" | "rich"
   oppSection: "All", // "All" | "Bonds" | "Gsec" | "DCM"
@@ -1428,7 +1453,7 @@ function computeSpread() {
   const cheapest = dispBonds.length && dispBonds[0].gap > 0 ? dispBonds[0] : null;
   const richest = dispBonds.length && dispBonds[dispBonds.length - 1].gap < 0 ? dispBonds[dispBonds.length - 1] : null;
 
-  return { total, quoteTotal, withUY, withUYT, govtCurve, govtSource, rows, buckets, gridStats, bonds: dispBonds, avgPickup, widest, cheapest, richest };
+  return { total, quoteTotal, withUY, withUYT, govtCurve, govtSource, rows, buckets, gridStats, bonds: dispBonds, allBonds: bonds, avgPickup, widest, cheapest, richest };
 }
 
 /* =========================================================================
@@ -1497,7 +1522,8 @@ function renderTip(o, pinned) {
     return `${L("How to read Spread Watch")}<div style="line-height:1.55">
       <b>Yield</b> = what a bond pays you. This tab shows the <b>extra</b> yield a corporate bond pays over a safe benchmark — more extra = cheaper = more worth buying.
       <div style="margin-top:6px"><b style="color:${T.tintIndigo}">vs Government</b> — extra yield over government bonds of the same maturity. Bigger = pays more = cheaper.</div>
-      <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div></div>`;
+      <div style="margin-top:4px"><b style="color:${T.tintEmerald}">vs Similar bonds</b> — how this bond's yield compares to other bonds of similar maturity. Above the group = cheap (buy); below = pricey.</div>
+      <div style="margin-top:4px"><b style="color:${T.grad2}">Bond vs Bond</b> — pick any two bonds (e.g. NABARD vs REC) and read the exact yield gap between them, with a warning if their maturities differ.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
   if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? (o.bench.approx
@@ -1685,7 +1711,7 @@ function spreadViewToggle() {
     const a = state.spreadView === v;
     return `<button data-spread-view="${v}" class="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${a ? "grad-bar text-white shadow-sm shadow-indigo-500/25" : "text-slate-500 hover:text-slate-700"}"><i data-lucide="${icon}" class="h-3.5 w-3.5"></i>${label}</button>`;
   };
-  return `<div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1">${opt("govt", "vs Government", "landmark")}${opt("peers", "vs Similar bonds", "users")}</div>`;
+  return `<div class="inline-flex items-center rounded-xl bg-slate-100/80 p-1">${opt("govt", "vs Government", "landmark")}${opt("peers", "vs Similar bonds", "users")}${opt("compare", "Bond vs Bond", "scale")}</div>`;
 }
 
 function spreadSectionSeg() {
@@ -1703,6 +1729,7 @@ function spreadTenorSelect() {
 
 function spreadStatChips(c) {
   const chip = (icon, label, value, tone) => `<span class="inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] ${tone}"><i data-lucide="${icon}" class="h-3 w-3"></i><span class="opacity-70">${label}</span><span class="font-bold nums">${esc(value)}</span></span>`;
+  if (state.spreadView === "compare") return ""; // the A-vs-B gap headlines the body itself
   if (state.spreadView === "govt") {
     return chip("trending-up", "Avg extra vs govt", c.avgPickup != null ? fmtBps(c.avgPickup) + " bps" : "—", "border-indigo-200 bg-indigo-50 text-indigo-700") +
       chip("flame", "Widest", c.widest ? `${trunc(c.widest.issuer, 15)} ${fmtBps(c.widest.v)}` : "—", "border-emerald-200 bg-emerald-50 text-emerald-700");
@@ -1725,6 +1752,7 @@ function spreadControlsHTML(c) {
 }
 
 function spreadLegend() {
+  if (state.spreadView === "compare") return ""; // Bond vs Bond carries its own labels
   if (state.spreadView === "govt") {
     return `<div class="hidden items-center gap-2 text-[11px] font-medium text-slate-400 md:flex"><span>small</span><span class="h-2 w-16 rounded-full" style="background:linear-gradient(90deg,${SPREAD_COOL},${SPREAD_MID},${SPREAD_WARM})"></span><span>big extra yield</span></div>`;
   }
@@ -1782,6 +1810,184 @@ function peersBody(c) {
   </div>`;
 }
 
+/* =========================================================================
+   Spread Watch — Bond vs Bond (direct A-vs-B, e.g. "NABARD vs REC")
+   The desk asked to compare two SPECIFIC bonds head-to-head, not just each
+   against a peer median: pick bond A + bond B, read the yield gap in bps, with
+   honest like-for-like caveats when the tenors or ratings differ.
+   ========================================================================= */
+
+/* A stable key for a bond across re-renders: its ISIN when matched, else the
+   section+issuer+maturity scheme computeUniverse itself keys on. */
+function bondKey(b) {
+  return b.isin ? `isin||${b.isin}` : `${b.section}||${String(b.issuer).toLowerCase()}||${b.maturity}`;
+}
+function bondByKey(bonds, key) {
+  return key ? (bonds.find((b) => bondKey(b) === key) || null) : null;
+}
+/* One-line label for a bond in the pick-lists: issuer · coupon maturity [rating] — yield. */
+function bondCmpLabel(b) {
+  const mat = b.maturity ? fmtMonYr(b.maturity) : (isNum(b.tenor) ? `${b.tenor.toFixed(1)}y` : "");
+  const cpn = isNum(b.coupon) ? `${fmtNum(b.coupon, 2)}% ` : "";
+  const rt = b.rating ? ` [${b.rating}]` : "";
+  const y = isNum(b.uy) ? ` — ${b.uy.toFixed(2)}%` : "";
+  return `${trunc(b.issuer, 22)} · ${cpn}${mat}${rt}${y}`;
+}
+
+/* A grouped-by-category <select> of bonds for the A / B pickers. */
+function cmpSelect(dataAttr, selectedKey, bonds) {
+  const cls = "w-full rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-200";
+  const byCat = new Map();
+  for (const b of bonds) { const c = b.category || "Other"; if (!byCat.has(c)) byCat.set(c, []); byCat.get(c).push(b); }
+  const cats = [...byCat.keys()].sort((a, b) => {
+    const ia = CATEGORY_ORDER.indexOf(a), ib = CATEGORY_ORDER.indexOf(b);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+  const groups = cats.map((c) => {
+    const opts = byCat.get(c).slice()
+      .sort((a, b) => String(a.issuer).localeCompare(String(b.issuer)) || (a.tenor || 0) - (b.tenor || 0))
+      .map((b) => { const k = bondKey(b); return `<option value="${esc(k)}" ${k === selectedKey ? "selected" : ""}>${esc(bondCmpLabel(b))}</option>`; }).join("");
+    return `<optgroup label="${esc(c)}">${opts}</optgroup>`;
+  }).join("");
+  return `<select ${dataAttr} class="${cls}"><option value="">— pick a bond —</option>${groups}</select>`;
+}
+
+/* One bond's stat card in the A-vs-B panel (desk yield, real last trade, CBRICS
+   usual, extra over government). */
+function cmpBondCard(b, tag, accent) {
+  const sec = SECTION[b.section] || SECTION.Bonds;
+  const tr = tradedRef(b.isin);
+  const nrm = tradedNormal(b.isin);
+  const row = (label, val, strong) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:2px 0"><span class="text-slate-400">${label}</span><span class="nums ${strong ? "font-bold text-slate-900" : "text-slate-600"}">${val}</span></div>`;
+  return `<div class="flex-1 rounded-xl border border-slate-200 bg-white/80 p-3">
+    <div class="mb-1 flex items-center gap-1.5">
+      <span class="grid h-5 w-5 shrink-0 place-items-center rounded-md text-[11px] font-bold text-white" style="background:${accent}">${tag}</span>
+      <span class="truncate font-display text-sm font-bold text-slate-800" style="max-width:180px">${esc(b.issuer)}</span>
+    </div>
+    <div class="mb-2 flex flex-wrap items-center gap-1.5">
+      <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}
+    </div>
+    <div class="mb-2 text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% coupon · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${isNum(b.tenor) ? b.tenor.toFixed(1) + "y" : b.bucket}</div>
+    <div class="space-y-0.5 text-xs">
+      ${row("Desk yield (today)", isNum(b.uy) ? b.uy.toFixed(2) + "%" : "—", true)}
+      ${row("Last traded (NSE)", tr && isNum(tr.yield) ? `${tr.yield.toFixed(2)}%${tr.date ? ` · ${fmtDate(tr.date).replace(/ '\d+$/, "")}` : ""}` : "—")}
+      ${row("Usually trades (NSE)", nrm ? `~${nrm.yield.toFixed(2)}% · ${nrm.n} trades` : "—")}
+      ${row("Extra over govt", isNum(b.govtSpread) ? fmtBps(b.govtSpread) + " bps" : "—")}
+    </div>
+  </div>`;
+}
+
+/* A zoomed number line showing where the two yields sit and the gap between
+   them. A is drawn above the axis, B below, so the labels never collide even
+   when the two yields are almost identical. */
+function cmpLineSVG(A, B) {
+  const W = 660, H = 96, L = 30, R = W - 30, ax = 54;
+  const lo = Math.min(A.uy, B.uy), hi = Math.max(A.uy, B.uy);
+  const span = Math.max(0.10, hi - lo);
+  const min = lo - span * 0.75, max = hi + span * 0.75;
+  const x = (y) => L + ((y - min) / (max - min)) * (R - L);
+  const xa = x(A.uy), xb = x(B.uy);
+  const gapBps = Math.abs(Math.round((A.uy - B.uy) * 100));
+  const midx = (xa + xb) / 2, gx1 = Math.min(xa, xb), gx2 = Math.max(xa, xb);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" role="img" aria-label="Yield gap between the two bonds">
+    <line x1="${L}" y1="${ax}" x2="${R}" y2="${ax}" stroke="${T.n200}" stroke-width="2"/>
+    ${gx2 - gx1 > 2 ? `<line x1="${gx1.toFixed(1)}" y1="${ax}" x2="${gx2.toFixed(1)}" y2="${ax}" stroke="${T.grad2}" stroke-width="4" stroke-linecap="round"/>` : ""}
+    <text x="${midx.toFixed(1)}" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="${T.n500}">${gapBps} bps apart</text>
+    <circle cx="${xa.toFixed(1)}" cy="${ax}" r="6.5" fill="${T.grad1}"/>
+    <circle cx="${xb.toFixed(1)}" cy="${ax}" r="6.5" fill="${T.grad3}"/>
+    <text x="${xa.toFixed(1)}" y="${ax - 14}" text-anchor="middle" font-size="12" font-weight="800" fill="${T.grad1}">A · ${A.uy.toFixed(2)}%</text>
+    <text x="${xb.toFixed(1)}" y="${ax + 24}" text-anchor="middle" font-size="12" font-weight="800" fill="${T.grad3}">B · ${B.uy.toFixed(2)}%</text>
+  </svg>`;
+}
+
+function compareBody(c) {
+  const all = (c.allBonds || []).filter((b) => isNum(b.uy));
+  if (all.length < 2) return spreadEmpty("Not enough bonds to compare", "Need at least two Bonds/DCM quotes with a usable yield today. Try another day or clear the filters.", "scale");
+
+  // Resolve current picks against the FULL list so a choice survives filtering.
+  let A = bondByKey(all, state.cmpA);
+  let B = bondByKey(all, state.cmpB);
+  // First-time defaults: honour the client's NABARD-vs-REC example when both are
+  // on the board, else the two bonds with the richest real-trade history.
+  if (!A && !B) {
+    const nab = all.filter((b) => /nabard|national bank for agri/i.test(String(b.issuer))); // NSDL spells NABARD out in full
+    const rec = all.filter((b) => /\brec\b|rural electr/i.test(String(b.issuer)));
+    if (nab.length && rec.length) {
+      // Closest-tenor pair for a clean like-for-like default, nudged toward bonds
+      // with real trade history so the cards land populated.
+      let best = null;
+      for (const x of nab) for (const y of rec) {
+        const dt = Math.abs((x.tenor || 0) - (y.tenor || 0));
+        const trades = ((tradedNormal(x.isin)?.n) || 0) + ((tradedNormal(y.isin)?.n) || 0);
+        const score = dt - Math.min(trades, 20) * 0.02;
+        if (!best || score < best.score) best = { x, y, score };
+      }
+      A = best.x; B = best.y;
+    }
+    if (!A || !B) {
+      const ranked = all.slice().sort((x, y) => ((tradedNormal(y.isin)?.n) || 0) - ((tradedNormal(x.isin)?.n) || 0));
+      A = A || ranked[0];
+      B = B || ranked.find((b) => b !== A) || ranked[1];
+    }
+    state.cmpA = A ? bondKey(A) : null;
+    state.cmpB = B ? bondKey(B) : null;
+  }
+
+  // Pick-lists honour the section/category/tenor/search filters, but always keep
+  // the current selection present so it never silently vanishes.
+  const term = state.search.trim().toLowerCase();
+  const pick = all.filter((b) =>
+    (state.spreadSection === "All" || b.section === state.spreadSection) &&
+    (state.spreadCategory === "All" || b.category === state.spreadCategory) &&
+    (state.spreadTenor === "All" || b.bucket === state.spreadTenor) &&
+    (!term || String(b.issuer).toLowerCase().includes(term) || (b.who && b.who.includes(term))));
+  const listWith = (sel) => {
+    const l = pick.slice();
+    if (sel && !l.some((b) => bondKey(b) === bondKey(sel))) l.unshift(sel);
+    return l;
+  };
+
+  const selectors = `<div class="flex flex-wrap items-end gap-2">
+    <label class="min-w-[200px] flex-1"><span class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Bond A</span>${cmpSelect("data-cmp-a", state.cmpA, listWith(A))}</label>
+    <button data-cmp-swap class="mb-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-slate-400 ring-1 ring-slate-200 transition hover:text-indigo-600 hover:ring-indigo-200" title="Swap A and B" aria-label="Swap the two bonds"><i data-lucide="arrow-left-right" class="h-4 w-4"></i></button>
+    <label class="min-w-[200px] flex-1"><span class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Bond B</span>${cmpSelect("data-cmp-b", state.cmpB, listWith(B))}</label>
+  </div>`;
+
+  if (!A || !B) return `<div class="space-y-4 p-4">${selectors}${spreadEmpty("Pick two bonds", "Choose a bond in each box to see the yield gap between them — e.g. NABARD vs REC.", "scale")}</div>`;
+  if (bondKey(A) === bondKey(B)) return `<div class="space-y-4 p-4">${selectors}${spreadEmpty("Pick two different bonds", "Bond A and Bond B are the same paper. Change one to compare.", "scale")}</div>`;
+
+  // The read: + gap means A yields more (A is the cheaper of the two).
+  const gap = Math.round((A.uy - B.uy) * 100);
+  const more = gap >= 0 ? A : B, less = gap >= 0 ? B : A;
+  const absPct = (Math.abs(gap) / 100).toFixed(2);
+  const gapLine = gap === 0
+    ? `<b>${esc(trunc(A.issuer, 22))}</b> and <b>${esc(trunc(B.issuer, 22))}</b> yield about the same today.`
+    : `<b>${esc(trunc(more.issuer, 22))}</b> yields <b style="color:${T.grad2}">${Math.abs(gap)} bps more</b> than <b>${esc(trunc(less.issuer, 22))}</b>.`;
+  const plain = gap === 0 ? "" : `<div class="mt-1 text-sm text-slate-500">That's about <b>${absPct}%</b> a year of extra yield for holding ${esc(trunc(more.issuer, 22))} instead.</div>`;
+
+  // Like-for-like caveats — the client's exact concern (don't compare a 1y to a 3y).
+  const notes = [];
+  if (isNum(A.tenor) && isNum(B.tenor) && Math.abs(A.tenor - B.tenor) >= 0.75) {
+    notes.push(`These mature about <b>${Math.abs(A.tenor - B.tenor).toFixed(1)} years apart</b> — part of the gap is just the longer wait, not extra reward for credit. For a true like-for-like read, compare bonds maturing around the same time.`);
+  }
+  const rA = String(A.rating || "").toUpperCase(), rB = String(B.rating || "").toUpperCase();
+  if (rA && rB && rA !== rB) {
+    notes.push(`Different credit ratings (<b>${esc(A.rating)}</b> vs <b>${esc(B.rating)}</b>) — some of the gap is the ratings difference, not just relative value.`);
+  }
+  const noteHtml = notes.length ? `<div class="mt-2 space-y-1">${notes.map((n) => `<div class="flex items-start gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-[11px] leading-relaxed text-amber-700"><i data-lucide="triangle-alert" class="mt-0.5 h-3 w-3 shrink-0"></i><span>${n}</span></div>`).join("")}</div>` : "";
+
+  return `<div class="space-y-4 p-4">
+    ${selectors}
+    <section class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3">
+      <div class="font-display text-base leading-snug text-slate-800">${gapLine}</div>
+      ${plain}
+      ${noteHtml}
+    </section>
+    <section class="rounded-xl border border-slate-100 bg-white/60 p-3">${cmpLineSVG(A, B)}</section>
+    <section class="flex flex-col gap-3 sm:flex-row">${cmpBondCard(A, "A", T.grad1)}${cmpBondCard(B, "B", T.grad3)}</section>
+  </div>`;
+}
+
 function spreadChrome(bodyHTML, c) {
   const cov = c ? `<span class="font-semibold text-slate-600">${c.withUYT}</span> of ${c.quoteTotal} quotes have a yield we can compare` : "";
   const gen = state.data ? fmtGenerated(state.data.generated_at) : null;
@@ -1816,6 +2022,8 @@ function renderSpreadView() {
   let body;
   if (c.withUYT === 0) {
     body = spreadEmpty("No usable yields yet", "None of today's quotes carry both a yield and a tenor, so spreads can't be computed. This view fills in as yield-bearing quotes arrive.", "gauge");
+  } else if (state.spreadView === "compare") {
+    body = compareBody(c);
   } else if (state.spreadView === "govt") {
     body = c.govtCurve
       ? govtBody(c)
@@ -2825,6 +3033,12 @@ els.view.addEventListener("click", (e) => {
     renderView();
     return;
   }
+  const cmpSwap = e.target.closest("button[data-cmp-swap]");
+  if (cmpSwap) {
+    const a = state.cmpA; state.cmpA = state.cmpB; state.cmpB = a;
+    renderView();
+    return;
+  }
   const spreadSecBtn = e.target.closest("button[data-spread-section]");
   if (spreadSecBtn) {
     state.spreadSection = spreadSecBtn.dataset.spreadSection;
@@ -2951,6 +3165,18 @@ els.view.addEventListener("change", (e) => {
   const spreadCatSel = e.target.closest("select[data-spread-category]");
   if (spreadCatSel) {
     state.spreadCategory = spreadCatSel.value;
+    renderView();
+    return;
+  }
+  const cmpASel = e.target.closest("select[data-cmp-a]");
+  if (cmpASel) {
+    state.cmpA = cmpASel.value || null;
+    renderView();
+    return;
+  }
+  const cmpBSel = e.target.closest("select[data-cmp-b]");
+  if (cmpBSel) {
+    state.cmpB = cmpBSel.value || null;
     renderView();
     return;
   }
