@@ -1,6 +1,6 @@
 {
   "_note": "AUTO-GENERATED updated ratings. Source: BSE 'Credit Rating' filings (SEBI LODR Reg 30), all agencies; rating read from the agency report PDF by the pipeline LLM. Applied as latest / lower-of-two + date. Each entry links the exact exchange filing. Edit/clear entries freely.",
-  "_updated_at": "2026-09-23T08:08:41.458Z",
+  "_updated_at": "2026-09-23T13:28:17.948Z",
   "_seen": [
     "8a0d89f7-ac73-457e-86ca-35411f8d81d1",
     "c3c5cd41-ddc2-4e45-8741-38ab715b72c8",
@@ -105,7 +105,17 @@
     "406e9193-78b0-4913-8123-dbf40d6b853e",
     "fbd1f42c-e03c-431d-a0a7-676a63011470",
     "e1300619-7dd6-498a-8746-dd1efaac2aa8",
-    "5a5fc122-f1d2-4c44-aa99-a2145e42c437"
+    "5a5fc122-f1d2-4c44-aa99-a2145e42c437",
+    "480601b4-aa92-424e-b901-9c6384ff2689",
+    "05567683-dc7c-44eb-88a5-a3991af4f5ba",
+    "1e6603cd-c8bf-4f71-86ff-82b6658acaa8",
+    "2241a1f0-3df0-4c2e-b66a-d22391508532",
+    "1cb2b19f-b36e-44a5-9bab-f23a2e32a751",
+    "722d3f48-e3eb-4a34-a627-4cd1c7d8be1b",
+    "853024e8-b5fb-486b-a8ad-0eafc00ecfda",
+    "67c294d1-851f-4314-a6cc-7c081086aeb5",
+    "a06c7b45-8c04-4d51-908d-5b22afb7179a",
+    "f4122131-74f7-4c16-a20a-9cc64caa4e44"
   ],
   "byIsin": {
     "INE692A16LP9": {
@@ -796,12 +806,20 @@
     },
     "INE423Y14019": {
       "agencies": {
-        "ICRA": "AA-"
+        "ICRA": "AA-",
+        "CARE": "A1+"
       },
       "agencyDates": {
-        "ICRA": "2026-09-07"
+        "ICRA": "2026-09-07",
+        "CARE": "2026-09-22"
       },
       "sources": [
+        {
+          "agency": "CARE",
+          "date": "2026-09-22",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/ec016e4d-8725-4161-946b-4de4d736dce2.pdf"
+        },
         {
           "agency": "ICRA",
           "date": "2026-09-07",
@@ -809,7 +827,7 @@
           "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/03c30401-64a7-4b1a-852b-ac2177a35996.pdf"
         }
       ],
-      "date": "2026-09-07"
+      "date": "2026-09-22"
     },
     "INE774D07UM6": {
       "agencies": {
