@@ -135,6 +135,13 @@ jobs:
         continue-on-error: true
         run: node scripts/fetch-traded-ref.mjs
 
+      # Refresh the free historical 10Y G-Sec benchmark (OECD via FRED) used for
+      # the "spread since issue" read (public/data/gsec-history.json). Monthly
+      # series, merged onto the existing months. Best-effort; never fails refresh.
+      - name: Refresh historical G-Sec (FRED)
+        continue-on-error: true
+        run: node scripts/gsec-history.mjs
+
       # Commit the refreshed data if it changed, then push with a 4-attempt loop
       # that rebases on the branch head before each try — so a refresh that
       # overlaps another push (or a human commit) lands cleanly instead of
@@ -149,6 +156,7 @@ jobs:
           [ -f public/data/spread-history.json ] && git add public/data/spread-history.json
           [ -f data/ratings-override.json ] && git add data/ratings-override.json
           [ -f public/data/traded-ref.json ] && git add public/data/traded-ref.json
+          [ -f public/data/gsec-history.json ] && git add public/data/gsec-history.json
           if git diff --cached --quiet; then
             echo "No data changes — nothing to commit."
             exit 0

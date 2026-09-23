@@ -152,6 +152,51 @@ async function loadTradedRef() {
 function tradedRef(isin) {
   return TRADED_REF && isin ? (TRADED_REF.byIsin[isin] || null) : null;
 }
+
+const GSEC_HISTORY_URL = "data/gsec-history.json";
+let GSEC_HIST = null; // { tenor_years:10, monthly: { "YYYY-MM": yield } } — free, from FRED/OECD
+async function loadGsecHistory() {
+  try {
+    const r = await fetch(GSEC_HISTORY_URL, { cache: "no-store" });
+    if (!r.ok) return;
+    const j = await r.json();
+    GSEC_HIST = j && j.monthly ? j : null;
+  } catch { /* stays null -> the since-issue read is simply skipped */ }
+}
+/** Benchmark 10Y G-Sec yield for a YYYY-MM (nearest earlier month if the exact one
+ *  isn't published yet — the OECD/FRED series lags ~2 months). */
+function gsecMonthly(mk) {
+  if (!GSEC_HIST || !GSEC_HIST.monthly || !mk) return null;
+  const m = GSEC_HIST.monthly;
+  if (isNum(m[mk])) return m[mk];
+  let best = null;
+  for (const k of Object.keys(m)) { if (k <= mk && isNum(m[k])) best = m[k]; }
+  return best;
+}
+/** A bond's spread-over-10Y-G-Sec journey from its earliest real trade on record
+ *  (≈ since issue) to its latest — the desk's "spread since issue" ask. Needs a
+ *  real span (>= ~6 months) and both endpoints' 10Y benchmark; null otherwise. */
+function sinceIssueSpread(isin) {
+  const t = tradedRef(isin);
+  const h = t && Array.isArray(t.history) ? t.history.filter((x) => isNum(x.y)) : [];
+  if (h.length < 3 || !GSEC_HIST) return null;
+  const first = h[0], last = h[h.length - 1];
+  const spanDays = (new Date(last.d + "T00:00:00Z") - new Date(first.d + "T00:00:00Z")) / 86400000;
+  if (!(spanDays >= 180)) return null; // too short to be a "journey"
+  const g0 = gsecMonthly(first.d.slice(0, 7)), g1 = gsecMonthly(last.d.slice(0, 7));
+  if (g0 == null || g1 == null) return null;
+  const s0 = Math.round((first.y - g0) * 100), s1 = Math.round((last.y - g1) * 100);
+  return { fromD: first.d, fromY: first.y, fromSpread: s0, toD: last.d, toY: last.y, toSpread: s1, delta: s1 - s0, n: h.length };
+}
+/** Compact tooltip line for the since-issue spread journey. */
+function sinceIssueTip(isin) {
+  const si = sinceIssueSpread(isin);
+  if (!si) return "";
+  const wider = si.delta > 0;
+  const tag = Math.abs(si.delta) < 8 ? "about the same" : `${Math.abs(si.delta)} bps ${wider ? "wider" : "tighter"}`;
+  const col = Math.abs(si.delta) < 8 ? T.n500 : wider ? T.buyInk : T.sellInk;
+  return `<div style="margin-top:6px;color:${T.n400};font-size:11px">Since first traded (${esc(fmtMonYr(si.fromD))}): <b style="color:${T.n600}">+${si.fromSpread} → +${si.toSpread} bps</b> over 10Y G-Sec · <span style="color:${col};font-weight:600">${tag}</span></div>`;
+}
 /** Tooltip line: "Last traded X.XX% · DD-Mon (NSE reported)", plus a warning when
  *  the desk quote sits far (>=50 bps) from the last real trade. */
 function tradedLine(isin, deskYield) {
@@ -206,7 +251,7 @@ function tradedNormalLine(isin, curYield, pinned) {
       drill = `<div style="margin-top:6px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see the ${nrm.n} trades ↗</div>`;
     }
   }
-  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · NSE (${nrm.n} trades)`)}${read}${drill}</div>`;
+  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · NSE (${nrm.n} trades)`)}${read}${sinceIssueTip(isin)}${drill}</div>`;
 }
 /** Median of PRIOR days' bucket medians (excludes today), preferring the
  *  same-rating series and falling back to the rating-agnostic one. */
@@ -1860,6 +1905,18 @@ function cmpBondCard(b, tag, accent) {
   const tr = tradedRef(b.isin);
   const nrm = tradedNormal(b.isin);
   const row = (label, val, strong) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:2px 0"><span class="text-slate-400">${label}</span><span class="nums ${strong ? "font-bold text-slate-900" : "text-slate-600"}">${val}</span></div>`;
+  // Spread-since-issue block (real NSE trades vs the 10Y G-Sec benchmark).
+  const si = sinceIssueSpread(b.isin);
+  let siBlock = "";
+  if (si) {
+    const wider = si.delta > 0;
+    const tag2 = Math.abs(si.delta) < 8 ? "about the same" : `${Math.abs(si.delta)} bps ${wider ? "wider" : "tighter"}`;
+    const col = Math.abs(si.delta) < 8 ? "text-slate-500" : wider ? "text-emerald-600" : "text-rose-600";
+    siBlock = `<div class="mt-2 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] leading-snug">
+      <div class="font-semibold text-slate-500">Spread since first traded (${esc(fmtMonYr(si.fromD))})</div>
+      <div class="mt-0.5 text-slate-600"><b class="nums">+${si.fromSpread}</b> → <b class="nums">+${si.toSpread}</b> bps over 10Y G-Sec · <span class="${col} font-semibold">${tag2}</span></div>
+    </div>`;
+  }
   return `<div class="flex-1 rounded-xl border border-slate-200 bg-white/80 p-3">
     <div class="mb-1 flex items-center gap-1.5">
       <span class="grid h-5 w-5 shrink-0 place-items-center rounded-md text-[11px] font-bold text-white" style="background:${accent}">${tag}</span>
@@ -1875,6 +1932,7 @@ function cmpBondCard(b, tag, accent) {
       ${row("Usually trades (NSE)", nrm ? `~${nrm.yield.toFixed(2)}% · ${nrm.n} trades` : "—")}
       ${row("Extra over govt", isNum(b.govtSpread) ? fmtBps(b.govtSpread) + " bps" : "—")}
     </div>
+    ${siBlock}
   </div>`;
 }
 
@@ -3285,6 +3343,10 @@ loadSpreadHistory().then(() => {
 loadTradedRef().then(() => {
   // Real traded yields (Cbrics) arrived — refresh so tooltips can show where each
   // bond actually last traded and flag desk quotes far from it.
+  if (state.data && !state.loading && !state.error) renderView();
+});
+loadGsecHistory().then(() => {
+  // Historical 10Y G-Sec arrived — refresh so the "spread since issue" read can show.
   if (state.data && !state.loading && !state.error) renderView();
 });
 loadData({ initial: true });
