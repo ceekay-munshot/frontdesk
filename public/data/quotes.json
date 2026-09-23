@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T18:30:26+05:30",
+  "generated_at": "2026-09-23T13:35:20+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "54c57a204424ea73b0dc6327cab35c2b96443826fe1359bbd84b5589eb7495ef",
   "trading_day": "2026-09-18",
@@ -21,64 +21,64 @@
   "quote_count": 7165,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-22 16:59:59",
+    "as_of": "2026-09-23 13:30:44",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.0106
+        "yield": 7.0226
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.1724
+        "yield": 7.1869
       },
       {
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.6912
+        "yield": 6.7041
       },
       {
         "type": "gsec",
         "name": "06.10 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.7937
+        "yield": 6.7978
       },
       {
         "type": "gsec",
-        "name": "06.54 GS 2032",
-        "maturity": "2032-07-01",
-        "yield": 6.8443
+        "name": "06.90 GS 2065",
+        "maturity": "2065-07-01",
+        "yield": 7.64
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
-        "maturity": "2026-09-23",
+        "maturity": "2026-09-24",
         "yield": 5.13
       }
     ]
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-09-18",
+    "as_of": "2026-09-23",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_15.09.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_15-09-2026.xls",
-      "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-11.09.2026.xlsx"
+      "debt": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_22.09.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-09/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_22-09-2026.xls",
+      "cd": "https://nsdl.com/nsdl/2026-09/Cd%20%28Including%20Redeemed%29%20-18.09.2026.xlsx"
     },
     "counts": {
-      "bond": 27451,
-      "cp": 1978,
-      "cd": 418
+      "bond": 27561,
+      "cp": 2035,
+      "cd": 409
     },
-    "securities_count": 477,
+    "securities_count": 468,
     "matched": {
-      "confirmed": 2704,
+      "confirmed": 2689,
       "shortlisted": 62,
-      "rated": 2693
+      "rated": 2659
     }
   },
   "securities": {
@@ -217,9 +217,15 @@
       "maturity": "2027-08-21",
       "rating": "AA+",
       "type": "bond",
-      "ratingDate": "2026-08-28",
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingDate": "2026-09-22",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "ratingSources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-22",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1b162ccf-d9af-4a26-8f3a-7a04b7b9fb0b.pdf"
+        },
         {
           "agency": "India Ratings",
           "date": "2026-08-28",
@@ -1056,14 +1062,6 @@
       "rating": null,
       "type": "cd"
     },
-    "INE790I14HO0": {
-      "name": "HSBC INVESTDIRECT FINANCIAL SERVICES (I)LTD 180D CP 21SEP26",
-      "issuer": "HSBC INVESTDIRECT FINANCIAL SERVICES (INDIA) LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE028A16KY0": {
       "name": "BANK OF BARODA CD 08JAN27",
       "issuer": "BANK OF BARODA",
@@ -1852,23 +1850,15 @@
       "rating": "A1+",
       "type": "cp"
     },
-    "INE357L14412": {
-      "name": "NOMURA CAPITAL (INDIA) PVT. LTD. 24D CP 18SEP26",
-      "issuer": "NOMURA CAPITAL (INDIA) PRIVATE LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-18",
-      "rating": "A1+",
-      "type": "cp"
-    },
     "INE484J14G05": {
       "name": "GODREJ PROPERTIES LIMITED 91D CP 17NOV26",
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-11-17",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cp",
       "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "ratingSources": [
         {
           "agency": "ICRA",
@@ -1883,10 +1873,10 @@
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-12-17",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cp",
       "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "ratingSources": [
         {
           "agency": "ICRA",
@@ -2073,14 +2063,6 @@
       "issuer": "TATA CAPITAL LIMITED",
       "coupon": null,
       "maturity": "2027-03-09",
-      "rating": "A1+",
-      "type": "cp"
-    },
-    "INE01C314GH7": {
-      "name": "BAJAJ FINANCIAL SECURITIES LIMITED 81D CP 22SEP26",
-      "issuer": "BAJAJ FINANCIAL SECURITIES LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-22",
       "rating": "A1+",
       "type": "cp"
     },
@@ -2380,32 +2362,6 @@
       "rating": null,
       "type": "cd"
     },
-    "INE763G14M28": {
-      "name": "ICICI SECURITIES LIMITED 154D CP 24DEC26",
-      "issuer": "ICICI SECURITIES LIMITED (EARLIER ICICI BROKERAGE SERVICES LIMITED)",
-      "coupon": null,
-      "maturity": "2026-12-24",
-      "rating": "A1+",
-      "type": "cp"
-    },
-    "INE692A16MM4": {
-      "name": "UNION BANK OF INDIA CD 21SEP26",
-      "issuer": "UNION BANK OF INDIA",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "AAA",
-      "type": "cd",
-      "ratingDate": "2026-09-17",
-      "ratingNote": "Brickwork AAA · 2026-09-17",
-      "ratingSources": [
-        {
-          "agency": "Brickwork",
-          "date": "2026-09-17",
-          "action": "Reaffirmed",
-          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1fd0c3ad-a34e-4d4f-a1d2-8b447699976a.pdf"
-        }
-      ]
-    },
     "INE261F14PX2": {
       "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT 90D CP 01OCT26",
       "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
@@ -2419,7 +2375,7 @@
       "issuer": "BANK OF BARODA",
       "coupon": null,
       "maturity": "2027-03-11",
-      "rating": null,
+      "rating": "A1+",
       "type": "cd"
     },
     "INE028A16KW4": {
@@ -2815,9 +2771,15 @@
       "maturity": "2027-12-02",
       "rating": "AA+",
       "type": "bond",
-      "ratingDate": "2026-08-28",
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingDate": "2026-09-22",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "ratingSources": [
+        {
+          "agency": "ICRA",
+          "date": "2026-09-22",
+          "action": "Upgraded",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/1b162ccf-d9af-4a26-8f3a-7a04b7b9fb0b.pdf"
+        },
         {
           "agency": "India Ratings",
           "date": "2026-08-28",
@@ -2963,16 +2925,18 @@
       "issuer": "THE FEDERAL BANK LIMITED",
       "coupon": null,
       "maturity": "2026-12-10",
-      "rating": "A1+",
-      "type": "cd"
-    },
-    "INE929O14FF4": {
-      "name": "RELIANCE RETAIL VENTURES LIMITED 91D CP 21SEP26",
-      "issuer": "RELIANCE RETAIL VENTURES LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": "A1+",
-      "type": "cp"
+      "rating": "AA+",
+      "type": "cd",
+      "ratingDate": "2026-09-21",
+      "ratingNote": "India Ratings AA+ · 2026-09-21",
+      "ratingSources": [
+        {
+          "agency": "India Ratings",
+          "date": "2026-09-21",
+          "action": "Affirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/5356e598-728b-4782-b1f2-9341c3621601.pdf"
+        }
+      ]
     },
     "INE261F16AQ3": {
       "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT CD 18MAR27",
@@ -2995,10 +2959,10 @@
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-11-16",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cp",
       "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "ratingSources": [
         {
           "agency": "ICRA",
@@ -3013,10 +2977,10 @@
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-12-16",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cp",
       "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "ratingSources": [
         {
           "agency": "ICRA",
@@ -3115,14 +3079,6 @@
       "maturity": "2026-11-16",
       "rating": "A1+",
       "type": "cp"
-    },
-    "INE040A16HR5": {
-      "name": "HDFC BANK LIMITED CD 21SEP26",
-      "issuer": "HDFC BANK LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
-      "rating": null,
-      "type": "cd"
     },
     "INE733E14CI2": {
       "name": "NTPC LIMITED 40D CP 19OCT26",
@@ -3784,14 +3740,6 @@
       "rating": "A1+",
       "type": "cp"
     },
-    "INE261F16AB5": {
-      "name": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT CD 18SEP26",
-      "issuer": "NATIONAL BANK FOR AGRICULTURE AND RURAL DEVELOPMENT",
-      "coupon": null,
-      "maturity": "2026-09-18",
-      "rating": null,
-      "type": "cd"
-    },
     "INE476A16K97": {
       "name": "CANARA BANK CD 23NOV26",
       "issuer": "CANARA BANK",
@@ -3933,10 +3881,10 @@
       "issuer": "GODREJ PROPERTIES LIMITED",
       "coupon": null,
       "maturity": "2026-12-15",
-      "rating": "AA+",
+      "rating": "A1+",
       "type": "cp",
       "ratingDate": "2026-09-02",
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "ratingSources": [
         {
           "agency": "ICRA",
@@ -4249,14 +4197,6 @@
       "issuer": "GRASIM INDUSTRIES LTD",
       "coupon": null,
       "maturity": "2026-12-11",
-      "rating": "A1+",
-      "type": "cp"
-    },
-    "INE422H14487": {
-      "name": "DSP FINANCE PRIVATE LIMITED 91D CP 21SEP26",
-      "issuer": "DSP FINANCE PRIVATE LIMITED",
-      "coupon": null,
-      "maturity": "2026-09-21",
       "rating": "A1+",
       "type": "cp"
     },
@@ -7007,7 +6947,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.6,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -7158,7 +7098,7 @@
       ],
       "raw": "8.65  Aadhar Housing Finance Ltd.  NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.6,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -21194,9 +21134,7 @@
       "quote_date": "2026-09-18",
       "flags": [],
       "raw": "HSBC INVESTDIRECT CP (21SEP2026) 50+25 package 5.05 offer 10:51:32",
-      "confidence": 0.6,
-      "isin": "INE790I14HO0",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q674",
@@ -42162,7 +42100,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -42296,7 +42234,7 @@
       ],
       "raw": "8.65  Aadhar Housing Finance Ltd.  20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -48036,9 +47974,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "Nomura Capital India Pvt Ltd CP (MD 18/09/2026) offer 100 crs @ 5.10 09:14:26",
-      "confidence": 0.65,
-      "isin": "INE357L14412",
-      "rating": "A1+"
+      "confidence": 0.65
     },
     {
       "id": "q1759",
@@ -48063,9 +47999,7 @@
         "switch"
       ],
       "raw": "Punjab National Bank CD (MD 18/09/2026) offer 400 crs  - Looking to switch 09:15:29",
-      "confidence": 0.5,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.5
     },
     {
       "id": "q1760",
@@ -48135,9 +48069,9 @@
       "flags": [],
       "raw": "2m - 6.30",
       "confidence": 0.45,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14G05",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q1763",
@@ -48161,9 +48095,9 @@
       "flags": [],
       "raw": "3m - 6.40",
       "confidence": 0.45,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14H53",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q1764",
@@ -52852,9 +52786,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "Bajaj Financial Securities Ltd CP 22092026 5.5 offer 200 cr",
-      "confidence": 0.6,
-      "isin": "INE01C314GH7",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q1954",
@@ -53056,9 +52988,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "Bajaj Financial Securities Ltd CP 22092026 5.60offer 200 cr",
-      "confidence": 0.6,
-      "isin": "INE01C314GH7",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q1962",
@@ -57114,9 +57044,7 @@
       "quote_date": "2026-09-17",
       "flags": [],
       "raw": "1D Godrej Fin cp, 4.90 offer 250cr",
-      "confidence": 0.5,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.5
     },
     {
       "id": "q2128",
@@ -59246,9 +59174,7 @@
         "bid_pls"
       ],
       "raw": "CD - UNION BANK OF INDIA - 21/09/2026 bid pls 15:31:46",
-      "confidence": 0.7,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.7
     },
     {
       "id": "q2215",
@@ -59273,8 +59199,8 @@
       "raw": "ICICI Securities Limited CP (MD 24/12/2026) 10 offer",
       "confidence": 0.6,
       "handle_fixed": true,
-      "isin": "INE763G14M28",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q2216",
@@ -59371,9 +59297,7 @@
       "raw": "Union CD 21 sep 50 crs t+1 10 bid cbc 15:40:50",
       "confidence": 0.6,
       "ratingNote": "Brickwork AAA · 2026-09-17",
-      "handle_fixed": true,
-      "isin": "INE692A16MM4",
-      "rating": "AAA"
+      "handle_fixed": true
     },
     {
       "id": "q2220",
@@ -59473,7 +59397,8 @@
       "raw": "11/03 BOB CD 70/80 15:59:58",
       "confidence": 0.55,
       "handle_fixed": true,
-      "isin": "INE028A16LW2"
+      "isin": "INE028A16LW2",
+      "rating": "A1+"
     },
     {
       "id": "q2224",
@@ -75829,7 +75754,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.5% NA Taxable 02-Dec-2027 offer for 10crs 7.95  bid 10crs cbc",
       "confidence": 0.45,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07363",
       "rating": "AA+"
     },
@@ -87827,9 +87752,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Punjab National Bank 18SEP26 CD  offer @ 4.95% 09:32:40",
-      "confidence": 0.85,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.85
     },
     {
       "id": "q3387",
@@ -87952,9 +87875,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Union Bank of India 21SEP26 CD  offer @ 5% 09:35:52",
-      "confidence": 0.7,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.7
     },
     {
       "id": "q3392",
@@ -88522,7 +88443,8 @@
       "raw": "The Federal Bank Limited CD (MD 10/12/2026) 200 crs 6.32 bid   mkt 09:54:25",
       "confidence": 0.7,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3415",
@@ -88572,7 +88494,8 @@
       "raw": "10 dec federal cd 6.32 bid 200crs 09:54:33",
       "confidence": 0.7,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3417",
@@ -88600,7 +88523,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3418",
@@ -89015,9 +88939,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Reliance Retail Ventures Ltd. 21SEP26 CP  offer @ 5.10% 09:57:40",
-      "confidence": 0.7,
-      "isin": "INE929O14FF4",
-      "rating": "A1+"
+      "confidence": 0.7
     },
     {
       "id": "q3435",
@@ -89285,9 +89207,9 @@
       "flags": [],
       "raw": "2m offer @6.25",
       "confidence": 0.4,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14F97",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3446",
@@ -89311,9 +89233,9 @@
       "flags": [],
       "raw": "3m offer @6.35",
       "confidence": 0.4,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14H46",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q3447",
@@ -91108,7 +91030,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3520",
@@ -91254,7 +91177,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3526",
@@ -91280,7 +91204,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3527",
@@ -92089,8 +92014,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "HDFC Bank Ltd. 21SEP26 CD  offer @ 5% 10:54:04",
-      "confidence": 0.7,
-      "isin": "INE040A16HR5"
+      "confidence": 0.7
     },
     {
       "id": "q3560",
@@ -92525,9 +92449,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "Punjab National Bank 18SEP26 CD  offer @ 5%",
-      "confidence": 0.6,
-      "rating": "A1+",
-      "series": 2
+      "confidence": 0.6
     },
     {
       "id": "q3578",
@@ -92550,8 +92472,7 @@
       "quote_date": "2026-09-16",
       "flags": [],
       "raw": "HDFC Bank Ltd. 21SEP26 CD  offer @ 5% 11:02:23",
-      "confidence": 0.7,
-      "isin": "INE040A16HR5"
+      "confidence": 0.7
     },
     {
       "id": "q3579",
@@ -95379,7 +95300,8 @@
       "confidence": 0.4,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q3691",
@@ -103965,7 +103887,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -104479,7 +104401,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -104507,7 +104429,7 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.85,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -105132,7 +105054,7 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc 10:04:31",
       "confidence": 0.8,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -106556,7 +106478,7 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc 10:29:48",
       "confidence": 0.75,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -129380,8 +129302,7 @@
         "bid_pls"
       ],
       "raw": "18 Seo Nabard CD 100 crs can sell at 5.15...bid pls 11:11:52",
-      "confidence": 0.5,
-      "isin": "INE261F16AB5"
+      "confidence": 0.5
     },
     {
       "id": "q5066",
@@ -130608,7 +130529,8 @@
       "confidence": 0.55,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q5115",
@@ -130909,8 +130831,7 @@
         "can_sell"
       ],
       "raw": "18 Sep Nabard CD 100 crs can sell at 5.20",
-      "confidence": 0.65,
-      "isin": "INE261F16AB5"
+      "confidence": 0.65
     },
     {
       "id": "q5127",
@@ -131902,7 +131823,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q5166",
@@ -132435,7 +132357,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q5187",
@@ -135996,7 +135919,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q5329",
@@ -137459,9 +137383,9 @@
       "flags": [],
       "raw": "3m offer @6.35",
       "confidence": 0.6,
-      "ratingNote": "ICRA AA+ · 2026-09-02",
+      "ratingNote": "ICRA A1+ · 2026-09-02",
       "isin": "INE484J14H38",
-      "rating": "AA+"
+      "rating": "A1+"
     },
     {
       "id": "q5387",
@@ -149363,7 +149287,7 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.10  bid cbc 5 crs",
       "confidence": 0.7,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -149741,7 +149665,7 @@
       "flags": [],
       "raw": "8.65%   Aadhar Housing  20-Aug-2027 7.75/8.05   5 crs",
       "confidence": 0.6,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -150736,7 +150660,7 @@
       "flags": [],
       "raw": "8.65%   Aadhar Housing  20-Aug-2027 @ 7.75 offer 12:03:17",
       "confidence": 0.75,
-      "ratingNote": "India Ratings AA+ · 2026-08-28",
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
       "rating": "AA+"
     },
@@ -168069,9 +167993,7 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "21/09 DSP Fin CP @ 5.80 offer 100-200crs",
-      "confidence": 0.6,
-      "isin": "INE422H14487",
-      "rating": "A1+"
+      "confidence": 0.6
     },
     {
       "id": "q6641",
@@ -168546,7 +168468,8 @@
       "raw": "10 dec federal cd 6.05 offer 50crs",
       "confidence": 0.65,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q6660",
@@ -168571,7 +168494,8 @@
       "raw": "10 dec federal cd 6.05 offer 50crs",
       "confidence": 0.65,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q6661",
@@ -169314,7 +169238,8 @@
       "raw": "Federal Bank CD 10/12  6.10 OFFER  T+1 50crs 09:41:53",
       "confidence": 0.8,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q6691",
@@ -170346,8 +170271,8 @@
       "raw": "ICICI Securities Limited CP (MD 24/12/2026) 80 offer t+1 /*/ t+0",
       "confidence": 0.5,
       "handle_fixed": true,
-      "isin": "INE763G14M28",
-      "rating": "A1+"
+      "rating": "A1+",
+      "series": 2
     },
     {
       "id": "q6733",
@@ -170585,7 +170510,8 @@
       "raw": "10 dec federal cd 6.15 offer 50crs t1",
       "confidence": 0.5,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q6742",
@@ -170656,7 +170582,8 @@
       "raw": "Federal Bnak cd 10/12 50 crs - 6.15 offer t+1",
       "confidence": 0.55,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q6745",
@@ -174475,9 +174402,7 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "21/09 DSP Fin CP @ 6.00 offer",
-      "confidence": 0.8,
-      "isin": "INE422H14487",
-      "rating": "A1+"
+      "confidence": 0.8
     },
     {
       "id": "q6899",
@@ -174936,9 +174861,7 @@
       "quote_date": "2026-09-11",
       "flags": [],
       "raw": "21/09 DSP Fin CP @ 6.00 offer 100",
-      "confidence": 0.75,
-      "isin": "INE422H14487",
-      "rating": "A1+"
+      "confidence": 0.75
     },
     {
       "id": "q6918",
@@ -177192,7 +177115,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q7009",
@@ -177218,7 +177142,8 @@
       "confidence": 0.6,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q7010",
@@ -177469,7 +177394,8 @@
       "confidence": 0.5,
       "handle_fixed": true,
       "isin": "INE171A16NS4",
-      "rating": "A1+"
+      "rating": "AA+",
+      "ratingNote": "India Ratings AA+ · 2026-09-21"
     },
     {
       "id": "q7020",
