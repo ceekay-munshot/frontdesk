@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-23T18:51:15+05:30",
+  "generated_at": "2026-09-24T13:21:42+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "54c57a204424ea73b0dc6327cab35c2b96443826fe1359bbd84b5589eb7495ef",
   "trading_day": "2026-09-18",
@@ -21,43 +21,43 @@
   "quote_count": 7165,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-23 16:59:58",
+    "as_of": "2026-09-24 13:17:57",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.0345
-      },
-      {
-        "type": "tbill",
-        "name": "091 DTB 24122026",
-        "maturity": "2026-12-24",
-        "yield": 5.3694
-      },
-      {
-        "type": "gsec",
-        "name": "07.06 GS 2041",
-        "maturity": "2041-07-01",
-        "yield": 7.1958
+        "yield": 7.1024
       },
       {
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.731
+        "yield": 6.81
+      },
+      {
+        "type": "gsec",
+        "name": "07.06 GS 2041",
+        "maturity": "2041-07-01",
+        "yield": 7.2496
+      },
+      {
+        "type": "gsec",
+        "name": "06.10 GS 2031",
+        "maturity": "2031-07-01",
+        "yield": 6.8967
       },
       {
         "type": "tbill",
         "name": "364 DTB 23092027",
         "maturity": "2027-09-23",
-        "yield": 6.05
+        "yield": 6.07
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
-        "maturity": "2026-09-24",
-        "yield": 5.1
+        "maturity": "2026-09-25",
+        "yield": 5.09
       }
     ]
   },
@@ -2832,7 +2832,23 @@
       "coupon": null,
       "maturity": "2026-09-24",
       "rating": "A1+",
-      "type": "cp"
+      "type": "cp",
+      "ratingDate": "2026-09-22",
+      "ratingNote": "CARE A1+ · 2026-09-22",
+      "ratingSources": [
+        {
+          "agency": "CARE",
+          "date": "2026-09-22",
+          "action": "Reaffirmed",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/ec016e4d-8725-4161-946b-4de4d736dce2.pdf"
+        },
+        {
+          "agency": "ICRA",
+          "date": "2026-09-07",
+          "action": "Revalidated",
+          "url": "https://www.bseindia.com/xml-data/corpfiling/AttachLive/03c30401-64a7-4b1a-852b-ac2177a35996.pdf"
+        }
+      ]
     },
     "INE476A16E38": {
       "name": "CANARA BANK CD 11NOV26",
@@ -87584,7 +87600,7 @@
       "flags": [],
       "raw": "SBFC Finance Ltd CP (MD 24/09/2026)  100cr 6.50 chocie 09:30:07",
       "confidence": 0.6,
-      "ratingNote": "ICRA AA- · 2026-09-07",
+      "ratingNote": "CARE A1+ · 2026-09-22",
       "isin": "INE423Y14019",
       "rating": "A1+"
     },
@@ -124026,7 +124042,7 @@
       ],
       "raw": "SBFC Finance Ltd CP (MD 24/09/2026)    6.50 offer    150cr   can  switch also 09:25:28",
       "confidence": 0.8,
-      "ratingNote": "ICRA AA- · 2026-09-07",
+      "ratingNote": "CARE A1+ · 2026-09-22",
       "isin": "INE423Y14019",
       "rating": "A1+"
     },
