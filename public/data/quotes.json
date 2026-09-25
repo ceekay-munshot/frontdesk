@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-25T14:17:01+05:30",
+  "generated_at": "2026-09-25T19:18:39+05:30",
   "source": "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt",
   "source_hash": "7cc506d182fa35eb09342d586e8f13d7293971f398957bb067adb6168e8200c7",
   "trading_day": "2026-09-18",
@@ -21,37 +21,37 @@
   "quote_count": 7097,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-09-25 14:15:39",
+    "as_of": "2026-09-25 16:59:59",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.1245
+        "yield": 7.1194
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.2733
+        "yield": 7.2775
       },
       {
-        "type": "gsec",
-        "name": "06.90 GS 2065",
-        "maturity": "2065-07-01",
-        "yield": 7.6839
+        "type": "tbill",
+        "name": "091 DTB 05112026",
+        "maturity": "2026-11-05",
+        "yield": 5.3475
       },
       {
-        "type": "gsec",
-        "name": "07.30 GS 2053",
-        "maturity": "2053-07-01",
-        "yield": 7.6248
+        "type": "tbill",
+        "name": "091 DTB 12112026",
+        "maturity": "2026-11-12",
+        "yield": 5.3975
       },
       {
         "type": "gsec",
         "name": "06.68 GS 2040",
         "maturity": "2040-07-01",
-        "yield": 7.2369
+        "yield": 7.2393
       },
       {
         "type": "overnight",
@@ -4795,9 +4795,9 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.55,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q96",
@@ -4948,9 +4948,9 @@
       ],
       "raw": "8.65  Aadhar Housing Finance Ltd.  NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.55,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q102",
@@ -31389,9 +31389,9 @@
       ],
       "raw": "7.5285% Poonawalla Fincorp Ltd MAT 240927, offering at 7.55%, bid pls, Rs.50 crs 11:39:20",
       "confidence": 0.7,
+      "ratingNote": "CRISIL AAA · 2026-09-09",
       "isin": "INE511C07912",
-      "rating": "AAA",
-      "ratingNote": "CRISIL AAA · 2026-09-09"
+      "rating": "AAA"
     },
     {
       "id": "q1176",
@@ -39708,9 +39708,9 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.9,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q1511",
@@ -39842,9 +39842,9 @@
       ],
       "raw": "8.65  Aadhar Housing Finance Ltd.  20-Aug-2027 8.25 bid 10crs cbc",
       "confidence": 0.9,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q1516",
@@ -40721,9 +40721,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.90 offer",
       "confidence": 0.75,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q1552",
@@ -64048,9 +64048,9 @@
       "flags": [],
       "raw": "8.55% Shriram Fin  NCD(MD28/04/28)  8.05 offer  25 crs",
       "confidence": 0.7,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07SP0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q2509",
@@ -72168,9 +72168,9 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.5% NA Taxable 02-Dec-2027 offer for 10crs 7.95  bid 10crs cbc",
       "confidence": 0.55,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07363",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q2838",
@@ -74831,9 +74831,9 @@
       "flags": [],
       "raw": "7.9000% Mahindra & Mahindra Financial Services Ltd NCD 30082027 - 7.95 BID 25 CRS 15:59:07",
       "confidence": 0.7,
+      "ratingNote": "CRISIL AAA · 2026-09-07",
       "isin": "INE774D07UM6",
-      "rating": "AAA",
-      "ratingNote": "CRISIL AAA · 2026-09-07"
+      "rating": "AAA"
     },
     {
       "id": "q2946",
@@ -74951,9 +74951,9 @@
       "flags": [],
       "raw": "7.9000% Mahindra & Mahindra Financial Services Ltd NCD 30082027 - 7.95 BID 25 CRS 16:06:26",
       "confidence": 0.7,
+      "ratingNote": "CRISIL AAA · 2026-09-07",
       "isin": "INE774D07UM6",
-      "rating": "AAA",
-      "ratingNote": "CRISIL AAA · 2026-09-07"
+      "rating": "AAA"
     },
     {
       "id": "q2951",
@@ -97678,9 +97678,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.80 offer",
       "confidence": 0.6,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q3895",
@@ -97704,9 +97704,9 @@
       "flags": [],
       "raw": "9.233% SHRIRAM FINANCE LIMITED B & D 18-05-2027 - 7.50 offer",
       "confidence": 0.6,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RV0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q3896",
@@ -98929,9 +98929,9 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.8,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q3946",
@@ -99447,9 +99447,9 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.8,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q3967",
@@ -99475,9 +99475,9 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc",
       "confidence": 0.8,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q3968",
@@ -100101,9 +100101,9 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc 10:04:31",
       "confidence": 0.8,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q3993",
@@ -101525,9 +101525,9 @@
       ],
       "raw": "8.65%  Aadhar Housing Finance Ltd.  20-Aug-2027 5 to 10 crs 8.20 bid cbc 10:29:48",
       "confidence": 0.7,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q4051",
@@ -103292,9 +103292,9 @@
       "flags": [],
       "raw": "Poonawalla Fincorp Ltd. 7.55% 25MAR27 NCD  offer @ 7.25% 10:49:00",
       "confidence": 0.7,
+      "ratingNote": "CRISIL AAA · 2026-09-09",
       "isin": "INE511C07946",
-      "rating": "AAA",
-      "ratingNote": "CRISIL AAA · 2026-09-09"
+      "rating": "AAA"
     },
     {
       "id": "q4123",
@@ -103318,9 +103318,9 @@
       "flags": [],
       "raw": "Poonawalla Fincorp Ltd. 7.55% 25MAR27 NCD offer @ 7.25% 10:49:09",
       "confidence": 0.85,
+      "ratingNote": "CRISIL AAA · 2026-09-09",
       "isin": "INE511C07946",
-      "rating": "AAA",
-      "ratingNote": "CRISIL AAA · 2026-09-09"
+      "rating": "AAA"
     },
     {
       "id": "q4124",
@@ -105553,9 +105553,9 @@
       ],
       "raw": "INE721A07SA2 - 9.20% Shriram Fin 22 Sep 2029 - 10cr bid pls",
       "confidence": 0.75,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07SA2",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q4214",
@@ -108576,9 +108576,9 @@
       "flags": [],
       "raw": "9.233% SHRIRAM FINANCE LIMITED B & D 18-05-2027 - 7.50 offer 12:11:30",
       "confidence": 0.75,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RV0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q4336",
@@ -110198,9 +110198,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.90 offer",
       "confidence": 0.8,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q4402",
@@ -112135,9 +112135,9 @@
       ],
       "raw": "8.1390 Poonawalla Fincorp Sep’29 offer pls 25cr 13:54:56",
       "confidence": 0.75,
+      "ratingNote": "CRISIL AAA · 2026-09-09",
       "isin": "INE511C07AC7",
-      "rating": "AAA",
-      "ratingNote": "CRISIL AAA · 2026-09-09"
+      "rating": "AAA"
     },
     {
       "id": "q4480",
@@ -136235,9 +136235,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.40 offer 09:45:05",
       "confidence": 0.75,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q5474",
@@ -137513,9 +137513,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.40 offer",
       "confidence": 0.6,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q5526",
@@ -138455,9 +138455,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.70 offer 10:03:57",
       "confidence": 0.7,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q5565",
@@ -139492,9 +139492,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.70 offer",
       "confidence": 0.75,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q5607",
@@ -143742,9 +143742,9 @@
       ],
       "raw": "Aadhar Housing Finance Ltd. 8.65% NA Taxable 20-Aug-2027 8.10  bid cbc 5 crs",
       "confidence": 0.7,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q5777",
@@ -144120,9 +144120,9 @@
       "flags": [],
       "raw": "8.65%   Aadhar Housing  20-Aug-2027 7.75/8.05   5 crs",
       "confidence": 0.65,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q5792",
@@ -145138,9 +145138,9 @@
       "flags": [],
       "raw": "8.65%   Aadhar Housing  20-Aug-2027 @ 7.75 offer 12:03:17",
       "confidence": 0.7,
+      "ratingNote": "India Ratings AA+ · 2026-09-22",
       "isin": "INE883F07330",
-      "rating": "AA+",
-      "ratingNote": "India Ratings AA+ · 2026-09-22"
+      "rating": "AA+"
     },
     {
       "id": "q5834",
@@ -147083,9 +147083,9 @@
       ],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - sold at 6.80, 25crs can sell more",
       "confidence": 0.6,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q5912",
@@ -153940,9 +153940,9 @@
       "flags": [],
       "raw": "8.75% SHRIRAM FINANCE LIMITED B & D 05-10-2026 - 6.80 offer",
       "confidence": 0.65,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RQ0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q6190",
@@ -153966,9 +153966,9 @@
       "flags": [],
       "raw": "9.233% SHRIRAM FINANCE LIMITED B & D 18-05-2027 - 7.50 offer",
       "confidence": 0.65,
+      "ratingNote": "ICRA AAA · 2026-09-03",
       "isin": "INE721A07RV0",
-      "rating": "AAA",
-      "ratingNote": "ICRA AAA · 2026-09-03"
+      "rating": "AAA"
     },
     {
       "id": "q6191",
