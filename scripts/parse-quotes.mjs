@@ -48,7 +48,7 @@ import { fixMoneyMarketYields } from "./mm-handle.mjs";
    ------------------------------------------------------------------------- */
 
 const DOC_URL =
-  "https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt";
+  "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt";
 
 /** Output file, resolved relative to this script so cwd never matters. */
 const OUT_PATH = fileURLToPath(new URL("../public/data/quotes.json", import.meta.url));

@@ -68,8 +68,15 @@ and changes nothing inside it.
 A public, link-shared Google Doc (no login), fetched via its plain-text export:
 
 ```
-https://docs.google.com/document/d/11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4/export?format=txt
+https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt
 ```
+
+> **The doc rotates.** Google caps a document at ~1M characters, so when the live doc
+> fills up the desk starts a fresh one and pastes into that. When they do, point `DOC_URL`
+> in `scripts/parse-quotes.mjs` at the new doc's `/export?format=txt` link — that one
+> constant is the only thing to change. Every past day is already saved forever under
+> `data/archive/raw/`, so nothing is lost across a rotation.
+> _(Previous doc, retired at 18-Sep-2026: `11e0cnpJhjqCZJj3LMOF88oYZUGTwYCpZtKX6zVErU_4`.)_
 
 The doc has three sections, each marked by a bare line `Bonds`, `Gsec`, or `DCM`:
 
@@ -101,9 +108,11 @@ A dry run fetches the live doc, prints which sections it found and how many line
 how many LLM chunks it would send, and a sample of the annotated transcript — **without
 calling the LLM**, so no key is required.
 
-_Last dry run against the live doc found all three sections:_ **Bonds (472 lines),
-Gsec (124 lines), DCM (334 lines)** → 930 quote lines → ~24 LLM chunks (~40 lines
-each), run with bounded parallelism so a full day refreshes in a few minutes.
+_Last dry run against the live doc found all three sections:_ **Bonds (7224 lines),
+Gsec (1671 lines), DCM (3747 lines)** across days 21–25 Sep 2026 → ~10.3k quote lines →
+~260 LLM chunks (~40 lines each), run with bounded parallelism. That larger count is the
+one-time catch-up of the freshly-rotated doc's five days; once each day is settled it is
+reused verbatim, so routine refreshes only re-do the live day and finish in a few minutes.
 
 ---
 
