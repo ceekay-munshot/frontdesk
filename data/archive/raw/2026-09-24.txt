@@ -2040,3 +2040,131 @@ Reliance Retail Ventures Ltd CMP 11122026 25 choice 25 crs 16:33:44
 Union Jan Primary wat size dlt ? 16:37:38
 5 Mar HDFC Bank CD 86/91 16:37:41
 kuch choices baki hai ke ghar jaye ? 16:49:19
+7.71 2066 - 6550 offer
+7.25 2055 - 6150 bid
+switch 12:34:58
+UP 2044 - 7.90 Bid - 50/100cr
+Ban bank 12:35:02
+UP SDL 2044 - 7.90 bid - 50-100crs cbc 12:35:07
+bandhan bank 12:35:10
+7.88 UP 2046: 50-60crs 7.86 offer 12:38:26
+stci 12:38:28
+03/12 or 10/12 tbill- any offer?
+pru mf 12:39:27
+7.71 2066 can sell and buy 7.24 2055 - 4bps can pay 12:40:58
+LIC MF 12:40:59
+10/12 T-Bill - 5.32 offer - 200cr 12:41:28
+DFHI 12:41:30
+7.65% MADHYAPRADESH SGS Mat - 11/03/2040...7.85/90...50 vs 25crs 12:41:36
+uti mf vs lic pension 12:41:51
+10/12 Tbill - 5.32/40
+dfhi vs pru mf 12:43:04
+7.88 UP 2046: 50-60crs 7.86 / 92 cbc 12:44:29
+8.18 TN Dec 2028 - 25cr can switch
+cbi 12:50:40
+7.49 TN 08/2036 - 78Offer 12:54:38
+AR 12:54:41
+sold 29th Oct at 5.10, can sell 150 crs more
+emf 12:54:55
+UP SDL 2041 - 7.89 bid cbc 12:54:55
+7.81 GJ 10/2032 - 10cr
+8.62 JH 03/2030 - 10cr
+8.62 UP 03/2030 - 10cr
+7.98 TS 03/2030 - 5cr  Bids pls 12:54:56
+bandhan bank 12:54:57
+CHOLI 12:54:58
+7.81 UP ( 11/02/2041) - 50 crs - 84 offer 12:56:10
+SUD 12:56:12
+7.62 UP March 2041 - 7.84 / 89 - 80crs cbc 12:56:22
+2 oct tbill 70 offer 70 crs 12:56:26
+7.81 UP ( 11/02/2041) - 50 crs - 85 offer 13:02:40
+SUD 13:02:42
+7.87 RJ SDL (20/05/2041) -  86 offer 13:06:36
+Pru P 13:06:39
+7.62 UP March 2041 - 7.86 / 89 - 80crs cbc 13:06:51
+isec vs bandhan bank 13:06:58
+7.49 TN 08/2036 - 78 Offer - 25cr 13:11:30
+AR 13:11:35
+7.95 2032 - 7.03 / 7.04 - 250CR -CB C 13:13:36
+JP vs SBI 13:13:38
+10/12 T-Bill - 5.32 / 40 - 200cr cbc 13:26:53
+DFHI vs pru mf 13:26:57
+7.64% TELANGANA SGS Mat - 01/07/2044 25 Crs
+07.71% BIHAR SGS Mat - 22/07/2044 50 Crs
+8.07% KERALA SGS - 16/09/2044 25 Crs..
+7.9075/93 13:28:05
+uti mf vs gilts 13:28:09
+7.9075/92 cbc 13:31:46
+can look to buy 2043-2049 GSec papers 13:34:28
+chola 13:34:31
+7.71 Bihar 2044   100crs  7.90 offer 13:49:50
+NAVI 13:50:02
+7.71 Bihar 2044   100crs  7.90/93 13:53:17
+navi vs gilts 13:53:24
+7.64 TS 2044 - 25cr offers pls 13:54:18
+India First life 13:54:22
+Telangana 2044 sold at 7.88% can sell 20crs more
+Bihar 2044  100crs 7.90 offer  holding a 7.92 bid 13:55:03
+navi 13:55:07
+7.71 Bihar 2044  sold 25crs at 7.91.. can sell 75crs more 13:56:47
+o buy 6.01 2030 and sell 6.36 2031 50 cr - px pls 13:57:12
+SCB 13:57:13
+8.13 2045 45.50 offer 100cr 13:58:07
+MAx Life 13:58:09
+6.01 2030 can buy and sell 6.36 2031 - 50crs - can pay 1bps 13:58:58
+scb 13:58:59
+8.13 2045...7.4550/49 100crs 13:59:25
+max life vs chola 13:59:30
+6.10 2031 - 250crs bids pls 14:04:38
+isec 14:04:39
+7.09 2074 vs 7.43 2076 switch - mkt 200crs dlt at 1bps (2074 traded higher) 14:15:44
+7.25 2063 vs 7.71 2066 switch - mkt 155crs dlt at 2.45bps 14:22:47
+7.25 2063 vs 7.71 2066 switch - mkt 155crs dlt at 2.45bps (2063 traded higher) 14:23:48
+7.79MHSD22AP54 can switch with similar maturity 50cr 14:30:15
+max 14:30:21
+74/76 1.5 can rec best now 200 crs dealing
+14:32:17
+jp 14:32:20
+7.43 2076 price for 50-100cr please 14:49:59
+MAX 14:50:01
+2076 70p bid 100cr 14:53:49
+max 14:53:51
+8.97 GS 2030 can sell 35 crs show bid
+birla life 14:55:49
+can sell 7.25 GS 2063 and buy 7.71 GS 2066 .  25 cr. To pay 2.5 bps 14:57:54
+bajaj life 14:57:56
+7.58 WB Jul 2035 - bids pls
+cbi 14:58:28
+6.33 2035 - 25cr price 14:59:44
+LIC MF 14:59:48
+6.48 2035 - 50cr price 15:03:37
+LIC MF 15:03:40
+7.55 PN 17/06/2033 - 5cr - 7.6064 offer 15:03:47
+IDBI Bank 15:03:51
+7.58 WB Jul 2035 - 25cr can sell outright / switch - counters pls
+cbi 15:11:09
+15 oct and 22 oct tbill wht price 15:11:29
+KMF 15:11:33
+15/10
+22/10 TBil - 00/07 - cbc 15:13:33
+KMF 2way 15:13:40
+3m tbill 39 offer 50 crs 15:19:02
+bajaj mf 15:19:05
+6.90 2065 vs 7.71 2066 - 1.50bps / 2.50bps cbc (2065 trading higher) 15:24:52
+got 2041 TN at 88. can buy 2040 MP at 89 15:27:04
+bandhan bank 15:27:07
+6.33 2035  - 95.32 offer - 25cr 15:34:13
+LIC MF 15:34:17
+6.33 2035 - 26/30ps - 25 crs 15:37:03
+ISEC vs LIC MF 15:37:10
+Sold 50 crs of Mah Apr 2030 @ 7.34…can sell last 30 crs 15:42:01
+HSBC MF 15:42:04
+7.59 KA 15 Feb 27 10cr can sell at 5.85 15:43:29
+Can MF 15:43:33
+7.95 2032 vs 7.18 2033 switch - mkt 1bps dlt 475crs 15:53:50
+6.48 2035 25cr price 15:54:12
+LIC MF 15:54:16
+6.90 2065 vs 7.71 2066 - 1.50bps / 2.00bps cbc (2065 trading higher) 16:02:31
+3m tbill 40 offer 50 crs 16:35:38
+7.20 Maha Aug 2027- 50 cr can sell at 6.20
+pru mf 16:36:18
