@@ -98,3 +98,53 @@ export function fixMoneyMarketYields(quotes) {
 }
 
 export default fixMoneyMarketYields;
+
+/* =========================================================================
+ * Bond "dropped handle" repair — the SAME desk shorthand applies to bonds, not
+ * just CD/CP: "10y bajaj hsg 45" means 7.45%, a bond "10 offer" means 7.10%, etc.
+ * (This is exactly the client's "Bajaj Housing 10.00% is not correct".) Unlike
+ * money-market paper, bond handles vary by issuer (6/7/8%), so we anchor each
+ * bond to where it REALLY trades on NSE (its CBRICS traded yield), falling back
+ * to its coupon, then a section handle. Only bare integers 10..99 are touched,
+ * and only when the rebuilt value lands near the anchor — so a clean 7.45 or a
+ * genuine 8.10 is never altered, and a reconstruction that doesn't match reality
+ * is left alone (the frontend then excludes it rather than show a false level).
+ * ========================================================================= */
+const isBondQuote = (q) => String(q?.section) === "Bonds" && !isMM(q);
+
+export function fixBondYields(quotes, tradedByIsin) {
+  if (!Array.isArray(quotes) || !quotes.length) return { fixed: 0, details: [] };
+  const byIsin = tradedByIsin || {};
+  const bonds = quotes.filter(isBondQuote);
+  // Section fallback handle from cleanly-quoted bonds (decimal yields in-band).
+  const clean = [];
+  for (const q of bonds) for (const v of [q.yield, q.bid, q.offer, q.level]) if (isNum(v) && !Number.isInteger(v) && v >= 4 && v <= 11) clean.push(v);
+  const sectionHandle = clean.length >= 3 ? Math.floor(median(clean)) : 7;
+
+  const FIELDS = ["yield", "bid", "offer", "level"];
+  const details = [];
+  let fixed = 0;
+  for (const q of bonds) {
+    const tr = q.isin ? byIsin[q.isin] : null;
+    const anchor = tr && isNum(tr.yield) ? tr.yield : (isNum(q.coupon) ? q.coupon : null);
+    const handle = anchor != null ? Math.floor(anchor) : sectionHandle;
+    let touched = false;
+    const before = {};
+    for (const f of FIELDS) {
+      const v = q[f];
+      if (!isNum(v) || !Number.isInteger(v) || v < 10 || v > 99) continue; // only a bare dropped handle
+      const recon = Math.round((handle + v / 100) * 1e4) / 1e4;
+      if (recon < 3 || recon > 12) continue;                       // must be a real bond yield
+      if (anchor != null && Math.abs(recon - anchor) > 1.5) continue; // and near where it really trades
+      before[f] = v;
+      q[f] = recon;
+      touched = true;
+    }
+    if (touched) {
+      q.handle_fixed = true;
+      fixed++;
+      details.push({ id: q.id, isin: q.isin || null, issuer: q.issuer, handle, anchor, before, raw: q.raw });
+    }
+  }
+  return { fixed, details };
+}

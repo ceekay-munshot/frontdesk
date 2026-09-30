@@ -41,7 +41,7 @@ import { llmStructured, activeModel, llmBanner } from "./llm.mjs";
 import { fetchGovtBenchmark } from "./ccil.mjs";
 import { fetchNsdlSources, fetchNsdlDirectory, buildNsdlIndex, resolveSecurity } from "./nsdl.mjs";
 import { combineRatings, instrumentScale } from "./ratings.mjs";
-import { fixMoneyMarketYields } from "./mm-handle.mjs";
+import { fixMoneyMarketYields, fixBondYields } from "./mm-handle.mjs";
 
 /* ---------------------------------------------------------------------------
    Configuration.
@@ -1036,6 +1036,18 @@ async function main() {
   //      unique, and attach a confident credit rating (even across same-issuer
   //      series). Best-effort: degrades to "as of last good build" on any outage.
   const { securities, reference } = await enrichWithNsdl(quotes);
+
+  // 5a3. Bond "dropped handle" repair — same desk shorthand as CD/CP but for bonds
+  //      ("bajaj hsg 45" = 7.45%, a bond "10 offer" = 7.10%). Bond handles vary by
+  //      issuer, so anchor each to where it REALLY trades on NSE (the CBRICS
+  //      traded reference from the previous build), else its coupon. Runs AFTER
+  //      NSDL enrichment so q.isin is set for the traded-level lookup.
+  try {
+    const trPath = join(dirname(OUT_PATH), "traded-ref.json");
+    const tradedByIsin = existsSync(trPath) ? (JSON.parse(readFileSync(trPath, "utf8")).byIsin || {}) : {};
+    const bondFix = fixBondYields(quotes, tradedByIsin);
+    if (bondFix.fixed) console.log(`[frontdesk] bond handles rebuilt on ${bondFix.fixed} quote(s)`);
+  } catch (e) { console.warn("[frontdesk] bond handle repair skipped:", e.message); }
 
   // 5b. CCIL government benchmark (traded T-bills + G-Secs) — the desk prices
   //     corporate bonds as a spread over the matching-maturity govt security, so

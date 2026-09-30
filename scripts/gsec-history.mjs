@@ -1,65 +1,64 @@
 /**
- * gsec-history.mjs — free historical government-bond yield series.
+ * gsec-history.mjs — free historical government-bond yield CURVE (multi-tenor).
  * ===========================================================================
  * For the "spread since issue" read we need where GOVERNMENT bonds yielded on a
- * PAST date, not just today. India's own sources (RBI/FBIL/CCIL) block automated
- * pulls, but the OECD publishes India's benchmark 10-year G-Sec yield monthly and
- * the St. Louis Fed (FRED) serves it as a clean CSV, free and without a key:
+ * PAST date, at (roughly) the bond's remaining tenor on that date. India's own
+ * sources (RBI/CCIL/FBIL) block automated pulls, and investing.com/tradingeconomics
+ * return 403. The reliably-free, official series are the OECD ones served by the
+ * St. Louis Fed (FRED), no key required:
  *
- *   https://fred.stlouisfed.org/graph/fredgraph.csv?id=INDIRLTLT01STM
+ *   overnight / call  : IRSTCI01INM156N   (~0y)
+ *   3-month           : INDIR3TIB01STM    (~0.25y)
+ *   10-year G-Sec     : INDIRLTLT01STM    (10y)
  *
- * We store it as a monthly map so the dashboard can show a bond's spread OVER THE
- * 10-YEAR G-SEC BENCHMARK back to when it started trading. (The live tenor-matched
- * CCIL curve still drives today's headline spread; this monthly 10Y series is the
- * consistent benchmark for the historical trend.)
+ * We store all three as a monthly curve so the dashboard can INTERPOLATE the G-Sec
+ * yield at a bond's remaining tenor for each past month (tenor-aware, not flat 10Y).
+ * The 2-7y belly is interpolated between the 3-month and 10-year points — the one
+ * approximation, since no free belly source is reachable; today's spread stays
+ * exact (live CCIL, tenor-matched). Honest + free.
  *
  * Reject-bad-keep-old: a failed fetch leaves the existing file untouched.
- * Node 22 (global fetch). No dependencies.
+ * Node 22 (global fetch, curl fallback for the sandbox proxy). No dependencies.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 const execFileP = promisify(execFile);
 
-const FRED_10Y = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=INDIRLTLT01STM";
 const OUT = new URL("../public/data/gsec-history.json", import.meta.url);
+const FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=";
+// Each official series with the tenor (years) it represents on the curve.
+const SERIES = [
+  { id: "IRSTCI01INM156N", tenor: 0.02 }, // call / overnight
+  { id: "INDIR3TIB01STM", tenor: 0.25 },  // 3-month
+  { id: "INDIRLTLT01STM", tenor: 10 },    // 10-year benchmark G-Sec
+];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const looksLikeCsv = (t) => /observation_date/i.test((t || "").slice(0, 80));
 
-/** Fetch the FRED CSV. Native fetch works in the GitHub Action (direct network);
- *  in the sandboxed session the agent proxy rejects node fetch to FRED, so we
- *  fall back to curl (its default UA passes the proxy). Either path is fine. */
-async function fetchFredCsv(url) {
+async function fetchFredCsv(id) {
+  const url = FRED + id;
   let lastErr = null;
   for (let attempt = 0; attempt < 3; attempt++) {
     if (attempt) await sleep(1500 * attempt);
     try {
       const res = await fetch(url, { headers: { Accept: "text/csv,*/*" }, signal: AbortSignal.timeout(30000) });
-      if (!res.ok) { lastErr = new Error(`FRED HTTP ${res.status}`); continue; }
-      const text = await res.text();
-      if (looksLikeCsv(text)) return text;
-      lastErr = new Error("FRED: unexpected payload");
+      if (res.ok) { const t = await res.text(); if (looksLikeCsv(t)) return t; lastErr = new Error("bad payload"); }
+      else lastErr = new Error(`HTTP ${res.status}`);
     } catch (e) { lastErr = e; }
   }
-  // Fallback: curl with its default UA (works through the sandbox proxy).
-  try {
-    const { stdout } = await execFileP("curl", ["-fsS", "--max-time", "30", url], { maxBuffer: 8 * 1024 * 1024 });
-    if (looksLikeCsv(stdout)) return stdout;
-  } catch (e) { lastErr = e; }
-  throw lastErr || new Error("FRED: unreachable");
+  try { const { stdout } = await execFileP("curl", ["-fsS", "--max-time", "30", url], { maxBuffer: 8 * 1024 * 1024 }); if (looksLikeCsv(stdout)) return stdout; } catch (e) { lastErr = e; }
+  throw lastErr || new Error("unreachable");
 }
-
-/** Parse FRED CSV -> { "YYYY-MM": yield }. Skips missing (".") values. */
+/** FRED CSV -> { "YYYY-MM": yield }. */
 function parseMonthly(text) {
   const out = {};
-  const lines = text.split(/\r?\n/).filter((l) => l.trim());
-  for (let i = 1; i < lines.length; i++) {
-    const [date, valRaw] = lines[i].split(",");
+  for (const line of text.split(/\r?\n/).slice(1)) {
+    const [date, valRaw] = line.split(",");
     if (!date) continue;
     const v = parseFloat(valRaw);
-    if (!Number.isFinite(v) || v <= 0) continue;
-    out[date.slice(0, 7)] = Math.round(v * 100) / 100; // YYYY-MM -> yield
+    if (Number.isFinite(v) && v > 0) out[date.slice(0, 7)] = Math.round(v * 100) / 100;
   }
   return out;
 }
@@ -67,25 +66,38 @@ function parseMonthly(text) {
 let prev = null;
 try { prev = JSON.parse(await readFile(OUT, "utf8")); } catch { prev = null; }
 
-let monthly;
-try {
-  monthly = parseMonthly(await fetchFredCsv(FRED_10Y));
-} catch (e) {
-  console.warn(`[gsec-history] fetch failed (${e.message}); keeping previous`);
-  if (!prev) process.exit(1);
-  process.exit(0);
+// Fetch each series; tolerate one failing as long as the 10Y (the anchor) lands.
+const perSeries = {};
+let got10y = false;
+for (const s of SERIES) {
+  try { perSeries[s.id] = { tenor: s.tenor, monthly: parseMonthly(await fetchFredCsv(s.id)) }; if (s.id === "INDIRLTLT01STM") got10y = true; }
+  catch (e) { console.warn(`[gsec-history] ${s.id} failed: ${e.message}`); }
 }
+if (!got10y && !(prev && prev.monthly)) { console.error("[gsec-history] could not fetch the 10Y anchor and no previous file — aborting"); process.exit(1); }
 
-// Merge onto any previous months (so a temporary FRED gap never loses history).
-const merged = { ...((prev && prev.monthly) || {}), ...monthly };
-const months = Object.keys(merged).sort();
+// Assemble a monthly multi-tenor curve: month -> [[tenor, yield], ...] sorted by tenor.
+const monthly = {};
+// seed from previous so a temporarily-missing series never wipes history
+if (prev && prev.monthly) for (const [m, pts] of Object.entries(prev.monthly)) monthly[m] = Array.isArray(pts) ? pts.slice() : [];
+for (const s of SERIES) {
+  const rec = perSeries[s.id];
+  if (!rec) continue;
+  for (const [m, y] of Object.entries(rec.monthly)) {
+    const pts = (monthly[m] || []).filter((p) => p[0] !== s.tenor); // replace same-tenor
+    pts.push([s.tenor, y]);
+    pts.sort((a, b) => a[0] - b[0]);
+    monthly[m] = pts;
+  }
+}
+const months = Object.keys(monthly).sort();
 const out = {
-  _note: "India benchmark 10-year G-Sec yield, monthly, from OECD via FRED (free). Used for the spread-since-issue read (spread over the 10Y G-Sec benchmark). Built by scripts/gsec-history.mjs.",
-  series: "INDIRLTLT01STM",
+  _note: "India G-Sec curve, monthly, from OECD via FRED (free): overnight, 3-month, 10-year. Each month is [[tenorYears, yield%], ...]. The dashboard interpolates to a bond's remaining tenor for the spread-since-issue read. Built by scripts/gsec-history.mjs.",
+  series: SERIES.map((s) => s.id),
   source: "OECD / FRED (fred.stlouisfed.org)",
-  tenor_years: 10,
+  tenors: SERIES.map((s) => s.tenor),
   as_of: months[months.length - 1] || null,
-  monthly: merged,
+  monthly,
 };
 await writeFile(OUT, JSON.stringify(out));
-console.log(`[gsec-history] wrote ${months.length} months (${months[0]} -> ${out.as_of}); latest 10Y ${merged[out.as_of]}%`);
+const latest = monthly[out.as_of] || [];
+console.log(`[gsec-history] wrote ${months.length} months (${months[0]} -> ${out.as_of}); latest curve: ${latest.map(([t, y]) => `${t}y=${y}%`).join(", ")}`);

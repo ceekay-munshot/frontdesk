@@ -154,7 +154,7 @@ function tradedRef(isin) {
 }
 
 const GSEC_HISTORY_URL = "data/gsec-history.json";
-let GSEC_HIST = null; // { tenor_years:10, monthly: { "YYYY-MM": yield } } — free, from FRED/OECD
+let GSEC_HIST = null; // { monthly: { "YYYY-MM": [[tenorYears, yield%], ...] } } — free, FRED/OECD
 async function loadGsecHistory() {
   try {
     const r = await fetch(GSEC_HISTORY_URL, { cache: "no-store" });
@@ -163,39 +163,94 @@ async function loadGsecHistory() {
     GSEC_HIST = j && j.monthly ? j : null;
   } catch { /* stays null -> the since-issue read is simply skipped */ }
 }
-/** Benchmark 10Y G-Sec yield for a YYYY-MM (nearest earlier month if the exact one
- *  isn't published yet — the OECD/FRED series lags ~2 months). */
-function gsecMonthly(mk) {
+/** The G-Sec curve points ([[tenor,yield],...]) for a month; nearest earlier month
+ *  if the exact one isn't published yet (the OECD/FRED series lags ~2 months). */
+function gsecCurveAt(mk) {
   if (!GSEC_HIST || !GSEC_HIST.monthly || !mk) return null;
   const m = GSEC_HIST.monthly;
-  if (isNum(m[mk])) return m[mk];
-  let best = null;
-  for (const k of Object.keys(m)) { if (k <= mk && isNum(m[k])) best = m[k]; }
+  if (Array.isArray(m[mk]) && m[mk].length) return m[mk];
+  // nearest EARLIER month — pick the MAXIMUM key <= mk (object key order isn't sorted).
+  let best = null, bestK = "";
+  for (const k of Object.keys(m)) { if (k <= mk && k > bestK && Array.isArray(m[k]) && m[k].length) { bestK = k; best = m[k]; } }
   return best;
 }
-/** A bond's spread-over-10Y-G-Sec journey from its earliest real trade on record
- *  (≈ since issue) to its latest — the desk's "spread since issue" ask. Needs a
- *  real span (>= ~6 months) and both endpoints' 10Y benchmark; null otherwise. */
-function sinceIssueSpread(isin) {
+/** G-Sec yield interpolated to `tenor` (years) for a month; clamps at the ends.
+ *  Tenor-aware: a bond issued 10y ago reads off the 10y point back then, and the
+ *  short end as it approaches maturity. (Belly 2-7y is interpolated 3M↔10Y.) */
+function gsecAt(mk, tenor) {
+  const pts = gsecCurveAt(mk);
+  if (!pts || !pts.length) return null;
+  const t = isNum(tenor) ? Math.max(0.02, tenor) : 10;
+  if (t <= pts[0][0]) return pts[0][1];
+  if (t >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+  for (let i = 1; i < pts.length; i++) {
+    if (t <= pts[i][0]) { const [t0, y0] = pts[i - 1], [t1, y1] = pts[i]; return y0 + (y1 - y0) * (t - t0) / (t1 - t0); }
+  }
+  return pts[pts.length - 1][1];
+}
+/** A bond's spread-vs-G-Sec journey from its first real trade to today. Benchmark:
+ *  the 10-YEAR G-Sec, used CONSISTENTLY. (We tried tenor-matching each date, but the
+ *  only free short-end series is the interbank rate, which sits well below actual
+ *  T-bill yields and made short bonds look absurdly wide — so the honest, trustworthy
+ *  read is the standard "spread over the 10Y benchmark", clearly labelled. Today's
+ *  HEADLINE spread stays exactly tenor-matched via the live CCIL curve.) Returns the
+ *  monthly series + endpoints, or null when too thin / no G-Sec history. */
+function spreadJourney(isin) {
   const t = tradedRef(isin);
   const h = t && Array.isArray(t.history) ? t.history.filter((x) => isNum(x.y)) : [];
-  if (h.length < 3 || !GSEC_HIST) return null;
-  const first = h[0], last = h[h.length - 1];
-  const spanDays = (new Date(last.d + "T00:00:00Z") - new Date(first.d + "T00:00:00Z")) / 86400000;
-  if (!(spanDays >= 180)) return null; // too short to be a "journey"
-  const g0 = gsecMonthly(first.d.slice(0, 7)), g1 = gsecMonthly(last.d.slice(0, 7));
-  if (g0 == null || g1 == null) return null;
-  const s0 = Math.round((first.y - g0) * 100), s1 = Math.round((last.y - g1) * 100);
-  return { fromD: first.d, fromY: first.y, fromSpread: s0, toD: last.d, toY: last.y, toSpread: s1, delta: s1 - s0, n: h.length };
+  if (h.length < 2 || !GSEC_HIST) return null;
+  const pts = [];
+  for (const x of h) {
+    const g = gsecAt(x.d.slice(0, 7), 10); // 10Y benchmark (reliable free official series)
+    if (g == null) continue;
+    pts.push({ d: x.d, corpY: x.y, gsecY: Math.round(g * 100) / 100, spread: Math.round((x.y - g) * 100) });
+  }
+  if (pts.length < 2) return null;
+  return { pts, from: pts[0], to: pts[pts.length - 1], delta: pts[pts.length - 1].spread - pts[0].spread, n: h.length };
+}
+/** Summary of the journey (endpoints + change), for compact lines. */
+function sinceIssueSpread(isin) {
+  const j = spreadJourney(isin);
+  if (!j) return null;
+  const spanDays = (new Date(j.to.d + "T00:00:00Z") - new Date(j.from.d + "T00:00:00Z")) / 86400000;
+  if (!(spanDays >= 120)) return null;
+  return { fromD: j.from.d, fromSpread: j.from.spread, toD: j.to.d, toSpread: j.to.spread, delta: j.delta, n: j.n, journey: j };
 }
 /** Compact tooltip line for the since-issue spread journey. */
 function sinceIssueTip(isin) {
   const si = sinceIssueSpread(isin);
   if (!si) return "";
+  const sgn = (v) => (v >= 0 ? "+" : "") + v;
   const wider = si.delta > 0;
   const tag = Math.abs(si.delta) < 8 ? "about the same" : `${Math.abs(si.delta)} bps ${wider ? "wider" : "tighter"}`;
   const col = Math.abs(si.delta) < 8 ? T.n500 : wider ? T.buyInk : T.sellInk;
-  return `<div style="margin-top:6px;color:${T.n400};font-size:11px">Since first traded (${esc(fmtMonYr(si.fromD))}): <b style="color:${T.n600}">+${si.fromSpread} → +${si.toSpread} bps</b> over 10Y G-Sec · <span style="color:${col};font-weight:600">${tag}</span></div>`;
+  return `<div style="margin-top:6px;color:${T.n400};font-size:11px">Since first traded (${esc(fmtMonYr(si.fromD))}): <b style="color:${T.n600}">${sgn(si.fromSpread)} → ${sgn(si.toSpread)} bps</b> over 10Y G-Sec · <span style="color:${col};font-weight:600">${tag}</span></div>`;
+}
+/** Two-line mini chart of the bond's traded yield vs the matching G-Sec over time;
+ *  the shaded gap between them IS the spread. `dark` for the (dark) tooltip. */
+function spreadJourneySVG(j, opts = {}) {
+  const W = opts.w || 340, H = opts.h || 104, L = 8, R = W - 8, TOP = 18, BOT = H - 18;
+  const dark = !!opts.dark;
+  const ink = dark ? "#e2e8f0" : T.n700, mut = dark ? T.n400 : T.n500, grid = dark ? "#ffffff18" : T.n200;
+  const ds = j.pts.map((p) => new Date(p.d + "T00:00:00Z").getTime());
+  const x0 = ds[0], x1 = ds[ds.length - 1] || x0 + 1;
+  const ys = j.pts.flatMap((p) => [p.corpY, p.gsecY]);
+  let lo = Math.min(...ys), hi = Math.max(...ys); const pad = Math.max(0.1, (hi - lo) * 0.18); lo -= pad; hi += pad;
+  const X = (t) => L + (x1 > x0 ? (t - x0) / (x1 - x0) : 0.5) * (R - L);
+  const Y = (y) => BOT - (hi > lo ? (y - lo) / (hi - lo) : 0.5) * (BOT - TOP);
+  const line = (key) => j.pts.map((p, i) => `${i ? "L" : "M"}${X(ds[i]).toFixed(1)},${Y(p[key]).toFixed(1)}`).join(" ");
+  const area = j.pts.map((p, i) => `${i ? "L" : "M"}${X(ds[i]).toFixed(1)},${Y(p.corpY).toFixed(1)}`).join(" ")
+    + j.pts.map((p, i) => { const idx = j.pts.length - 1 - i; return `L${X(ds[idx]).toFixed(1)},${Y(j.pts[idx].gsecY).toFixed(1)}`; }).join(" ") + "Z";
+  const dot = (p, key, col) => `<circle cx="${X(new Date(p.d + "T00:00:00Z").getTime()).toFixed(1)}" cy="${Y(p[key]).toFixed(1)}" r="3" fill="${col}"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" class="w-full" role="img" aria-label="Spread over government since first trade">
+    <path d="${area}" fill="${T.grad2}22"/>
+    <path d="${line("gsecY")}" fill="none" stroke="${mut}" stroke-width="1.5" stroke-dasharray="3 2"/>
+    <path d="${line("corpY")}" fill="none" stroke="${T.grad1}" stroke-width="2"/>
+    ${dot(j.from, "corpY", T.grad1)}${dot(j.to, "corpY", T.grad1)}
+    <text x="${L}" y="11" font-size="10" fill="${mut}">${esc(fmtMonYr(j.from.d))} · ${j.from.spread >= 0 ? "+" : ""}${j.from.spread}bps</text>
+    <text x="${R}" y="11" text-anchor="end" font-size="10" font-weight="700" fill="${ink}">now · ${j.to.spread >= 0 ? "+" : ""}${j.to.spread}bps</text>
+    <text x="${R}" y="${H - 4}" text-anchor="end" font-size="9.5" fill="${mut}">— bond · - - govt (10Y)</text>
+  </svg>`;
 }
 /** Tooltip line: "Last traded X.XX% · DD-Mon (NSE reported)", plus a warning when
  *  the desk quote sits far (>=50 bps) from the last real trade. */
@@ -245,13 +300,13 @@ function tradedNormalLine(isin, curYield, pinned) {
     if (pinned) {
       const rows = hist.slice().reverse().slice(0, 30).map((h) =>
         `<tr><td style="padding:2px 12px 2px 0;color:${T.n400};white-space:nowrap">${esc(fmtDate(h.d))}</td><td style="padding:2px 0;text-align:right;font-variant-numeric:tabular-nums">${h.y.toFixed(2)}%</td></tr>`).join("");
-      drill = `<div class="tt-label" style="margin-top:8px">The ${nrm.n} real trades · NSE${hist.length > 30 ? " (latest 30)" : ""}</div>
+      drill = `<div class="tt-label" style="margin-top:8px">The ${nrm.n} NSE trade readings${hist.length > 30 ? " (latest 30)" : ""} · recent in full, older sampled monthly</div>
         <div style="max-height:190px;overflow:auto;margin-top:3px"><table style="border-collapse:collapse;font-size:11px"><thead><tr style="color:${T.n400};text-align:left"><th style="padding:0 12px 3px 0">Date</th><th style="padding:0 0 3px;text-align:right">Traded yield</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     } else {
-      drill = `<div style="margin-top:6px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see the ${nrm.n} trades ↗</div>`;
+      drill = `<div style="margin-top:6px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see the ${nrm.n} NSE trade readings ↗</div>`;
     }
   }
-  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · NSE (${nrm.n} trades)`)}${read}${sinceIssueTip(isin)}${drill}</div>`;
+  return `<div style="margin-top:4px">${rowHtml("Usually trades", `~${nrm.yield.toFixed(2)}% · <a href="https://www.nseindia.com/market-data/debt-market-reporting-corporate-bonds-traded-on-exchange" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">NSE reported / CBRICS ↗</a>`)}${read}${sinceIssueTip(isin)}${drill}</div>`;
 }
 /** Median of PRIOR days' bucket medians (excludes today), preferring the
  *  same-rating series and falling back to the rating-agnostic one. */
@@ -450,6 +505,24 @@ function ratingClass(r) {
   if (/^(AAA|AA|A1\+?|SOV)/.test(u)) return "border-emerald-200 bg-emerald-50 text-emerald-700";
   if (/^(A\b|A[+-]|A2|A3)/.test(u)) return "border-amber-200 bg-amber-50 text-amber-700";
   return "border-rose-200 bg-rose-50 text-rose-700";
+}
+
+/** Rating scale of a symbol: "MM" (short-term A1+..A4) or "LT" (AAA..D), else null. */
+function ratingScaleOf(r) {
+  const u = String(r || "").toUpperCase().replace(/[^A-Z0-9+]/g, "");
+  if (/^A[1-4]/.test(u)) return "MM";
+  if (/^(AAA|AA|A|BBB|BB|B|CCC|CC|C|D)/.test(u)) return "LT";
+  return null;
+}
+/** Instrument type label ("Bond"/"NCD"/"CP"/"CD") + rating scale it must use,
+ *  from the ISIN instrument-type code / type string / section. */
+function instrumentInfo(isin, type, section) {
+  const code = String(isin || "").slice(7, 9);
+  const t = String(type || "").toUpperCase();
+  if (code === "14" || /\bCP\b|COMMERCIAL PAPER/.test(t)) return { label: "CP", scale: "MM" };
+  if (code === "16" || /\bCD\b|CERTIFICATE/.test(t)) return { label: "CD", scale: "MM" };
+  if (/^0[789]$/.test(code) || section === "Bonds" || /NCD|BOND|DEBENTURE/.test(t)) return { label: /NCD/.test(t) ? "NCD" : "Bond", scale: "LT" };
+  return { label: null, scale: null };
 }
 
 /** A small rating chip. `series` (>1) notes that the exact ISIN is one of N
@@ -1188,6 +1261,10 @@ function usableYield(q) {
   else if (q.side === "two_way" && isNum(q.bid) && isNum(q.offer) && q.level_meaning === "yield") y = (q.bid + q.offer) / 2;
   if (y == null || y < USABLE_Y_MIN || y > USABLE_Y_MAX) return null;
   if (MM_TYPES.has(String(q.instrument_type || "").toUpperCase()) && Number.isInteger(y) && y >= 10) return null;
+  // Safety net: a bond quoted as a bare integer >=10 is a dropped handle the data
+  // repair couldn't rebuild (no ISIN/traded anchor) — exclude it rather than let a
+  // false "10%" create a huge fake spread. (Matched bonds are already rebuilt.)
+  if (String(q.section) === "Bonds" && Number.isInteger(y) && y >= 10) return null;
   return y;
 }
 
@@ -1356,48 +1433,53 @@ function computeUniverse() {
     // NSDL enrichment — all quotes for one security resolve alike, so take the
     // first that carries each (confirmed ISIN, confident rating, series count).
     const isin = b.items.map((e) => e.q.isin).find(Boolean) ?? null;
-    const rating = b.items.map((e) => e.q.rating).find(Boolean) ?? null;
+    const type = b.items.map((e) => e.q.instrument_type || e.q.type).find(Boolean) ?? null;
+    const inst = instrumentInfo(isin, type, b.section);
+    let rating = b.items.map((e) => e.q.rating).find(Boolean) ?? null;
+    // Enforce the correct scale: a bond must NEVER show a money-market rating (A1+),
+    // nor a CD/CP a long-term one. If the only rating we have is wrong-scale, blank
+    // it (show nothing) rather than mislead — the client's "a bond must be AAA, not
+    // A1+". Matched instruments already carry the right one from the pipeline.
+    if (rating && inst.scale && ratingScaleOf(rating) && ratingScaleOf(rating) !== inst.scale) rating = null;
     const series = b.items.map((e) => e.q.series).find(isNum) ?? null;
     const candidates = b.items.map((e) => e.q.candidates).find(Boolean) ?? null;
     // Once matched, show the official registered name so all variants read alike.
     const dispIssuer = isin ? titleCaseIssuer(secOf(isin)?.issuer || b.issuer) : b.issuer;
-    return { issuer: dispIssuer, maturity: b.maturity, section: b.section, category: b.category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series, candidates };
+    // Category MUST come from the official (ISIN-matched) issuer name, not the raw
+    // desk shorthand — otherwise a bare "Bajaj" resolves to Manufacturing even when
+    // the quote is confirmed as Bajaj Finance (NBFC). Fall back to the raw name only
+    // when the bond is unmatched.
+    const category = catOrOther(dispIssuer);
+    return { issuer: dispIssuer, maturity: b.maturity, section: b.section, category, coupon, tenor: b.tenor, bucket: b.bucket, uy: repr.uy, n: b.uys.length, size, who: [...b.who].join(" ").toLowerCase(), repr, isin, rating, series, candidates, instLabel: inst.label, instScale: inst.scale };
   });
 
-  // Leave-one-out peer median — LIKE-FOR-LIKE. The client wants same CATEGORY +
-  // tenor bucket + credit RATING (an AA NBFC vs other AA NBFCs). Ratings are only
-  // ~a third populated, so we PREFER a same-rating peer group and gracefully fall
-  // back to category+tenor (still like-for-like on sector & maturity) when a bond
-  // is unrated or has too few same-rating peers. `peerBasis` records which was
-  // used so the card can say "vs AA peers" or just "vs similar".
-  const stKey = (b) => `${b.category}||${b.bucket}`;
+  // Leave-one-out peer median — TRUE like-for-like. The desk was explicit: a bond
+  // may only be compared with genuinely similar paper, so peers must share:
+  //   • the SAME category (NBFC vs NBFC — never Bajaj Finance vs Sikka Ports),
+  //   • the SAME instrument scale (a bond vs bonds — never a bond vs a CP),
+  //   • a CLOSE maturity — a tenor WINDOW, tight at the short end, so a Mar'27
+  //     paper is never lumped with an Oct'26 one,
+  //   • and, when available, the SAME credit rating.
+  // Prefer the same-rating set, else fall back to same category+scale+tenor.
   const ratingBand = (r) => String(r || "").toUpperCase().trim();
-  const srKey = (b) => `${stKey(b)}||${ratingBand(b.rating)}`;
-  const peersST = new Map();  // category + tenor
-  const peersSTR = new Map(); // category + tenor + rating
+  // ±years window: 0.4y at the short end, widening ~0.35×tenor, capped at 2y.
+  const tenorWindow = (t) => Math.max(0.4, Math.min(2, (isNum(t) ? t : 1) * 0.35));
   for (const b of bonds) {
-    if (!peersST.has(stKey(b))) peersST.set(stKey(b), []);
-    peersST.get(stKey(b)).push(b);
-    if (b.rating) {
-      if (!peersSTR.has(srKey(b))) peersSTR.set(srKey(b), []);
-      peersSTR.get(srKey(b)).push(b);
-    }
-  }
-  for (const b of bonds) {
-    // Same-rating peers first; need at least one OTHER bond (group size ≥ 2).
-    let group = b.rating ? (peersSTR.get(srKey(b)) || []) : [];
-    let basis = "rating";
-    if (group.length < 2) { group = peersST.get(stKey(b)) || []; basis = "sector"; }
-    const others = group.filter((x) => x !== b);
-    const pm = others.length ? median(others.map((x) => x.uy)) : null;
-    b.peerMedian = pm;
-    b.peerBasis = pm != null ? basis : null; // "rating" = same-rating peers, "sector" = category+tenor
-    // The exact bonds behind the median — powers the "which bonds?" drill-down the
-    // client asked for (click a bar / card / row to see the peer set + the median).
-    b.peers = pm != null ? others.map((x) => ({ issuer: x.issuer, maturity: x.maturity, uy: x.uy, rating: x.rating, isin: x.isin })) : null;
-    b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
     b.govtSpread = govtCurve ? Math.round((b.uy - govtYieldAt(govtCurve, b.tenor)) * 100) : null;
     b.bench = nearestBenchmark(govtCurve, b.tenor); // which govt security this maps to (CCIL)
+    if (!isNum(b.tenor)) { b.peerMedian = null; b.peerBasis = null; b.peers = null; b.gap = null; continue; }
+    const w = tenorWindow(b.tenor);
+    const base = bonds.filter((x) => x !== b && x.category === b.category && x.instScale === b.instScale && isNum(x.tenor) && Math.abs(x.tenor - b.tenor) <= w);
+    const sameRating = b.rating ? base.filter((x) => ratingBand(x.rating) === ratingBand(b.rating)) : [];
+    const others = sameRating.length ? sameRating : base;
+    const basis = sameRating.length ? "rating" : "sector";
+    const pm = others.length ? median(others.map((x) => x.uy)) : null;
+    b.peerMedian = pm;
+    b.peerBasis = pm != null ? basis : null; // "rating" = same-rating peers, "sector" = category+scale+tenor
+    b.peerWindow = w; // ±years used, for the "which bonds?" explanation
+    // The exact bonds behind the median — powers the "which bonds?" drill-down.
+    b.peers = pm != null ? others.map((x) => ({ issuer: x.issuer, maturity: x.maturity, uy: x.uy, rating: x.rating, isin: x.isin, instLabel: x.instLabel })) : null;
+    b.gap = pm != null ? Math.round((b.uy - pm) * 100) : null;
   }
 
   return { total, quoteTotal, withUY, withUYT, enriched, corp, govtCurve, govtSource, bonds };
@@ -1532,14 +1614,15 @@ function divergingColor(v, min, med, max) {
  *  row is CLICKED (the tooltip pins open). */
 function peerTableTip(o) {
   if (!Array.isArray(o.peers) || !o.peers.length || !isNum(o.peerMedian)) return "";
-  const rows = [{ issuer: o.issuer, maturity: o.maturity, uy: o.uy, rating: o.rating, self: true }, ...o.peers]
+  const rows = [{ issuer: o.issuer, maturity: o.maturity, uy: o.uy, rating: o.rating, instLabel: o.instLabel, self: true }, ...o.peers]
     .filter((p) => isNum(p.uy))
     .sort((a, b) => b.uy - a.uy);
-  const scope = (o.basis === "rating" && o.rating ? `${o.rating} · ` : "") + [o.category, o.bucket].filter(Boolean).join(" · ");
+  const scope = [o.basis === "rating" && o.rating ? o.rating : null, o.category, isNum(o.peerWindow) ? `similar maturity (±${o.peerWindow.toFixed(1)}y)` : null].filter(Boolean).join(" · ");
   const body = rows.map((p) => {
     const hi = p.self ? `background:${T.tintIndigo}1f;font-weight:700` : "";
     return `<tr style="${hi}">
-      <td style="padding:2px 8px 2px 0;white-space:nowrap">${esc(trunc(p.issuer || "—", 24))}${p.self ? " ◀" : ""}</td>
+      <td style="padding:2px 8px 2px 0;white-space:nowrap">${esc(trunc(p.issuer || "—", 22))}${p.self ? " ◀" : ""}</td>
+      <td style="padding:2px 8px;color:${T.n400}">${esc(p.instLabel || "—")}</td>
       <td style="padding:2px 8px;color:${T.n400}">${esc(p.rating || "—")}</td>
       <td style="padding:2px 8px;color:${T.n400};white-space:nowrap">${p.maturity ? esc(fmtDate(p.maturity)) : "—"}</td>
       <td style="padding:2px 0;text-align:right;font-variant-numeric:tabular-nums">${p.uy.toFixed(2)}%</td>
@@ -1547,7 +1630,7 @@ function peerTableTip(o) {
   }).join("");
   return `<div class="tt-label" style="margin-top:8px">The ${o.peers.length} similar bond${o.peers.length === 1 ? "" : "s"} used${scope ? ` · ${esc(scope)}` : ""}</div>
     <div style="max-height:210px;overflow:auto;margin-top:3px"><table style="width:100%;border-collapse:collapse;font-size:11px">
-      <thead><tr style="color:${T.n400};text-align:left"><th style="padding:0 8px 3px 0">Bond</th><th style="padding:0 8px 3px">Rating</th><th style="padding:0 8px 3px">Maturity</th><th style="padding:0 0 3px;text-align:right">Yield</th></tr></thead>
+      <thead><tr style="color:${T.n400};text-align:left"><th style="padding:0 8px 3px 0">Bond</th><th style="padding:0 8px 3px">Type</th><th style="padding:0 8px 3px">Rating</th><th style="padding:0 8px 3px">Maturity</th><th style="padding:0 0 3px;text-align:right">Yield</th></tr></thead>
       <tbody>${body}</tbody></table></div>
     <div style="margin-top:5px;color:${T.n500}">Middle (median) of the group = <b>${o.peerMedian.toFixed(2)}%</b> · this bond <b>${isNum(o.uy) ? o.uy.toFixed(2) + "%" : "—"}</b></div>`;
 }
@@ -1555,6 +1638,26 @@ function peerTableTip(o) {
 const peerDrill = (o, pinned) => (Array.isArray(o.peers) && o.peers.length)
   ? (pinned ? peerTableTip(o) : `<div style="margin-top:7px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see the ${o.peers.length} similar bonds ↗</div>`)
   : "";
+
+/** Spread-since-inception block for a pinned tooltip: the two-line chart (bond vs
+ *  matching G-Sec) + the from→now spread. A hint when not yet pinned. Available on
+ *  ANY bond the desk clicks, so the "spread since inception vs G-Sec" is never
+ *  hidden. Maturity resolves from the ISIN. */
+function journeyBlock(isin, pinned) {
+  const j = spreadJourney(isin);
+  if (!j) return "";
+  const spanDays = (new Date(j.to.d + "T00:00:00Z") - new Date(j.from.d + "T00:00:00Z")) / 86400000;
+  if (spanDays < 120) return "";
+  if (!pinned) return `<div style="margin-top:7px;color:${T.tintIndigo};font-size:11px;font-weight:600">Click to see its spread since inception ↗</div>`;
+  const wider = j.delta > 0;
+  const sgn = (v) => (v >= 0 ? "+" : "") + v;
+  const tag = Math.abs(j.delta) < 8 ? "about the same" : `${Math.abs(j.delta)} bps ${wider ? "wider" : "tighter"}`;
+  const col = Math.abs(j.delta) < 8 ? T.n400 : wider ? T.tintEmerald : T.tintRose;
+  return `<div class="tt-label" style="margin-top:9px">Spread over govt since first traded (${esc(fmtMonYr(j.from.d))})</div>
+    <div style="margin-top:2px">${spreadJourneySVG(j, { w: 380, h: 120, dark: true })}</div>
+    <div style="color:${T.n400};font-size:11px;margin-top:1px"><b style="color:#e2e8f0">${sgn(j.from.spread)} → ${sgn(j.to.spread)} bps</b> · <span style="color:${col};font-weight:600">${tag}</span></div>
+    <div style="color:${T.n500};font-size:10px;margin-top:2px">Bond's real NSE trades vs the 10Y G-Sec benchmark (free official data). Today's headline spread is tenor-matched (CCIL).</div>`;
+}
 
 function renderTip(o, pinned) {
   const L = (t) => `<div class="tt-label">${t}</div>`;
@@ -1572,11 +1675,11 @@ function renderTip(o, pinned) {
       <div style="margin-top:4px"><b style="color:${T.grad2}">Bond vs Bond</b> — pick any two bonds (e.g. NABARD vs REC) and read the exact yield gap between them, with a warning if their maturities differ.</div></div>`;
   }
   if (o.kind === "curve") return `${L(o.name ? "Government benchmark" : "Government curve")}${o.name ? `<div style="font-weight:600;margin-bottom:4px">${esc(o.name)}</div>` : ""}${row("Tenor", o.t + "y")}${row("Yield", o.y.toFixed(2) + "%")}`;
-  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? (o.bench.approx
+  if (o.kind === "cell") return `${L("Extra yield over government")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)} · ${esc(o.bucket)}</div>${(() => { const s = o.isin && secOf(o.isin); if (!s) return ""; const bits = [titleCaseIssuer(s.issuer || s.name || ""), isNum(s.coupon) ? fmtNum(s.coupon, 2) + "%" : null, s.maturity ? fmtDate(s.maturity) : null, o.isin].filter(Boolean); return `<div style="color:${T.n400};font-size:11px;margin:-2px 0 5px">${o.n > 1 ? "e.g. " : ""}${esc(bits.join(" · "))}</div>`; })()}${row("Corp yield", o.corpY.toFixed(2) + "%")}${row("Govt benchmark", o.govtY.toFixed(2) + "%")}${o.bench ? (o.bench.approx
   ? `<div style="color:${T.tintAmber};font-size:11px;margin:1px 0 5px;line-height:1.35">⚠ No govt bond traded near ${esc(o.bucket)} — govt yield <b>interpolated</b> on the <a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL curve ↗</a> (nearest: ${esc(o.bench.name)}, ${o.bench.t}y). For short bonds the <b>vs Similar bonds</b> view is the truer read.</div>`
   : `<div style="color:${T.n400};font-size:11px;margin:1px 0 5px;line-height:1.35">= ${esc(o.bench.name)}<br><a href="https://www.ccilindia.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color:${T.tintIndigo};text-decoration:underline">CCIL ${o.bench.type === "overnight" ? "overnight money-market rate" : "traded " + (o.bench.type === "tbill" ? "T-bill" : "G-Sec") + ", nearest " + o.bench.t + "y"} ↗</a></div>`
 ) : ""}${row("Extra (spread)", fmtBps(o.spread) + " bps")}${row("Backed by", o.n + (o.n === 1 ? " bond" : " bonds"))}${o.category && benchmarkFor(o.category) ? `<div style="color:${T.n400};font-size:11px;margin-top:3px">${esc(o.category)} benchmark: <b style="color:${T.n600}">${esc(benchmarkFor(o.category))}</b></div>` : ""}${tradedNormalLine(o.isin, o.corpY, pinned) || histSpreadLine(o.spread, o.category, null, o.bucket)}`;
-  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}`;
+  if (o.kind === "bar") return `${L(o.gap >= 0 ? "Cheaper than similar bonds (buy)" : "Pricier than similar bonds")}<div style="font-weight:600;margin-bottom:4px">${esc(o.issuer)}${o.instLabel ? ` · ${esc(o.instLabel)}` : ""}${o.maturity ? ` · ${fmtDate(o.maturity)}` : ""}</div>${row("Its yield", o.uy.toFixed(2) + "%")}${row("Similar median", o.peer.toFixed(2) + "%")}${row("Gap", fmtBps(o.gap, true) + " bps")}${o.size != null ? row("Size", fmtCr(o.size)) : ""}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}${journeyBlock(o.isin, pinned)}`;
   if (o.kind === "oppinfo") {
     return `${L("How to read Opportunities")}<div style="line-height:1.55">Today's quotes, scanned for the few worth acting on now:
       <div style="margin-top:6px"><b style="color:${T.tintEmerald}">Cheap (buy)</b> — yields more than similar bonds. <b style="color:${T.tintAmber}">Easy to trade</b> — a two-way with a small bid–offer gap; easy to deal.</div>
@@ -1587,7 +1690,7 @@ function renderTip(o, pinned) {
     const rows = (o.rows || []).map(([k, v]) => row(esc(k), esc(v))).join("");
     const raws = [o.raw, o.buyRaw, o.sellRaw].filter(Boolean);
     const rawHtml = raws.length ? `<div class="tt-label" style="margin-top:7px">Original line${raws.length > 1 ? "s" : ""}${o.date ? ` · ${esc(o.date)}` : ""}</div>${raws.map((r) => esc(r)).join("<br>")}` : "";
-    return `${L(esc(o.title || "Opportunity"))}${rows}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}${rawHtml}`;
+    return `${L(esc(o.title || "Opportunity"))}${rows}${tradedLine(o.isin, o.uy)}${peerDrill(o, pinned)}${journeyBlock(o.isin, pinned)}${rawHtml}`;
   }
   if (o.kind === "pulseinfo") {
     return `${L("How to read Desk Pulse")}<div style="line-height:1.55">A quick read on the desk today:
@@ -1679,7 +1782,7 @@ function peersBarsSVG(shown) {
     const x2 = bx(b.gap), left = Math.min(zeroX, x2), w = Math.max(2, Math.abs(x2 - zeroX));
     const col = b.gap >= 0 ? "url(#peerBuy)" : "url(#peerSell)";
     const valX = b.gap >= 0 ? x2 + 4 : x2 - 4, anchor = b.gap >= 0 ? "start" : "end";
-    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin });
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin, instLabel: b.instLabel, peerWindow: b.peerWindow });
     return `<g data-tip="${esc(tip)}" style="cursor:pointer">
       <rect x="0" y="${y}" width="${W}" height="${rowH}" fill="transparent"/>
       <text x="${labelW - 10}" y="${(cy + 3.5).toFixed(1)}" text-anchor="end" font-size="11" fill="${T.n700}">${esc(trunc(b.issuer, 22))}</text>
@@ -1729,7 +1832,7 @@ function peersTableHTML(shown) {
   const body = shown.map((b) => {
     const sec = SECTION[b.section] || SECTION.Bonds;
     const col = b.gap >= 0 ? "text-emerald-600" : "text-rose-600";
-    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin });
+    const tip = JSON.stringify({ kind: "bar", issuer: b.issuer, maturity: b.maturity, uy: +b.uy.toFixed(2), peer: +b.peerMedian.toFixed(2), gap: b.gap, size: b.size, accent: b.gap >= 0 ? T.buy : T.sell, peers: b.peers, peerMedian: +b.peerMedian.toFixed(2), basis: b.peerBasis, rating: b.rating, category: b.category, bucket: b.bucket, isin: b.isin, instLabel: b.instLabel, peerWindow: b.peerWindow });
     // Real last-traded yield (NSE/Cbrics), shown right next to the desk quote so a
     // quote far from where the bond actually traded stands out (amber).
     const tr = tradedRef(b.isin);
@@ -1909,21 +2012,23 @@ function cmpBondCard(b, tag, accent) {
   const si = sinceIssueSpread(b.isin);
   let siBlock = "";
   if (si) {
+    const sgn = (v) => (v >= 0 ? "+" : "") + v;
     const wider = si.delta > 0;
     const tag2 = Math.abs(si.delta) < 8 ? "about the same" : `${Math.abs(si.delta)} bps ${wider ? "wider" : "tighter"}`;
     const col = Math.abs(si.delta) < 8 ? "text-slate-500" : wider ? "text-emerald-600" : "text-rose-600";
-    siBlock = `<div class="mt-2 rounded-lg bg-slate-50 px-2 py-1.5 text-[11px] leading-snug">
-      <div class="font-semibold text-slate-500">Spread since first traded (${esc(fmtMonYr(si.fromD))})</div>
-      <div class="mt-0.5 text-slate-600"><b class="nums">+${si.fromSpread}</b> → <b class="nums">+${si.toSpread}</b> bps over 10Y G-Sec · <span class="${col} font-semibold">${tag2}</span></div>
+    siBlock = `<div class="mt-2 rounded-lg bg-slate-50 px-2 py-1.5">
+      <div class="mb-1 flex items-baseline justify-between gap-2 text-[11px]"><span class="font-semibold text-slate-500">Spread over 10Y G-Sec since ${esc(fmtMonYr(si.fromD))}</span><span class="${col} font-semibold">${sgn(si.fromSpread)} → ${sgn(si.toSpread)} bps · ${tag2}</span></div>
+      ${spreadJourneySVG(si.journey, { w: 320, h: 96 })}
     </div>`;
   }
+  const instTag = b.instLabel ? `<span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide border border-slate-200 bg-slate-100 text-slate-600">${esc(b.instLabel)}</span>` : "";
   return `<div class="flex-1 rounded-xl border border-slate-200 bg-white/80 p-3">
     <div class="mb-1 flex items-center gap-1.5">
       <span class="grid h-5 w-5 shrink-0 place-items-center rounded-md text-[11px] font-bold text-white" style="background:${accent}">${tag}</span>
       <span class="truncate font-display text-sm font-bold text-slate-800" style="max-width:180px">${esc(b.issuer)}</span>
     </div>
     <div class="mb-2 flex flex-wrap items-center gap-1.5">
-      <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}
+      <span class="rounded px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide ${sec.chip}">${sec.label}</span>${instTag}${catChip(b.category)}${ratingChip(b.rating, b.series, secOf(b.isin)?.ratingNote)}
     </div>
     <div class="mb-2 text-[11px] text-slate-400">${isNum(b.coupon) ? fmtNum(b.coupon, 2) + "% coupon · " : ""}${b.maturity ? fmtDate(b.maturity) : "—"} · ${isNum(b.tenor) ? b.tenor.toFixed(1) + "y" : b.bucket}</div>
     <div class="space-y-0.5 text-xs">
@@ -2172,7 +2277,8 @@ function computeOpportunities() {
       type, key: `${b.section}|${(b.issuer || "").toLowerCase()}|${b.maturity || ""}`,
       issuer: b.issuer, maturity: b.maturity, section: b.section, category: b.category, coupon: b.coupon, bucket: b.bucket, tenor: b.tenor,
       size: b.size, dealer: q.dealer, firm: q.firm, time: q.timestamp, date: q.quote_date, side: q.side, fresh: isFresh(q), raw: q.raw,
-      isin: b.isin, rating: b.rating, series: b.series, candidates: b.candidates,
+      isin: b.isin, rating: b.rating, series: b.series, candidates: b.candidates, instLabel: b.instLabel,
+      peers: b.peers || null, peerMedian: b.peerMedian, peerBasis: b.peerBasis, peerWindow: b.peerWindow, uy: b.uy,
       _val: 0,
     };
   };
@@ -2350,7 +2456,7 @@ function oppCard(o) {
   const c = OPP_CAT[o.type] || OPP_CAT.cheap;
   const sec = SECTION[o.section] || SECTION.Bonds;
   const fresh = o.fresh ? `<span class="ml-1 inline-block h-2 w-2 shrink-0 rounded-full bg-emerald-500 pulse" title="fresh quote"></span>` : "";
-  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color, peers: o.peers || null, peerMedian: isNum(o.peerMedian) ? +o.peerMedian.toFixed(2) : null, uy: isNum(o.uy) ? +o.uy.toFixed(2) : null, basis: o.peerBasis, rating: o.rating, category: o.category, bucket: o.bucket, issuer: o.issuer, maturity: o.maturity, isin: o.isin });
+  const tip = JSON.stringify({ kind: "opp", title: c.label, rows: o.rows || [], raw: o.raw, date: o.date, buyRaw: o.buy?.raw, sellRaw: o.sell?.raw, accent: c.color, peers: o.peers || null, peerMedian: isNum(o.peerMedian) ? +o.peerMedian.toFixed(2) : null, uy: isNum(o.uy) ? +o.uy.toFixed(2) : null, basis: o.peerBasis, rating: o.rating, category: o.category, bucket: o.bucket, issuer: o.issuer, maturity: o.maturity, isin: o.isin, instLabel: o.instLabel, peerWindow: o.peerWindow });
 
   const primary = o.type === "twosided"
     ? `<div class="mt-2 grid grid-cols-2 gap-1.5">
@@ -2548,35 +2654,45 @@ function crossCard(crosses) {
 }
 
 /* Board-wide match alert. The desk asked to be nudged the moment a buyer and a
- * seller are both live on the same bond. This banner sits above EVERY tab (not
- * just Desk Pulse) so a cross can't be missed. It reuses computeCrosses(), so it
- * already respects the per-day per-cross dismissals from the Desk Pulse card;
- * the banner's own ✕ hushes it until a genuinely NEW match appears. */
+ * seller are both live on the same bond — and (their feedback) to always be able
+ * to SEE how/where the alert appears. So this strip sits above EVERY tab at all
+ * times: a loud amber banner when a cross is live, and a quiet always-on indicator
+ * otherwise (so it's never invisible). It reuses computeCrosses(). */
 let ackCrossKeys = new Set();
 function renderAlertBanner() {
   const el = els.alertBanner;
   if (!el) return;
   if (state.loading || state.error || !state.data) { el.innerHTML = ""; return; }
   const crosses = computeCrosses();
-  const fresh = crosses.filter((c) => !ackCrossKeys.has(c.key)); // stay hushed until a new one shows
-  if (!crosses.length || !fresh.length) { el.innerHTML = ""; return; }
+  const fresh = crosses.filter((c) => !ackCrossKeys.has(c.key)); // hushed ones drop to the quiet strip
   const n = crosses.length;
-  // Lead with the FRESHEST named matches (the actionable nudge), not the big
-  // count — a busy two-way desk has many, and a blaring number reads as noise.
-  const names = crosses.slice(0, 3).map((c) => `${esc(trunc(titleCaseIssuer(c.issuer), 16))}${c.maturity ? " " + esc(fmtMonYr(c.maturity)) : ""}`);
-  const more = n > names.length ? ` <span class="font-normal text-slate-400">+${n - names.length} more</span>` : "";
-  el.innerHTML = `<div class="mb-3 flex items-center gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50/90 px-3.5 py-2.5 shadow-sm shadow-amber-200/40">
-    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl shadow-sm pulse" style="background:${T.act}"><span style="color:#ffffff;font-size:18px;font-weight:800;line-height:1">⇄</span></span>
-    <div class="min-w-0 flex-1">
-      <div class="flex flex-wrap items-baseline gap-x-2">
-        <span class="font-display text-sm font-extrabold text-slate-800">Possible cross${n === 1 ? "" : "es"} — connect a buyer &amp; seller</span>
-        <span class="text-[12px] text-slate-500">both sides live on the same bond</span>
+  if (crosses.length && fresh.length) {
+    // LOUD: a live, un-dismissed cross — lead with the freshest named matches.
+    const names = crosses.slice(0, 3).map((c) => `${esc(trunc(titleCaseIssuer(c.issuer), 16))}${c.maturity ? " " + esc(fmtMonYr(c.maturity)) : ""}`);
+    const more = n > names.length ? ` <span class="font-normal text-slate-400">+${n - names.length} more</span>` : "";
+    el.innerHTML = `<div class="mb-3 flex items-center gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50/90 px-3.5 py-2.5 shadow-sm shadow-amber-200/40">
+      <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl shadow-sm pulse" style="background:${T.act}"><span style="color:#ffffff;font-size:18px;font-weight:800;line-height:1">⇄</span></span>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-baseline gap-x-2">
+          <span class="font-display text-sm font-extrabold text-slate-800">Possible cross${n === 1 ? "" : "es"} — connect a buyer &amp; seller</span>
+          <span class="text-[12px] text-slate-500">both sides live on the same bond, right now</span>
+        </div>
+        <div class="mt-0.5 truncate text-[12px] font-semibold text-slate-600">${names.join(" &nbsp;·&nbsp; ")}${more}</div>
       </div>
-      <div class="mt-0.5 truncate text-[12px] font-semibold text-slate-600">${names.join(" &nbsp;·&nbsp; ")}${more}</div>
-    </div>
-    <button data-cross-goto class="shrink-0 rounded-lg grad-bar px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25">View all ${n} →</button>
-    <button data-cross-hush class="shrink-0 rounded-md px-1.5 py-1 text-slate-400 ring-1 ring-slate-200 transition hover:bg-white hover:text-slate-600" title="Hide until a new match appears" aria-label="Hide match alert">✕</button>
-  </div>`;
+      <button data-cross-goto class="shrink-0 rounded-lg grad-bar px-3 py-1.5 text-xs font-semibold text-white shadow-sm shadow-indigo-500/25">View all ${n} →</button>
+      <button data-cross-hush class="shrink-0 rounded-md px-1.5 py-1 text-slate-400 ring-1 ring-slate-200 transition hover:bg-white hover:text-slate-600" title="Dismiss (stays as a quiet indicator below)" aria-label="Dismiss match alert">✕</button>
+    </div>`;
+  } else {
+    // QUIET always-on indicator — so the desk always knows the alert exists & where
+    // it shows up, even when there's no live cross (or all are dismissed).
+    const dismissedNote = crosses.length ? `${crosses.length} today, dismissed` : "none live right now";
+    const showBtn = crosses.length ? `<button data-cross-unhush class="ml-auto shrink-0 rounded-md px-2 py-1 text-[11px] font-semibold text-indigo-600 ring-1 ring-indigo-200 transition hover:bg-indigo-50">Show ${crosses.length} →</button>` : "";
+    el.innerHTML = `<div class="mb-3 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-white/70 px-3 py-1.5">
+      <span class="grid h-6 w-6 shrink-0 place-items-center rounded-lg bg-slate-100"><span style="color:${T.n500};font-size:13px;font-weight:800;line-height:1">⇄</span></span>
+      <span class="text-[12px] leading-snug text-slate-500"><b class="text-slate-600">Match alert is on</b> — a loud banner appears here the moment a buyer &amp; a seller are live on the same bond. <span class="text-slate-400">(${dismissedNote})</span></span>
+      ${showBtn}
+    </div>`;
+  }
 }
 
 function computePulse() {
@@ -3118,11 +3234,18 @@ els.tabs.addEventListener("click", (e) => {
   render();
 });
 
-// Board-wide match-alert banner: jump to the matches, or hush until a new one.
+// Board-wide match-alert banner: jump to the matches, dismiss to the quiet strip,
+// or re-show dismissed matches.
 els.alertBanner.addEventListener("click", (e) => {
   if (e.target.closest("button[data-cross-goto]")) { state.tab = "pulse"; render(); return; }
   if (e.target.closest("button[data-cross-hush]")) {
     computeCrosses().forEach((c) => ackCrossKeys.add(c.key));
+    renderAlertBanner();
+    afterRender();
+    return;
+  }
+  if (e.target.closest("button[data-cross-unhush]")) {
+    ackCrossKeys = new Set();
     renderAlertBanner();
     afterRender();
   }
