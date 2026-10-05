@@ -24,14 +24,22 @@
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36";
 const CBM_BASE = "https://nsearchives.nseindia.com/archives/debt/cbm/cbm_trd";
-// History retention. We keep every observation inside a recent window (fine
-// detail for the "usually trades" read), and for anything older we keep only ONE
-// observation per calendar month (downsampled) — enough to draw a bond's
-// spread-since-issue trajectory without letting the file balloon as we backfill
-// years of trades. A hard cap bounds the worst case, and NEVER drops the oldest
-// (since-issue) anchors: only the middle recent detail is thinned.
-const RECENT_DAYS = 420;   // ~1.4 trading years kept in full
-const MAX_OBS = 520;       // per-ISIN ceiling (oldest monthly anchors always kept)
+// History retention — TWO TIER, keyed to whether the desk actually looks at the
+// bond. The CBM archive covers ~13,500 ISINs but the desk only quotes a few
+// hundred; keeping every trade for all of them would bloat the file the browser
+// downloads on every load. So:
+//   • RELEVANT ISINs (ones the desk has quoted, tracked persistently) — keep
+//     EVERY real trade (the desk's "show all"), up to a generous cap, always
+//     preserving the OLDEST (inception) anchors so the since-issue chart is whole.
+//   • everything else — a light tail only, enough to read a bond the moment it is
+//     first quoted; it's promoted to full detail from that day on.
+const FULL_CAP = 1200;    // relevant (quoted) bonds: keep ~all real trades
+const LIGHT_CAP = 8;      // never-quoted market bonds: a short recent tail only.
+// Why 8: a bond the desk has never quoted never appears on any screen, so its
+// history is never charted. We keep a handful of its most-recent trades purely so
+// that the DAY it is first quoted there is already a sensible "last traded / usually
+// trades" read; from that day it joins the relevant set and accrues full detail.
+const ANCHOR_KEEP = 24;   // always keep this many OLDEST obs (inception anchors) for relevant bonds
 const BACKFILL_START = "2016-01-01"; // NSE CBM archive reaches ~here
 
 const isNum = (x) => typeof x === "number" && Number.isFinite(x);
@@ -39,30 +47,20 @@ const pad = (n) => String(n).padStart(2, "0");
 const ymd = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** ISO date `RECENT_DAYS` before `nowIso` — the cutoff below which history is
- *  downsampled to one observation per month. */
-function recentCutoff(nowIso) {
-  const d = new Date((nowIso || new Date().toISOString().slice(0, 10)) + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() - RECENT_DAYS);
-  return d.toISOString().slice(0, 10);
-}
-/** Keep recent obs in full + one-per-month for older; always preserve the oldest
- *  anchors, thinning only the middle recent detail if over MAX_OBS. */
-function retainHistory(history, nowIso) {
-  const cutoff = recentCutoff(nowIso);
-  const sorted = (history || []).filter((h) => h && h.d).sort((a, b) => (a.d < b.d ? -1 : 1));
-  const older = new Map(), recent = [];
-  for (const h of sorted) {
-    if (h.d >= cutoff) recent.push(h);
-    else older.set(h.d.slice(0, 7), h); // YYYY-MM -> last obs that month (asc: last wins)
-  }
-  const olderArr = [...older.values()];
-  const budget = Math.max(0, MAX_OBS - olderArr.length);
-  const recentKept = recent.length > budget ? recent.slice(-budget) : recent;
-  return [...olderArr, ...recentKept].sort((a, b) => (a.d < b.d ? -1 : 1));
+/** Keep a bond's trade history. `isRelevant` = the desk quotes it, so keep EVERY
+ *  trade (capped, oldest anchors preserved); otherwise keep a light tail only.
+ *  De-dupes by date. */
+export function retainHistory(history, isRelevant) {
+  const byDate = new Map();
+  for (const h of (history || [])) if (h && h.d && isNum(h.y)) byDate.set(h.d, h); // one per date
+  const uniq = [...byDate.values()].sort((a, b) => (a.d < b.d ? -1 : 1));
+  const cap = isRelevant ? FULL_CAP : LIGHT_CAP;
+  if (uniq.length <= cap) return uniq;
+  if (cap <= ANCHOR_KEEP) return uniq.slice(-cap);
+  return [...uniq.slice(0, ANCHOR_KEEP), ...uniq.slice(-(cap - ANCHOR_KEEP))]; // oldest anchors + newest
 }
 /** The oldest trade date on file across all ISINs (histories are sorted asc). */
-function computeOldest(byIsin) {
+export function computeOldest(byIsin) {
   let min = null;
   for (const k in byIsin) { const h = byIsin[k].history; if (h && h.length && (!min || h[0].d < min)) min = h[0].d; }
   return min;
@@ -108,8 +106,9 @@ export async function fetchBhavcopyForDate(d) {
   return rows.length ? { tradeDate, rows, file: CBM_BASE + ymd(d) + ".csv" } : null;
 }
 
-/** Merge one day's bhavcopy into the per-ISIN store (latest snapshot + history). */
-function mergeBhavcopy(byIsin, bc, nowIso) {
+/** Merge one day's bhavcopy into the per-ISIN store (latest snapshot + history).
+ *  `relevant` is the Set of quoted ISINs (full detail); others get a light tail. */
+function mergeBhavcopy(byIsin, bc, relevant) {
   const date = bc.tradeDate;
   for (const r of bc.rows) {
     const e = byIsin[r.isin] || { history: [] };
@@ -118,7 +117,7 @@ function mergeBhavcopy(byIsin, bc, nowIso) {
     if (!e.date || date >= e.date) { e.date = date; e.yield = y; e.price = isNum(r.waPrice) ? r.waPrice : r.lastPrice; e.valueCr = r.valueCr; }
     const hist = (e.history || []).filter((h) => h.d !== date);
     hist.push({ d: date, y });
-    e.history = retainHistory(hist, nowIso);
+    e.history = retainHistory(hist, relevant ? relevant.has(r.isin) : true); // no set => keep all (safe default)
     byIsin[r.isin] = e;
   }
 }
@@ -133,7 +132,7 @@ export async function buildTradedRef(prev, opts = {}) {
   const backfillDays = Math.max(0, opts.backfillDays || 0);
   const byIsin = (prev && prev.byIsin) || {};
   const today = new Date();
-  const nowIso = today.toISOString().slice(0, 10);
+  const relevant = opts.relevant || null; // Set of quoted ISINs (full detail); others light
   let latest = null, merged = 0;
 
   // Oldest -> newest so the latest snapshot ends up current and history is ordered.
@@ -143,18 +142,18 @@ export async function buildTradedRef(prev, opts = {}) {
     if (dow === 0 || dow === 6) continue; // skip weekends (no file)
     const bc = await fetchBhavcopyForDate(d);
     if (!bc) continue;
-    mergeBhavcopy(byIsin, bc, nowIso);
+    mergeBhavcopy(byIsin, bc, relevant);
     merged++;
     latest = bc;
   }
   if (!latest) { console.warn("[cbrics] no CBM bhavcopy available (kept previous)"); return null; }
 
   const out = {
-    _note: "Real reported corporate-bond trades from NSE's CBM bhavcopy (the client's 'Cbrics'). Per ISIN: latest trade + traded-yield history (recent in full, older downsampled monthly). Built by scripts/cbrics.mjs.",
+    _note: "Real reported corporate-bond trades from NSE's CBM bhavcopy (the client's 'Cbrics'). Per ISIN: latest trade + traded-yield history — EVERY trade for bonds the desk quotes (see `relevant`), a light tail for the rest. Built by scripts/cbrics.mjs.",
     as_of: latest.tradeDate, source: "NSE CBM daily bhavcopy (reported corporate bond trades)", file: latest.file,
-    oldest: computeOldest(byIsin), byIsin,
+    oldest: computeOldest(byIsin), relevant: relevant ? [...relevant] : (prev && prev.relevant) || [], byIsin,
   };
-  console.log(`[cbrics] traded reference: merged ${merged} day(s); latest ${latest.tradeDate}; oldest ${out.oldest}; ${Object.keys(byIsin).length} ISINs on file`);
+  console.log(`[cbrics] traded reference: merged ${merged} day(s); latest ${latest.tradeDate}; oldest ${out.oldest}; ${Object.keys(byIsin).length} ISINs (${out.relevant.length} relevant/full)`);
   return out;
 }
 
@@ -172,7 +171,7 @@ export async function backfillRange(prev, opts = {}) {
   const start = opts.start || BACKFILL_START;
   const maxDays = Math.max(1, opts.maxDays || 60);
   const delayMs = opts.delayMs ?? 700;
-  const nowIso = opts.nowIso || new Date().toISOString().slice(0, 10);
+  const relevant = opts.relevant || null;
   const startD = new Date(start + "T00:00:00Z");
   const globalOldest = computeOldest(byIsin);
   const cursor = globalOldest ? new Date(globalOldest + "T00:00:00Z") : new Date();
@@ -188,7 +187,7 @@ export async function backfillRange(prev, opts = {}) {
         try { bc = await fetchBhavcopyForDate(cursor); } catch { bc = null; }
         if (!bc && t < 2) { blocked++; await sleep(delayMs * (t + 2)); } // back off (block or holiday)
       }
-      if (bc) { mergeBhavcopy(byIsin, bc, nowIso); merged++; if (!latest) latest = bc; }
+      if (bc) { mergeBhavcopy(byIsin, bc, relevant); merged++; if (!latest) latest = bc; }
       await sleep(delayMs);
     }
     cursor.setUTCDate(cursor.getUTCDate() - 1);
@@ -199,7 +198,7 @@ export async function backfillRange(prev, opts = {}) {
     as_of: (prev && prev.as_of) || (latest && latest.tradeDate) || null,
     source: (prev && prev.source) || "NSE CBM daily bhavcopy (reported corporate bond trades)",
     file: (prev && prev.file) || (latest && latest.file) || null,
-    oldest, byIsin,
+    oldest, relevant: relevant ? [...relevant] : (prev && prev.relevant) || [], byIsin,
   };
   console.log(`[cbrics] deep backfill: reached ${cursor.toISOString().slice(0, 10)}; attempted ${attempted}, merged ${merged}, blocked ${blocked}; oldest on file now ${oldest}; ${Object.keys(byIsin).length} ISINs`);
   return out;
@@ -218,7 +217,7 @@ export async function backfillMonthly(prev, opts = {}) {
   const start = opts.start || BACKFILL_START;
   const maxMonths = Math.max(1, opts.maxMonths || 24);
   const delayMs = opts.delayMs ?? 700;
-  const nowIso = opts.nowIso || new Date().toISOString().slice(0, 10);
+  const relevant = opts.relevant || null;
   const startY = +start.slice(0, 4), startM = +start.slice(5, 7);
   const globalOldest = computeOldest(byIsin);
   let y, m;
@@ -241,7 +240,7 @@ export async function backfillMonthly(prev, opts = {}) {
       blocked++;
       await sleep(delayMs);
     }
-    if (bc) { mergeBhavcopy(byIsin, bc, nowIso); merged++; oldestMonth = `${y}-${pad(m)}`; }
+    if (bc) { mergeBhavcopy(byIsin, bc, relevant); merged++; oldestMonth = `${y}-${pad(m)}`; }
     await sleep(delayMs);
     stepBack();
   }
@@ -251,7 +250,7 @@ export async function backfillMonthly(prev, opts = {}) {
     as_of: (prev && prev.as_of) || null,
     source: (prev && prev.source) || "NSE CBM daily bhavcopy (reported corporate bond trades)",
     file: (prev && prev.file) || null,
-    oldest, byIsin,
+    oldest, relevant: relevant ? [...relevant] : (prev && prev.relevant) || [], byIsin,
   };
   console.log(`[cbrics] monthly backfill: ${months} month(s) attempted, merged ${merged}, blocked ${blocked}; oldest month reached ${oldestMonth || "—"}; oldest on file ${oldest}; ${Object.keys(byIsin).length} ISINs`);
   return out;

@@ -32,13 +32,23 @@ const median = (a) => { const s = a.slice().sort((x, y) => x - y); const n = s.l
 const USABLE_Y_MIN = 2, USABLE_Y_MAX = 13;
 const MM_TYPES = new Set(["CD", "CP"]);
 function usableYield(q) {
+  const isBond = String(q.section) === "Bonds";
+  // Fields are yields exactly when the line says so (level_meaning "yield") — a
+  // rebuilt dropped handle is stamped "yield" in the pipeline. Read the one-sided
+  // cases too, so the baseline counts the same repaired markets the screen shows.
+  const yieldFields = q.level_meaning === "yield";
   let y = null;
   if (num(q.yield)) y = q.yield;
-  else if (q.side === "two_way" && num(q.bid) && num(q.offer) && q.level_meaning === "yield") y = (q.bid + q.offer) / 2;
+  else if (yieldFields && q.side === "two_way" && num(q.bid) && num(q.offer)) y = (q.bid + q.offer) / 2;
+  else if (yieldFields && num(q.offer)) y = q.offer;
+  else if (yieldFields && num(q.bid)) y = q.bid;
+  else if (yieldFields && num(q.level)) y = q.level;
   if (y == null || y < USABLE_Y_MIN || y > USABLE_Y_MAX) return null;
   // Money-market safety net (mirrors app.js): a CD/CP yield left as a bare integer
   // >= 10 is an un-rebuilt dropped "6." handle ("10" = 6.10%), not a real 10% CD.
   if (MM_TYPES.has(String(q.instrument_type || "").toUpperCase()) && Number.isInteger(y) && y >= 10) return null;
+  // Same guard for bonds: a bare integer >= 10 is an un-rebuilt dropped handle.
+  if (isBond && Number.isInteger(y) && y >= 10) return null;
   return y;
 }
 const tenorBucket = (t) => (!num(t) ? null : t <= 1 ? "<=1y" : t <= 3 ? "1-3y" : t <= 5 ? "3-5y" : t <= 10 ? "5-10y" : "10y+");
@@ -84,6 +94,8 @@ export function makeCategoryOf(cats) {
     for (const [nm, cat] of CBF.get(ft) || []) if (nm.startsWith(c) || c.startsWith(nm)) return cat;
     const p = pat(c); if (p) return p === "SKIP" ? null : p;
     if (c.length >= 4) for (const nm of CN) if (nm.startsWith(c) || c.startsWith(nm + " ")) return CAT_DIR[nm];
+    const ctoks = new Set(toks); // last resort: every token present in a directory name
+    for (const [nm, cat] of CBF.get(ft) || []) if ([...ctoks].every((t) => nm.split(" ").includes(t))) return cat;
     return null;
   };
 }
@@ -93,17 +105,24 @@ export function daySpreadSnapshot(data, categoryOf) {
   const day = data.trading_day;
   const curve = ccilCurve(data.govt_benchmark?.points, day);
   if (!day || !curve) return null;
-  // Bonds only, this trading day, aggregated to one LATEST quote per issuer+maturity.
+  // The official (ISIN-matched) issuer name drives the category — same as the live
+  // screen. Without this the baseline buckets a bond under the parent-brand category
+  // (a bare "Bajaj" -> Manufacturing) while the screen compares it under the real
+  // one (Bajaj Finance -> NBFC): today-vs-normal would then be apples-to-oranges.
+  const secs = data.securities || {};
+  const dispIssuer = (q) => (q.isin && secs[q.isin]?.issuer) || q.issuer || "";
+  // Bonds only, this trading day, aggregated to one LATEST quote per bond (keyed by
+  // confirmed ISIN when known, so name variants collapse to one row — like app.js).
   const bondMap = new Map();
   for (const q of data.quotes || []) {
     if (q.quote_date !== day) continue;
     if (q.section !== "Bonds" && q.section !== "DCM") continue;
     const uy = usableYield(q);
     if (uy == null || !num(q.tenor_years)) continue;
-    const key = `${q.section}||${(q.issuer || "").toLowerCase()}||${q.maturity || ""}`;
+    const key = q.isin ? `isin||${q.isin}` : `${q.section}||${(q.issuer || "").toLowerCase()}||${q.maturity || ""}`;
     const prev = bondMap.get(key);
     if (!prev || tsSeconds(q.timestamp) >= prev.ts) {
-      bondMap.set(key, { uy, tenor: q.tenor_years, issuer: q.issuer, rating: q.rating || null, ts: tsSeconds(q.timestamp) });
+      bondMap.set(key, { uy, tenor: q.tenor_years, issuer: dispIssuer(q), rating: q.rating || null, ts: tsSeconds(q.timestamp) });
     }
   }
   // Group bonds into category|rating|bucket and category|ALL|bucket, take median spread.

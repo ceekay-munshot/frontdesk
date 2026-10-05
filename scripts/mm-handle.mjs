@@ -29,6 +29,14 @@ const MM_TYPES = new Set(["CD", "CP"]);
 const isNum = (x) => typeof x === "number" && Number.isFinite(x);
 const isMM = (q) => MM_TYPES.has(String(q?.instrument_type || "").toUpperCase());
 
+/* A quote the structuring LLM is CONFIDENT is a size (crores) or a spread (bps):
+ * its integer is NOT a dropped yield handle. "664 PFC ... 75crs any bid" (75 is a
+ * size), "25 vs 50 crs" (sizes), "...14 bps can do" (a spread) must never be
+ * rebuilt into 6.75 / 7.25 / 7.14 yields. The ambiguous labels the desk shorthand
+ * actually produces for a dropped handle — "price_or_spread", "price", "unknown",
+ * none — stay eligible. */
+const NON_YIELD_MEANING = new Set(["size_cr", "spread_bps"]);
+
 /** A bare integer in [10,99] on a money-market quote = the desk dropped the handle. */
 const isDroppedHandle = (v) => isNum(v) && Number.isInteger(v) && v >= 10 && v <= 99;
 
@@ -77,6 +85,7 @@ export function fixMoneyMarketYields(quotes) {
   let fixed = 0;
   const FIELDS = ["yield", "bid", "offer", "level"];
   for (const q of mm) {
+    if (NON_YIELD_MEANING.has(q.level_meaning)) continue; // a size/spread, not a dropped handle
     const handle = handleForDay.get(q.quote_date || "_") ?? globalHandle;
     let touched = false;
     const before = {};
@@ -90,6 +99,7 @@ export function fixMoneyMarketYields(quotes) {
     }
     if (touched) {
       q.handle_fixed = true; // provenance: this quote's MM yield was rebuilt
+      q.level_meaning = "yield"; // rebuilt fields ARE yields — label + spread engine must read them as such
       fixed++;
       details.push({ id: q.id, isin: q.isin || null, issuer: q.issuer, handle, before, raw: q.raw });
     }
@@ -125,6 +135,7 @@ export function fixBondYields(quotes, tradedByIsin) {
   const details = [];
   let fixed = 0;
   for (const q of bonds) {
+    if (NON_YIELD_MEANING.has(q.level_meaning)) continue; // a size/spread, not a dropped handle
     const tr = q.isin ? byIsin[q.isin] : null;
     const anchor = tr && isNum(tr.yield) ? tr.yield : (isNum(q.coupon) ? q.coupon : null);
     const handle = anchor != null ? Math.floor(anchor) : sectionHandle;
@@ -142,6 +153,9 @@ export function fixBondYields(quotes, tradedByIsin) {
     }
     if (touched) {
       q.handle_fixed = true;
+      q.level_meaning = "yield"; // the rebuilt bid/offer/level ARE yields now — so the
+      // Live Board labels them "yld" (not "px") and usableYield feeds them to the
+      // comparison engine (two-way mid AND one-sided), the client's like-for-like read.
       fixed++;
       details.push({ id: q.id, isin: q.isin || null, issuer: q.issuer, handle, anchor, before, raw: q.raw });
     }

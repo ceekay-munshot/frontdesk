@@ -15,19 +15,33 @@ import { dirname } from "node:path";
 import { buildTradedRef } from "./cbrics.mjs";
 
 const OUT = fileURLToPath(new URL("../public/data/traded-ref.json", import.meta.url));
+const QUOTES = fileURLToPath(new URL("../public/data/quotes.json", import.meta.url));
+
+/** The "relevant" set = every ISIN the desk has ever quoted (accumulated across
+ *  the rotating Google Doc). These get FULL trade detail; the rest of the market
+ *  gets a light tail. Persisted in traded-ref.relevant so it never forgets. */
+function buildRelevant(prev) {
+  const set = new Set((prev && prev.relevant) || []);
+  try {
+    const q = JSON.parse(readFileSync(QUOTES, "utf8"));
+    for (const x of q.quotes || []) if (x.isin) set.add(x.isin);
+  } catch { /* no quotes yet — keep the persisted set */ }
+  return set;
+}
 
 async function main() {
   let prev = null;
   if (existsSync(OUT)) { try { prev = JSON.parse(readFileSync(OUT, "utf8")); } catch { prev = null; } }
 
+  const relevant = buildRelevant(prev);
   // A small rolling backfill self-heals days missed over a weekend or a failed
   // run; the per-ISIN history dedupes by date, so re-merging a day is a no-op.
-  const ref = await buildTradedRef(prev, { backfillDays: 6 });
+  const ref = await buildTradedRef(prev, { backfillDays: 6, relevant });
   if (!ref) { console.warn("[traded-ref] no update — kept previous file"); return; }
 
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(ref) + "\n");
-  console.log(`[traded-ref] wrote ${OUT} — ${Object.keys(ref.byIsin).length} ISINs as of ${ref.as_of}`);
+  console.log(`[traded-ref] wrote ${OUT} — ${Object.keys(ref.byIsin).length} ISINs (${ref.relevant.length} relevant/full) as of ${ref.as_of}`);
 }
 
 main().catch((err) => {

@@ -16,6 +16,19 @@ import { readFile, writeFile } from "node:fs/promises";
 import { backfillRange, backfillMonthly } from "./cbrics.mjs";
 
 const FILE = new URL("../public/data/traded-ref.json", import.meta.url);
+const QUOTES = new URL("../public/data/quotes.json", import.meta.url);
+
+/** The "relevant" set = every ISIN the desk has ever quoted (persisted in
+ *  traded-ref.relevant) plus anything in the current quotes.json. These keep
+ *  FULL trade detail; the rest of the market gets a light tail. */
+async function buildRelevant(prev) {
+  const set = new Set((prev && prev.relevant) || []);
+  try {
+    const q = JSON.parse(await readFile(QUOTES, "utf8"));
+    for (const x of q.quotes || []) if (x.isin) set.add(x.isin);
+  } catch { /* no quotes yet — keep the persisted set */ }
+  return set;
+}
 
 // mode "monthly" (default, efficient path to 2016) or "daily" (fine detail near
 // the recent window). node deep-backfill.mjs [mode] [count] [start] [delayMs]
@@ -28,10 +41,11 @@ let prev = null;
 try { prev = JSON.parse(await readFile(FILE, "utf8")); } catch { prev = null; }
 if (!prev || !prev.byIsin) { console.error("[deep-backfill] no existing traded-ref.json — run fetch-traded-ref first"); process.exit(1); }
 
+const relevant = await buildRelevant(prev);
 const before = { oldest: prev.oldest || null, isins: Object.keys(prev.byIsin).length };
 const out = mode === "daily"
-  ? await backfillRange(prev, { maxDays: count, start, delayMs })
-  : await backfillMonthly(prev, { maxMonths: count, start, delayMs });
+  ? await backfillRange(prev, { maxDays: count, start, delayMs, relevant })
+  : await backfillMonthly(prev, { maxMonths: count, start, delayMs, relevant });
 if (!out) { console.warn("[deep-backfill] nothing merged; kept previous"); process.exit(0); }
 
 await writeFile(FILE, JSON.stringify(out));

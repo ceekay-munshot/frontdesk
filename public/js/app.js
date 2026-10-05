@@ -406,7 +406,7 @@ function categoriesForDay() {
   const set = new Set();
   for (const q of dayQuotes(state.data?.quotes || [])) {
     if (q.section === "Gsec" || q.side === "comment" || !q.issuer) continue;
-    set.add(catOrOther(q.issuer));
+    set.add(catOfQuote(q));
   }
   return CATEGORY_ORDER.filter((c) => set.has(c)).concat([...set].filter((c) => !CATEGORY_ORDER.includes(c)));
 }
@@ -497,6 +497,32 @@ const benchmarkFor = (category) => BENCHMARKS[category] || null;
 
 /** The confirmed security details for an ISIN, from the quotes.json table. */
 const secOf = (isin) => (isin && state.data?.securities?.[isin]) || null;
+
+/** The display issuer name: the official NSDL name for an ISIN when matched, else
+ *  the desk's raw shorthand. ONE place so every surface — Live Board, Spread
+ *  Watch, Opportunities, crosses, Desk Pulse — names AND categorises a bond the
+ *  same way. (Without this a bare "Bajaj" / "LIC" on the Live Board resolves to
+ *  the PARENT brand's category — Manufacturing / Insurance — while Spread Watch,
+ *  which uses the ISIN name, shows the real one — NBFC / HFC. That tab-to-tab
+ *  contradiction is exactly the mis-categorisation the client reported, so the
+ *  official-name path must be used everywhere, not just in the comparison engine.) */
+const dispIssuerFor = (isin, raw) => (isin ? titleCaseIssuer(secOf(isin)?.issuer || raw || "") : String(raw || ""));
+const catFor = (isin, raw) => catOrOther(dispIssuerFor(isin, raw));
+/** Same two, taking a whole quote (the common case). */
+const dispIssuerOf = (q) => dispIssuerFor(q && q.isin, q && q.issuer);
+const catOfQuote = (q) => catFor(q && q.isin, q && q.issuer);
+
+/** The rating to DISPLAY for a raw quote: blanked when it is the wrong scale for
+ *  the instrument (a bond must never show a money-market rating like A1+, nor a
+ *  CD/CP a long-term AAA). Same rule the Spread Watch universe applies — lifted
+ *  here so every surface that chips a raw quote's rating enforces it too. */
+function ratingForQuote(q) {
+  const r = q && q.rating;
+  if (!r) return null;
+  const inst = instrumentInfo(q.isin, q.instrument_type || q.type, q.section);
+  if (inst.scale && ratingScaleOf(r) && ratingScaleOf(r) !== inst.scale) return null;
+  return r;
+}
 
 /** Colour band for a credit rating: high grade green, single-A amber, the rest
  *  rose. Handles bond scale (AAA/AA/A) and money-market scale (A1+/A1/A2). */
@@ -726,7 +752,7 @@ function dedupeExact(list) {
   const seen = new Map(); // key -> surviving (cloned) row
   const out = [];
   for (const q of list) {
-    const key = `${dayOfQuote(q)} ${q.section} ${q.raw || ""}`;
+    const key = `${dayOfQuote(q)}\u0000${q.section}\u0000${q.raw || ""}`;
     const hit = seen.get(key);
     if (hit) {
       hit._repeats++;
@@ -785,11 +811,13 @@ function levelCell(q) {
   }
   if (isNum(q.yield)) return { main: fmtNum(q.yield, 2), unit: "yld" };
   if (isNum(q.level)) {
+    if (q.level_meaning === "yield") return { main: fmtNum(q.level, 2), unit: "yld" };
     const u = q.level_meaning === "price" ? "px" : q.level_meaning === "spread_bps" ? "bps" : q.level_meaning === "size_cr" ? "cr" : "lvl";
     return { main: fmtNum(q.level), unit: u };
   }
-  if (isNum(q.bid)) return { main: fmtNum(q.bid), unit: "bid" };
-  if (isNum(q.offer)) return { main: fmtNum(q.offer), unit: "ofr" };
+  const yld = q.level_meaning === "yield" ? 2 : null; // a repaired one-sided bond level is a yield
+  if (isNum(q.bid)) return { main: fmtNum(q.bid, yld), unit: "bid" };
+  if (isNum(q.offer)) return { main: fmtNum(q.offer, yld), unit: "ofr" };
   return { main: "—", unit: "" };
 }
 
@@ -1093,9 +1121,9 @@ function rowHTML(q) {
   const instr = q.instrument_type && !q.isin ? `<span class="text-slate-400">${esc(q.instrument_type)}</span>` : "";
   const subBits = [instr, flags].filter(Boolean).join(" ");
 
-  const rchip = ratingChip(q.rating, q.series, secOf(q.isin)?.ratingNote, secOf(q.isin)?.ratingSources);
+  const rchip = ratingChip(ratingForQuote(q), q.series, secOf(q.isin)?.ratingNote, secOf(q.isin)?.ratingSources);
   const rating = rchip || `<span class="text-[11px] text-slate-300">—</span>`;
-  const cat = catChip(categoryOf(q.issuer));
+  const cat = catChip(catOfQuote(q));
 
   const rowTip = JSON.stringify({ kind: "row", raw: q.raw, dealer: q.dealer || "", firm: q.firm || "", time: q.timestamp || "", accent: sectionColor(q.section) });
   return `
@@ -1103,7 +1131,7 @@ function rowHTML(q) {
         data-tip="${esc(rowTip)}">
       <td class="px-3 py-2.5">
         <div class="flex items-baseline gap-1.5 font-semibold text-slate-800">
-          <span class="truncate">${esc(titleCaseIssuer(q.issuer || "—"))}</span>
+          <span class="truncate">${esc(dispIssuerOf(q) || "—")}</span>
           ${coupon ? `<span class="nums shrink-0 text-indigo-600">${coupon}</span>` : ""}
           ${monYr ? `<span class="nums shrink-0 text-[11px] font-medium text-slate-400">· ${monYr}</span>` : ""}
           ${secTag}${repeats}
@@ -1253,18 +1281,39 @@ const USABLE_Y_MIN = 2, USABLE_Y_MAX = 13;
 // not a 10%+ CD, and letting it through prints a false "cheap / buy" flag.
 const MM_TYPES = new Set(["CD", "CP"]);
 
-/** Usable yield for a quote: q.yield, else the mid of a yield two-way, else null —
- *  but only when it falls in the plausible [2, 13]% band (else null). */
+/** Usable yield for a quote: the explicit yield, else a yield two-way's mid, else
+ *  a one-sided yield level — but only when it falls in the plausible [2, 13]% band.
+ *
+ *  The bid/offer/level fields hold YIELDS when the chat line said so
+ *  (level_meaning "yield") OR when we rebuilt a dropped bond handle: a
+ *  handle-fixed bond is anchored to its real NSE traded yield, so its numbers are
+ *  yields even if the structuring LLM first mislabelled the line "price_or_spread".
+ *  We must read those — and read the ONE-SIDED cases too (a lone offer/bid) — or
+ *  the repaired desk markets (the client's NABARD / PFC / SIDBI two-ways and
+ *  one-sided offers) never reach Spread Watch, Opportunities or the bond-vs-bond
+ *  picker: the exact like-for-like comparison the client asked for. */
 function usableYield(q) {
+  const isBond = String(q.section) === "Bonds";
+  // The bid/offer/level fields are YIELDS exactly when the line says so. A rebuilt
+  // dropped handle is stamped level_meaning:"yield" in the pipeline (and on the
+  // deployed file), so this one flag covers both clean yield quotes and repaired
+  // ones — while a genuine size ("75crs") or spread ("14 bps") keeps its own
+  // meaning and is never read as a yield.
+  const yieldFields = q.level_meaning === "yield";
   let y = null;
   if (isNum(q.yield)) y = q.yield;
-  else if (q.side === "two_way" && isNum(q.bid) && isNum(q.offer) && q.level_meaning === "yield") y = (q.bid + q.offer) / 2;
+  else if (yieldFields && q.side === "two_way" && isNum(q.bid) && isNum(q.offer)) y = (q.bid + q.offer) / 2;
+  else if (yieldFields && isNum(q.offer)) y = q.offer;
+  else if (yieldFields && isNum(q.bid)) y = q.bid;
+  else if (yieldFields && isNum(q.level)) y = q.level;
   if (y == null || y < USABLE_Y_MIN || y > USABLE_Y_MAX) return null;
   if (MM_TYPES.has(String(q.instrument_type || "").toUpperCase()) && Number.isInteger(y) && y >= 10) return null;
-  // Safety net: a bond quoted as a bare integer >=10 is a dropped handle the data
-  // repair couldn't rebuild (no ISIN/traded anchor) — exclude it rather than let a
-  // false "10%" create a huge fake spread. (Matched bonds are already rebuilt.)
-  if (String(q.section) === "Bonds" && Number.isInteger(y) && y >= 10) return null;
+  // Safety net: a bond OR a government security quoted as a bare integer >=10 is a
+  // dropped handle the data repair couldn't rebuild (no ISIN/traded anchor) —
+  // exclude it rather than let a false "10%" create a huge fake spread or spike the
+  // fallback govt curve. (Matched bonds are already rebuilt; real India yields,
+  // govt or corporate, carry a decimal and sit below ~9%.)
+  if ((isBond || String(q.section) === "Gsec") && Number.isInteger(y) && y >= 10) return null;
   return y;
 }
 
@@ -1395,7 +1444,7 @@ function computeUniverse() {
     if (uy != null) withUY++;
     if (uy != null && isNum(q.tenor_years)) {
       withUYT++;
-      enriched.push({ q, uy, tenor: q.tenor_years, bucket: tenorBucket(q.tenor_years), section: q.section, category: catOrOther(q.issuer), issuer: q.issuer || "—", maturity: q.maturity || "" });
+      enriched.push({ q, uy, tenor: q.tenor_years, bucket: tenorBucket(q.tenor_years), section: q.section, category: catOfQuote(q), issuer: dispIssuerOf(q) || "—", maturity: q.maturity || "" });
     }
   }
 
@@ -2365,13 +2414,13 @@ function computeOpportunities() {
     const gap = Math.abs(Math.round((q.offer - q.bid) * 100));
     if (gap <= 0 || gap > 8) continue;
     const bucket = tenorBucket(q.tenor_years);
-    const tcat = catOrOther(q.issuer);
+    const tcat = catOfQuote(q);
     if (!secOk(q.section) || !catOk(tcat) || !tenOk(bucket) || !hitsSearch(q.issuer, `${q.dealer || ""} ${q.firm || ""}`)) continue;
     tight.push({
       type: "tight", key: `${q.section}|${(q.issuer || "").toLowerCase()}|${q.maturity || ""}`,
-      issuer: q.issuer || "—", maturity: q.maturity, section: q.section, category: tcat, coupon: q.coupon, bucket, tenor: q.tenor_years,
+      issuer: dispIssuerOf(q) || "—", maturity: q.maturity, section: q.section, category: tcat, coupon: q.coupon, bucket, tenor: q.tenor_years,
       size: q.size_cr, dealer: q.dealer, firm: q.firm, time: q.timestamp, fresh: isFresh(q), raw: q.raw, _val: gap,
-      isin: q.isin, rating: q.rating, series: q.series, candidates: q.candidates,
+      isin: q.isin, rating: ratingForQuote(q), series: q.series, candidates: q.candidates,
       headline: `${gap} bps`, sub: "bid–offer",
       why: `Only ${gap} bps between bid (${fmtNum(q.bid, 2)}) and offer (${fmtNum(q.offer, 2)}) — a tight, liquid market; easy to deal now.`,
       rows: [["Bid yield", pct(q.bid)], ["Offer yield", pct(q.offer)], ["Bid-offer", gap + " bps"]],
@@ -2394,7 +2443,8 @@ function computeOpportunities() {
     const dealers = new Set([...e.buys, ...e.sells].map((q) => q.dealer).filter(Boolean));
     if (dealers.size < 2) continue; // need at least two different desks
     const bucket = tenorBucket(e.tenor);
-    const ecat = catOrOther(e.issuer);
+    const bisin = (e.buys.find((q) => q.isin) || e.sells.find((q) => q.isin) || {}).isin || null;
+    const ecat = catFor(bisin, e.issuer);
     const whoAll = [...e.buys, ...e.sells].map((q) => `${q.dealer || ""} ${q.firm || ""}`).join(" ");
     if (!secOk(e.section) || !catOk(ecat) || !tenOk(bucket) || !hitsSearch(e.issuer, whoAll)) continue;
     const recent = (arr) => arr.slice().sort((a, b) => tsSeconds(b.timestamp) - tsSeconds(a.timestamp));
@@ -2412,9 +2462,9 @@ function computeOpportunities() {
     const time = tsSeconds(buy.timestamp) >= tsSeconds(sell.timestamp) ? buy.timestamp : sell.timestamp;
     twosided.push({
       type: "twosided", key: `${e.section}|${e.issuer.toLowerCase()}|${e.maturity}`,
-      issuer: e.issuer, maturity: e.maturity, section: e.section, category: ecat, coupon: isNum(buy.coupon) ? buy.coupon : (isNum(sell.coupon) ? sell.coupon : null), bucket, tenor: e.tenor,
+      issuer: dispIssuerFor(bisin, e.issuer), maturity: e.maturity, section: e.section, category: ecat, coupon: isNum(buy.coupon) ? buy.coupon : (isNum(sell.coupon) ? sell.coupon : null), bucket, tenor: e.tenor,
       size: size || null, dealer: null, firm: null, time, fresh: isFresh(buy) || isFresh(sell), raw: null,
-      isin: buy.isin || sell.isin, rating: buy.rating || sell.rating, series: buy.series || sell.series, candidates: buy.candidates || sell.candidates,
+      isin: buy.isin || sell.isin, rating: ratingForQuote({ rating: buy.rating || sell.rating, isin: buy.isin || sell.isin, instrument_type: buy.instrument_type || sell.instrument_type, type: buy.type || sell.type, section: e.section }), series: buy.series || sell.series, candidates: buy.candidates || sell.candidates,
       _val: size + tsSeconds(time) / 100000, // interest + recency
       headline: "Both sides", sub: "active",
       buy: { level: levelStr(buy), dealer: buy.dealer || "—", raw: buy.raw },
@@ -2615,9 +2665,11 @@ function computeCrosses() {
     const isBuy = BUY_SIDES.has(q.side), isSell = SELL_SIDES.has(q.side);
     if (!isBuy && !isSell) continue;
     const k = `${(q.issuer || "").toLowerCase()}||${q.maturity || ""}`;
-    if (!byBond.has(k)) byBond.set(k, { issuer: q.issuer, maturity: q.maturity || "", tenor: q.tenor_years, buys: [], sells: [] });
+    if (!byBond.has(k)) byBond.set(k, { issuer: q.issuer, isin: q.isin || null, maturity: q.maturity || "", tenor: q.tenor_years, buys: [], sells: [] });
+    const bb = byBond.get(k);
+    if (!bb.isin && q.isin) bb.isin = q.isin; // remember the confirmed ISIN for official name + category
     const rec = { dealer: q.dealer || "—", t: tsSeconds(q.timestamp), level: levelStr(q) };
-    (isBuy ? byBond.get(k).buys : byBond.get(k).sells).push(rec);
+    (isBuy ? bb.buys : bb.sells).push(rec);
   }
   const dismissed = crossDismissed();
   const out = [];
@@ -2627,7 +2679,7 @@ function computeCrosses() {
     if (desks.size < 2 || dismissed.has(k)) continue; // need two different desks
     const byTime = (a, b) => a.t - b.t;
     e.buys.sort(byTime); e.sells.sort(byTime);
-    out.push({ key: k, issuer: e.issuer, maturity: e.maturity, category: categoryOf(e.issuer), buys: e.buys, sells: e.sells });
+    out.push({ key: k, issuer: dispIssuerFor(e.isin, e.issuer), maturity: e.maturity, category: catFor(e.isin, e.issuer), buys: e.buys, sells: e.sells });
   }
   const lastT = (c) => Math.max(...[...c.buys, ...c.sells].map((r) => r.t)); // most-recent activity first
   out.sort((a, b) => lastT(b) - lastT(a));
@@ -2785,7 +2837,7 @@ function computePulse() {
     // Specialisation: which SECTOR (issuer category) and TENOR bucket this dealer
     // trades most. Skip unresolved categories and undated tenors so a dealer's
     // "focus" reflects real, classifiable flow.
-    const cat = catOrOther(q.issuer);
+    const cat = catOfQuote(q);
     if (cat && cat !== "Other") it.sectors.set(cat, (it.sectors.get(cat) || 0) + 1);
     const tb = isNum(q.tenor_years) ? tenorBucket(q.tenor_years) : null;
     if (tb) it.tenors.set(tb, (it.tenors.get(tb) || 0) + 1);
