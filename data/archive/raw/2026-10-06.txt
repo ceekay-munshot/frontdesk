@@ -1630,3 +1630,157 @@ EARLY FEB PSU CD 75 bid cbc holding 67 offer 14:48:11
 March mat MOFL 7.80/8.10 priamry 14:48:41
 March mat MOFSL 7.70/8.00 priamry
 March Mat MOFL 7.80/8.05 14:48:43
+7.80% NABARD MARCH 27 12/17 cbc 14:49:41
+7.80% NABARD MARCH 27 12/17 cbc 14:51:23
+7.57 LIC 23-11-2029 8.03% offer-50crs (mkt 10bid-100crs) 14:51:25
+7.57 LIC 23-11-2029 8.03/8.10-50crs 14:52:49
+7.57 LIC 23-11-2029 8.03/8.10-50crs 14:53:10
+7.80% NABARD MARCH 27 12/15 cbc 14:53:11
+7.80% NABARD MARCH 27 12/15 cbc 14:53:22
+KMPL sept 27 25crs what px/ offers 14:57:16
+7.52% REC Ltd NCD (MD 07/11/2026) 6.00offer 25crs 14:58:39
+771 lic 2033    8.10/8.17   no oc 14:59:32
+7.10 Bajaj hsg Oct-28 @8.17 cbc (holding 22 bid)
+either or 25cr cbc
+ZURICH 15:01:40
+6.11 HUDCO Nov 28. 25crs . 7.65 offer 15:02:48
+768 sidbi july 2027 100crs 50 offer 15:03:06
+8.6 *HUDCO Nov 28. 25crs . 7.65 offer 15:03:26
+8.03 offer -100cr 15:03:47
+7.80% NABARD MARCH 27 10/12 cbc 15:06:05
+7.80% NABARD MARCH 27 10/12 cbc 15:06:17
+759  nhb sept 27     7.51 bid   50crs 15:06:54
+7.52% REC Ltd NCD (MD 07/11/2026) - 25 crs - 6.20 choice 15:07:14
+7.87% Bajaj Hous Fin NCD (MD 04/08/2036)  38-44  50 crs 15:08:13
+7.87% Bajaj Hous Fin NCD (MD 04/08/2036)  38-44  50 crs 15:08:23
+8.12 Bajaj Fin Sept 27  got at 8.00, can buy more  5 crs cbc 15:08:23
+7.7% Bajaj Fin Ltd NCD (MD 20/09/2029)  28-34  50 crs 15:08:37
+7.7% Bajaj Fin Ltd NCD (MD 20/09/2029)  28-34  50 crs 15:08:59
+8 tata caphsg 3th nov 2027 50crs what bids 15:09:59
+768 sidbi july 2027 100crs 50 offer 15:10:08
+7.52% REC Ltd NCD (MD 07/11/2026) 6.20choice-25crs t+0 further  6.20choice-25crs 15:10:14
+8 tata caphsg 3th nov 2027 50crs what bids 15:10:25
+7.52% REC Ltd NCD (MD 07/11/2026) - 25 crs -6.20dealt 25crs further  6.20 choice t1 vs t0 15:10:49
+8.10 bid 15:12:13
+8.6 HUDCO Nov 28. 25crs . 7.67 offer. 15:12:43
+7.44 nabard jul 29. 50crs 7.83 offer  mkt 15:16:22
+7.44 nabard jul 29. 50crs 7.85 offer.. passing 90 bid 15:17:03
+ultratech 31 any offers? 15:17:14
+7.57 LIC 23-11-2029 8.04offer-100crs 15:17:49
+7.16% NABARD Dec 2029 87/91-50crs 15:19:17
+7.29% SIDBI Nov 2029 86/90-50crs 15:19:28
+8.60% Aditya Birla Renewables Limited NCD MAT 240927, can qoute 8.38-8.40, Rs.25 crs 15:19:57
+7.29% SIDBI Nov 2029 86/90-50crs-SP Mkt 90bid 15:20:23
+7.16% NABARD Dec 2029 87/91-50crs
+7.29% SIDBI Nov 2029 86/90-50crs (can sell 100crs ) 15:20:43
+7.44 nabard jul 29. 50crs 7.86 offer
+8.6 HUDCO Nov 28. 25crs . 7.67 offer. 15:22:29
+8.6 HUDCO Nov 28. 25crs . 7.67 offer. 15:22:46
+7.44% NABARD july 2029 86/90-50crs 15:23:55
+7.16 nabard dec 2029 88offer best 15:27:28
+7.16% NABARD Dec 2029 88/91-100/50 15:28:20
+7.44% NABARD july 2029 86/90-50crs 15:28:24
+leaving for d day 15:28:39
+7.16 nabard dec 2029 88/91  100/50
+7.44 nabard jul 2029 86/90 50crs 15:29:42
+hi 15:31:19
+Mutual Fund
+	Quant Liquid Fund - Dir - Growth
+	PGIM India Liquid Fund - Dir - Growth
+	Motilal Oswal Liquid Fund - Dir - Growth
+	The Wealth Company Liquid Fund - Dir - Growth
+	WhiteOak Capital Liquid Fund - Dir - Growth
+	Abakkus Liquid Fund - Dir - Growth
+	Quantum Liquid Fund - Dir - Growth
+	Groww Liquid Fund - Dir- Growth
+	Capitalmind Liquid Fund - Dir - Growth
+	Navi Liquid Fund - Dir - Growth
+	Unifi Liquid Fund - Dir - Growth
+	15:19:50
+Hi Sir if you can help me out with contact of above mentioned mutual funds 15:33:11
+sidbi apr/jun 28 86/90 50 cr 15:34:03
+7.80% NABARD MARCH 27 12 bid cbc holding 10 offer 15:35:04
+7.44 sidbi april 2028 oct ip
+7.51 sidbi jun 2028 nov ip
+86/90 50crs 15:37:03
+5Y ultratech 72 bid 25crs 15:37:29
+8.1167% Baj Fin may 27 82 offer 25crs t+1 15:37:43
+ultratech cement 2030 60offer 15:41:14
+gautam 15:41:15
+7.25 2031 15:41:16
+7.25 ultratech aug 2031 62/70 25crs ( passing 66 offer) 15:42:39
+8.0409% TATA CAPITAL HOUSING FINANCE LIMITED B & D 19-03-2027 - 7.25% offer 15:49:37
+7.57 LIC Nov 2029 8.06 dlt 50 crs selling more mkt 15:51:33
+iffco bot 15:52:37
+can sell bharti tele dec 26 and buy tchfl march 27 15:52:43
+7.02% Bajaj Housing Finance NCD Mat 260528 8.12-17 15:52:59
+757 lic nov 2029 8.06dealt 50crs mkt 15:54:48
+8.10 bajaj hsg jul 27. sold @ 88. sold on bid. 50crs 15:55:38
+8 tata caphsg 3th nov 2027  8.10 bid 25crs 15:57:40
+7.75 PFC MARCH 27 7.10 bid cbc holding 97 offer 15:59:20
+7.80% LIC HOUSING FINANCE (22DEC2027) - 5crs can sell at 7.80 16:01:18
+can sell 7.38 bajaj fin june 2030
+and buy bajaj hsg july 2030  in 5bps
+25crs 16:01:32
+25crs  ( did switch in 5bps can do further) 16:02:01
+8.60% Aditya Birla Renewables Limited NCD MAT 240927, can qoute 8.38-8.40, Rs.25 crs 16:02:08
+10-12y pfc rec nabard ny offers 16:03:29
+770 nabard sep 2027 65offer 16:06:29
+jp 16:06:31
+PFC Feb 27 Bond - 25crs - 6.90/6.95 16:13:44
+REC Feb 27 Bond - 25crs - 6.90/6.97 16:13:48
+sp 16:13:50
+Can take SIDBI Nov 29 at 90 - 100 crs 16:16:20
+7.29 sidbi nov 2029 85/90 50/100crs 16:16:48
+7.16% NABARD Dec 2029
+7.29% SIDBI Nov 2029 85 can sell either -50crs 16:17:03
+7.64 Bajaj Hsg Jul 2030 38 dlt 100 crs mkt pru mf to 25 nuvama, 25 kgen, 50 uti mf 16:25:48
+7.80% NABARD MARCH 27 bought at 7.10 , 100crs , nothing more thanks 16:49:22
+tata 16:49:24
+im gng for lunch do back up 14:50:12
+Small Ind Dev Bk of India CD (MD 26/02/2027) last  25cr to sell 14:50:36
+Mid March mat MOFSL 7.70/7.95 priamry
+Mid March Mat MOFL 7.80/8.05 14:53:15
+rrvl nov chk..sold 400 at 92 14:54:42
+23/11 Kotak sec ofrd at 6.70 for 25cr T+1 cbc 14:58:11
+Punjab National Bank CD (MD 05/02/2027) 50crs 66/70 t+1/t+0 15:00:11
+10/03 NABARD CD 95 bid 25crs cbc
+12/03 BAJAJ HSG CP 93/98 cbc 15:13:44
+05/02 PNB 66/70 15:14:13
+10 min bidding in cpcl 15:19:32
+any bids? 15:19:35
+14 Days CPCL primary bidding @ 3.30 7 vd over 21 oct mat 150cr 15:19:43
+4 Dec Aseem Infra 50crs ny bid? 15:38:07
+Punjab National Bank CD (MD 05/02/2027) 75crs 68/72 t+1 15:39:47
+7/5 Union CD 10 choice 25 crs cbc 15:50:41
+Small Ind Dev Bk of India CD (MD 20/08/2027) 75crs 52 offer t+1 15:51:29
+Punjab National Bank CD (MD 05/02/2027) 75crs 68/72 t+1 15:53:17
+SIDBI 20Aug  55 / 57  25crs T1 15:58:38
+cpcl have asked to keep on hold ek min 15:59:14
+r u issuing or no? 16:00:34
+issuer on hold bolo 16:00:47
+Punjab National Bank CD (MD 05/02/2027) 75crs 68 offer 16:08:17
+Punjab National Bank CD (MD 05/02/2027) 75crs 68 offer 16:09:00
+gen check 16:10:03
+5 Feb HDFC Bank CD 75 offer 16:12:19
+CPCL 14 days mat did @ 5.85 150cr can do 120cr @ 5.80 8 over 21 oct 16:14:31
+SIDBI CD 16/12 can sell @ 20.. 100crs, cbc 16:18:48
+me to switch Bank of Baroda 15DEC26 CD for 25 Crs 16:19:01
+Union bank CD 28/12 can sell @ 15..50crs 16:19:08
+HDFC CD 4/12 can sell @ 10.. 175crs, cbc 16:20:19
+12/03 PILANI CP 7.65 offer 50crs cbc 16:21:04
+BOB CD 8/1 can sell @ 54.. 50crs, cbc 16:21:30
+BOB CD 8/1 dlt @ 54.. in mrkt.. can sell more @ 54.. cbc 16:22:14
+18feb sidbi 85-88 my 2 way   sp 16:22:38
+SIDBI CD 18022027 - 82 offer 50 crs T+1 16:24:49
+Axis Bank CD 14/1    58/62    50crs 16:24:55
+Bank of Baroda 15DEC26 CD 6.08% offer 25 Crs 16:28:24
+Axis Bank CD 14/1 62 bid t+1 100crs 16:28:36
+66/68  10 02 union cd sp sbi mf 16:29:08
+Union Bank CD 28/12 can sell @ 15.. 50crs, cbc 16:29:43
+29/01 FEDBANK FINANCIAL SERVICES 7.90offer 50crs 16:31:43
+canara Bank CD 4/12 can sell @ 6.05.. upto 100crs, cbc 16:34:06
+BOB CD 4/12 can sell @ 05.. 125crs, cbc 16:37:46
+PNB CD 15/12 sold @ 12..50crs 16:45:07
+I guess only IDBI capital is working rest all busy trying SBI MF deal.. mind milega kuch nahi :0 16:46:18
+BOB CD 8/1 chk gone @ 54 16:54:05
