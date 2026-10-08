@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-07T22:15:37+05:30",
+  "generated_at": "2026-10-08T15:05:16+05:30",
   "source": "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt",
   "source_hash": "89aa2e3da84962a534e5295c66f2d6a01c617c67e213637dc86df3765768e40a",
   "trading_day": "2026-10-06",
@@ -21,58 +21,58 @@
   "quote_count": 4447,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-10-07 16:59:59",
+    "as_of": "2026-10-08 15:02:00",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.241
+        "yield": 7.2656
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.4465
+        "yield": 7.4755
       },
       {
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.9784
+        "yield": 6.9753
       },
       {
         "type": "tbill",
-        "name": "091 DTB 07012027",
-        "maturity": "2027-01-07",
-        "yield": 5.5701
+        "name": "182 DTB 11022027",
+        "maturity": "2027-02-11",
+        "yield": 5.75
       },
       {
-        "type": "tbill",
-        "name": "364 DTB 07102027",
-        "maturity": "2027-10-07",
-        "yield": 6.28
+        "type": "gsec",
+        "name": "06.10 GS 2031",
+        "maturity": "2031-07-01",
+        "yield": 7.0172
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
-        "maturity": "2026-10-08",
-        "yield": 5.32
+        "maturity": "2026-10-09",
+        "yield": 5.28
       }
     ]
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-10-06",
+    "as_of": "2026-10-08",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_05.10.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_05-10-2026.xls",
+      "debt": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_06.10.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_06-10-2026.xls",
       "cd": "https://nsdl.com/nsdl/2026-10/Cd%20%28Including%20Redeemed%29%20-02.10.2026_0.xlsx"
     },
     "counts": {
-      "bond": 27406,
-      "cp": 1976,
-      "cd": 413
+      "bond": 27417,
+      "cp": 1958,
+      "cd": 411
     },
     "securities_count": 200,
     "matched": {
@@ -351,7 +351,7 @@
       "issuer": "TATA STEEL LIMITED",
       "coupon": 7.65,
       "maturity": "2030-02-21",
-      "rating": "AAA",
+      "rating": "AA+",
       "type": "bond"
     },
     "INE020B08FH7": {
@@ -1609,7 +1609,7 @@
       "issuer": "BHARTI TELECOM LIMITED",
       "coupon": 8.9,
       "maturity": "2031-11-05",
-      "rating": "AA+",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE020B08DA7": {
@@ -6182,7 +6182,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q181",
@@ -6258,7 +6258,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q184",
@@ -55827,7 +55827,7 @@
       "raw": "7.65 TATA STEEL 21st FEb 2030 8.00 offer 10cr  need bid",
       "confidence": 0.6,
       "isin": "INE081A08355",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q2175",
@@ -61334,7 +61334,7 @@
       "raw": "8.90 Bharti Tele 2031 38/55 25crs SP",
       "confidence": 0.6,
       "isin": "INE403D08249",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2397",
@@ -61384,7 +61384,7 @@
       "raw": "8.90 Bharti Tele 2031 38/55 25crs SP",
       "confidence": 0.6,
       "isin": "INE403D08249",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2399",
@@ -61632,7 +61632,7 @@
       "raw": "8.90 Bharti Tele 2031 38/55 5/25crs SP 13:09:53",
       "confidence": 0.6,
       "isin": "INE403D08249",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2409",
