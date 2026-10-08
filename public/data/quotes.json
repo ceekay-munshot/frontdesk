@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T15:05:16+05:30",
+  "generated_at": "2026-10-08T22:23:14+05:30",
   "source": "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt",
   "source_hash": "89aa2e3da84962a534e5295c66f2d6a01c617c67e213637dc86df3765768e40a",
   "trading_day": "2026-10-06",
@@ -21,43 +21,43 @@
   "quote_count": 4447,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-10-08 15:02:00",
+    "as_of": "2026-10-08 16:59:59",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.2656
+        "yield": 7.2868
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.4755
+        "yield": 7.492
       },
       {
         "type": "gsec",
         "name": "06.36 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 6.9753
+        "yield": 7.0021
       },
       {
         "type": "tbill",
         "name": "182 DTB 11022027",
         "maturity": "2027-02-11",
-        "yield": 5.75
+        "yield": 5.7
       },
       {
         "type": "gsec",
         "name": "06.10 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 7.0172
+        "yield": 6.9993
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
         "maturity": "2026-10-09",
-        "yield": 5.28
+        "yield": 5.26
       }
     ]
   },
@@ -65,13 +65,13 @@
     "source": "NSDL",
     "as_of": "2026-10-08",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_06.10.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_06-10-2026.xls",
+      "debt": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_07.10.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_07-10-2026.xls",
       "cd": "https://nsdl.com/nsdl/2026-10/Cd%20%28Including%20Redeemed%29%20-02.10.2026_0.xlsx"
     },
     "counts": {
-      "bond": 27417,
-      "cp": 1958,
+      "bond": 27431,
+      "cp": 1978,
       "cd": 411
     },
     "securities_count": 200,
@@ -263,7 +263,7 @@
       "issuer": "BHARTI TELECOM LIMITED",
       "coupon": 8.65,
       "maturity": "2027-11-05",
-      "rating": "AA+",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE377Y07698": {
@@ -351,7 +351,7 @@
       "issuer": "TATA STEEL LIMITED",
       "coupon": 7.65,
       "maturity": "2030-02-21",
-      "rating": "AA+",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE020B08FH7": {
@@ -4881,7 +4881,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.20",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q129",
@@ -6182,7 +6182,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q181",
@@ -6258,7 +6258,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q184",
@@ -10941,7 +10941,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.20",
       "confidence": 0.8,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q372",
@@ -12296,7 +12296,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.26 11:12:31",
       "confidence": 0.75,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q426",
@@ -19153,7 +19153,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs - can sell at 8.30",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q696",
@@ -19491,7 +19491,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs - can sell at 8.30",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q709",
@@ -55827,7 +55827,7 @@
       "raw": "7.65 TATA STEEL 21st FEb 2030 8.00 offer 10cr  need bid",
       "confidence": 0.6,
       "isin": "INE081A08355",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2175",
@@ -61732,7 +61732,7 @@
       "raw": "8.65% Bharti Telecom (MD 05/11/2027) 8.10offer 50crs",
       "confidence": 0.6,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2413",
