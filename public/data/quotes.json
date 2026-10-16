@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-16T18:11:23+05:30",
+  "generated_at": "2026-10-16T22:29:45+05:30",
   "source": "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt",
   "source_hash": "89aa2e3da84962a534e5295c66f2d6a01c617c67e213637dc86df3765768e40a",
   "trading_day": "2026-10-06",
@@ -57,16 +57,16 @@
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-10-08",
+    "as_of": "2026-10-16",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_07.10.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_07-10-2026.xls",
-      "cd": "https://nsdl.com/nsdl/2026-10/Cd%20%28Including%20Redeemed%29%20-02.10.2026_0.xlsx"
+      "debt": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_15.10.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-10/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_15-10-2026.xls",
+      "cd": "https://nsdl.com/nsdl/2026-10/Cd%20%28Including%20Redeemed%29%20-09.10.2026.xlsx"
     },
     "counts": {
-      "bond": 27431,
-      "cp": 1978,
-      "cd": 411
+      "bond": 27543,
+      "cp": 2040,
+      "cd": 417
     },
     "securities_count": 200,
     "matched": {
@@ -257,7 +257,7 @@
       "issuer": "BHARTI TELECOM LIMITED",
       "coupon": 8.65,
       "maturity": "2027-11-05",
-      "rating": "AAA",
+      "rating": "AA+",
       "type": "bond"
     },
     "INE377Y07698": {
@@ -345,7 +345,7 @@
       "issuer": "TATA STEEL LIMITED",
       "coupon": 7.65,
       "maturity": "2030-02-21",
-      "rating": "AAA",
+      "rating": "AA+",
       "type": "bond"
     },
     "INE020B08FH7": {
@@ -4875,7 +4875,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.20",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q129",
@@ -6176,7 +6176,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q181",
@@ -6252,7 +6252,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q184",
@@ -10935,7 +10935,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.20",
       "confidence": 0.8,
       "isin": "INE403D08231",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q372",
@@ -12290,7 +12290,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.26 11:12:31",
       "confidence": 0.75,
       "isin": "INE403D08231",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q426",
@@ -19147,7 +19147,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs - can sell at 8.30",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q696",
@@ -19485,7 +19485,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs - can sell at 8.30",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q709",
@@ -55821,7 +55821,7 @@
       "raw": "7.65 TATA STEEL 21st FEb 2030 8.00 offer 10cr  need bid",
       "confidence": 0.6,
       "isin": "INE081A08355",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q2175",
@@ -61726,7 +61726,7 @@
       "raw": "8.65% Bharti Telecom (MD 05/11/2027) 8.10offer 50crs",
       "confidence": 0.6,
       "isin": "INE403D08231",
-      "rating": "AAA"
+      "rating": "AA+"
     },
     {
       "id": "q2413",
