@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-30T14:36:28+05:30",
+  "generated_at": "2026-10-30T21:20:07+05:30",
   "source": "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt",
   "source_hash": "89aa2e3da84962a534e5295c66f2d6a01c617c67e213637dc86df3765768e40a",
   "trading_day": "2026-10-06",
@@ -21,37 +21,31 @@
   "quote_count": 4447,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-10-30 14:34:27",
+    "as_of": "2026-10-30 16:59:59",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.3837
+        "yield": 7.4139
+      },
+      {
+        "type": "gsec",
+        "name": "07.63 GS 2056",
+        "maturity": "2056-07-01",
+        "yield": 7.845
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.563
-      },
-      {
-        "type": "gsec",
-        "name": "06.53 GS 2031",
-        "maturity": "2031-07-01",
-        "yield": 7.3078
-      },
-      {
-        "type": "gsec",
-        "name": "05.74 GS 2026",
-        "maturity": "2026-07-01",
-        "yield": 5.1893
+        "yield": 7.6006
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
         "maturity": "2026-10-31",
-        "yield": 5.72
+        "yield": 5.74
       }
     ]
   },
