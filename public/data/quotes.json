@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-05T23:15:49+05:30",
+  "generated_at": "2026-11-06T15:30:26+05:30",
   "source": "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt",
   "source_hash": "89aa2e3da84962a534e5295c66f2d6a01c617c67e213637dc86df3765768e40a",
   "trading_day": "2026-10-06",
@@ -21,58 +21,58 @@
   "quote_count": 4447,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-11-05 16:59:58",
+    "as_of": "2026-11-06 15:25:56",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.171
+        "yield": 7.1754
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.3516
+        "yield": 7.3629
       },
       {
         "type": "gsec",
-        "name": "07.24 GS 2055",
-        "maturity": "2055-07-01",
-        "yield": 7.6537
+        "name": "07.43 GS 2076",
+        "maturity": "2076-07-01",
+        "yield": 7.7593
       },
       {
         "type": "gsec",
         "name": "06.57 GS 2033 17 AUG",
         "maturity": "2033-07-01",
-        "yield": 7.1749
+        "yield": 7.1783
       },
       {
-        "type": "tbill",
-        "name": "182 DTB 04032027",
-        "maturity": "2027-03-04",
-        "yield": 6.045
+        "type": "gsec",
+        "name": "07.24 GS 2055",
+        "maturity": "2055-07-01",
+        "yield": 7.6763
       },
       {
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
-        "maturity": "2026-11-06",
-        "yield": 5.53
+        "maturity": "2026-11-07",
+        "yield": 5.6
       }
     ]
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-11-03",
+    "as_of": "2026-11-06",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_30.10.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_30-10-2026.xls",
+      "debt": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_04.11.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_04-11-2026.xls",
       "cd": "https://nsdl.com/nsdl/2026-11/Cd%20%28Including%20Redeemed%29%20-30.10.2026.xlsx"
     },
     "counts": {
-      "bond": 27570,
-      "cp": 2012,
-      "cd": 421
+      "bond": 27670,
+      "cp": 2028,
+      "cd": 415
     },
     "securities_count": 199,
     "matched": {
@@ -351,7 +351,7 @@
       "issuer": "TATA STEEL LIMITED",
       "coupon": 7.65,
       "maturity": "2030-02-21",
-      "rating": "AA+",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE033L07ID4": {
@@ -6174,7 +6174,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q181",
@@ -6250,7 +6250,7 @@
       "raw": "7.65% TATA STEEL LIMITED 21 FEB 2030 8.00 offer 10cr needbid",
       "confidence": 0.75,
       "isin": "INE081A08355",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q184",
@@ -55791,7 +55791,7 @@
       "raw": "7.65 TATA STEEL 21st FEb 2030 8.00 offer 10cr  need bid",
       "confidence": 0.6,
       "isin": "INE081A08355",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2175",
