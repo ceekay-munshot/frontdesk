@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-13T15:38:09+05:30",
+  "generated_at": "2026-11-13T23:10:47+05:30",
   "source": "https://docs.google.com/document/d/1lP5iRILpBEy2JICTTgDYlDrHeiPkW7PM61-sejxAxkY/export?format=txt",
   "source_hash": "89aa2e3da84962a534e5295c66f2d6a01c617c67e213637dc86df3765768e40a",
   "trading_day": "2026-10-06",
@@ -21,31 +21,31 @@
   "quote_count": 4447,
   "model": "anthropic.claude-sonnet-5",
   "govt_benchmark": {
-    "as_of": "2026-11-13 15:36:19",
+    "as_of": "2026-11-13 16:59:59",
     "points": [
       {
         "type": "gsec",
         "name": "06.94 GS 2036",
         "maturity": "2036-07-01",
-        "yield": 7.2932
+        "yield": 7.3079
       },
       {
         "type": "gsec",
         "name": "07.06 GS 2041",
         "maturity": "2041-07-01",
-        "yield": 7.4635
+        "yield": 7.4728
       },
       {
         "type": "gsec",
         "name": "06.53 GS 2031",
         "maturity": "2031-07-01",
-        "yield": 7.087
+        "yield": 7.0744
       },
       {
         "type": "gsec",
         "name": "06.57 GS 2033 17 AUG",
         "maturity": "2033-07-01",
-        "yield": 7.247
+        "yield": 7.2489
       },
       {
         "type": "tbill",
@@ -57,28 +57,28 @@
         "type": "overnight",
         "name": "TREP overnight (CCIL)",
         "maturity": "2026-11-14",
-        "yield": 5.64
+        "yield": 5.65
       }
     ]
   },
   "reference": {
     "source": "NSDL",
-    "as_of": "2026-11-06",
+    "as_of": "2026-11-13",
     "sources": {
-      "debt": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_04.11.2026.xls",
-      "cp": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_04-11-2026.xls",
-      "cd": "https://nsdl.com/nsdl/2026-11/Cd%20%28Including%20Redeemed%29%20-30.10.2026.xlsx"
+      "debt": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Debt_Instruments_%28including_Redeemed%29_as_on_12.11.2026.xls",
+      "cp": "https://nsdl.com/nsdl/2026-11/Download_the_entire_list_of_Commercial_Papers_including_Redeemed_12-11-2026.xls",
+      "cd": "https://nsdl.com/nsdl/2026-11/Cd%20%28Including%20Redeemed%29%20-06.11.2026.xlsx"
     },
     "counts": {
-      "bond": 27670,
-      "cp": 2028,
-      "cd": 415
+      "bond": 27766,
+      "cp": 2030,
+      "cd": 411
     },
-    "securities_count": 199,
+    "securities_count": 198,
     "matched": {
-      "confirmed": 890,
+      "confirmed": 883,
       "shortlisted": 42,
-      "rated": 937
+      "rated": 930
     }
   },
   "securities": {
@@ -263,7 +263,7 @@
       "issuer": "BHARTI TELECOM LIMITED",
       "coupon": 8.65,
       "maturity": "2027-11-05",
-      "rating": "AA+",
+      "rating": "AAA",
       "type": "bond"
     },
     "INE377Y07698": {
@@ -463,14 +463,6 @@
       "issuer": "REC LIMITED",
       "coupon": 7.53,
       "maturity": "2034-05-31",
-      "rating": "AAA",
-      "type": "bond"
-    },
-    "INE020B08AA3": {
-      "name": "7.52% UNSECURED REDEEMABLE NON-CONVERTIBLE NON - CUMULATIVE TAXABLE BONDS. SERIES 140. DATE OF MATURITY 07/11/",
-      "issuer": "RURAL ELECTRIFICATION CORPORATION LIMITED",
-      "coupon": 7.52,
-      "maturity": "2026-11-07",
       "rating": "AAA",
       "type": "bond"
     },
@@ -4873,7 +4865,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.20",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q129",
@@ -8731,9 +8723,7 @@
       "quote_date": "2026-10-06",
       "flags": [],
       "raw": "7.52% REC Ltd NCD (MD 07/11/2026) offer 25 crs @ 5.95 10:26:40",
-      "confidence": 0.6,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.6
     },
     {
       "id": "q284",
@@ -10765,9 +10755,7 @@
       "quote_date": "2026-10-06",
       "flags": [],
       "raw": "7.5200% REC Ltd BONDS 07112026 - 6.20 choice 25 crs T+0 10:53:54",
-      "confidence": 0.6,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.6
     },
     {
       "id": "q366",
@@ -10917,7 +10905,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.20",
       "confidence": 0.8,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q372",
@@ -12272,7 +12260,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs can sell at 8.26 11:12:31",
       "confidence": 0.75,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q426",
@@ -19127,7 +19115,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs - can sell at 8.30",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q696",
@@ -19465,7 +19453,7 @@
       "raw": "08.65% BHARTI TELECOM Series XIX (05NOV2027) - 5crs - can sell at 8.30",
       "confidence": 0.7,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q709",
@@ -25376,9 +25364,7 @@
       "quote_date": "2026-10-06",
       "flags": [],
       "raw": "7.52% REC Ltd NCD (MD 07/11/2026) 6.00offer 25crs 14:58:39",
-      "confidence": 0.55,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.55
     },
     {
       "id": "q938",
@@ -25688,9 +25674,7 @@
       "quote_date": "2026-10-06",
       "flags": [],
       "raw": "7.52% REC Ltd NCD (MD 07/11/2026) - 25 crs - 6.20 choice 15:07:14",
-      "confidence": 0.7,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.7
     },
     {
       "id": "q950",
@@ -61694,7 +61678,7 @@
       "raw": "8.65% Bharti Telecom (MD 05/11/2027) 8.10offer 50crs",
       "confidence": 0.6,
       "isin": "INE403D08231",
-      "rating": "AA+"
+      "rating": "AAA"
     },
     {
       "id": "q2413",
@@ -62584,9 +62568,7 @@
       "quote_date": "2026-10-05",
       "flags": [],
       "raw": "7.52% REC Ltd NCD (MD 07/11/2026) offer 25 crs @ 5.95% 13:23:18",
-      "confidence": 0.85,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.85
     },
     {
       "id": "q2449",
@@ -63476,9 +63458,7 @@
       "quote_date": "2026-10-05",
       "flags": [],
       "raw": "7.52% REC Ltd NCD (MD 07/11/2026) offer 25 crs @ 6% passing 6.20 bid 13:42:49",
-      "confidence": 0.6,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.6
     },
     {
       "id": "q2485",
@@ -66290,9 +66270,7 @@
       "quote_date": "2026-10-05",
       "flags": [],
       "raw": "7.5200% REC Ltd BONDS 07112026 - 6.00 offer 25 crs 15:17:04",
-      "confidence": 0.75,
-      "isin": "INE020B08AA3",
-      "rating": "AAA"
+      "confidence": 0.75
     },
     {
       "id": "q2599",
